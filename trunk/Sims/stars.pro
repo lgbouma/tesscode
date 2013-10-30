@@ -10,22 +10,22 @@ pro stars, outfile=outfile, verbose=verbose
 ;  q = where(r le 0.5)
 ;  ilim[q] = 13.0
 ;  dmax = 10.*10.0^(0.2*(ilim-imag))
+  
+  dmax = 200.+0.0*r ;72.0 + 128.*r;
 
-;  dmax = 123.+0.0*r ;72.0 + 128.*r;
-  AU_IN_RSUN = 215.093990942
-  REARTH_IN_RSUN = 0.0091705248 
-  geom_area = 74.6
-  a = m^(1./3.) * (10./365.25)^(2./3.)   ; in AU
-  dur = r * 10. / (!DPI*a*AU_IN_RSUN)
-  exptime = 2.*dur*24.*3600
-  dep = (REARTH_IN_RSUN * 2.5 / r)^2.0
-  sig = dep/7.0
-  rn = 10.*sqrt(3.0*exptime/2.0)
-  minphot = (1.+sqrt(1.+4.*sig^2.*rn^2.))/(2.*sig^2.)
-  ;minphot = (sig^2.)^(-1.)
-  megaph_s_cm2_0mag = 1.6301336 + 0.14733937*(teff-5000.)/5000.
-  ilim = -2.5*alog10(minphot/(megaph_s_cm2_0mag * 1D6 * geom_area * exptime))
-  dmax = 10.*10.0^(0.2*(ilim-imag))
+;  AU_IN_RSUN = 215.093990942
+;  REARTH_IN_RSUN = 0.0091705248 
+;  geom_area = 74.6
+;  a = m^(1./3.) * (10./365.25)^(2./3.)   ; in AU
+;  dur = r * 10. / (!DPI*a*AU_IN_RSUN)
+;  exptime = 2.*dur*24.*3600
+;  dep = (REARTH_IN_RSUN * 2.5 / r)^2.0
+;  sig = dep/7.0
+;  rn = 10.*sqrt(3.0*exptime/2.0)
+;  minphot = (1.+sqrt(1.+4.*sig^2.*rn^2.))/(2.*sig^2.)
+;  megaph_s_cm2_0mag = 1.6301336 + 0.14733937*(teff-5000.)/5000.
+;  ilim = -2.5*alog10(minphot/(megaph_s_cm2_0mag * 1D6 * geom_area * exptime))
+;  dmax = 10.*10.0^(0.2*(ilim-imag))
 
   h = 300.0 + 0.0*r
 
@@ -36,7 +36,7 @@ pro stars, outfile=outfile, verbose=verbose
   nstars = number_of_stars_expz(dmax, phi, h)
   nstars = round(nstars)
   print, 'R_star: ', min(r), max(r)
-  print, 'I: ', min(ilim), max(ilim)
+ ; print, 'I: ', min(ilim), max(ilim)
   print, 'd: ', min(dmax), max(dmax)
   print, 'Nstars: ', min(nstars), max(nstars), total(nstars)
 
