@@ -1,20 +1,21 @@
 PRO report, nstar3d=nstar3d, nplanet3d=nplanet3d
 
   psfsize = 1.0
+  ;psfstr = '_105_4700k'
   psfstr = '_1p'+strtrim(round(10.*(psfsize-1.0)),2)
   ;psfstr = '_dither' + psfstr
-  filen = '../Sims/ss_r3_13x24.sav' 
+  filen = '../Sims/ss_r2p5_13x24.sav' 
   frac_file = '../ExpTimeCalc/frac24'+psfstr+'.fits' 
   fov = 24.0
   seg = 13
-  geomarea = 74.6
+  geomarea = 74.6 ;82.3 ;74.6
   readnoise=10.0
   thresh = 7.0
   tranmin = 2.0
-  n_trial = 3
+  n_trial = 10
   
   magbins = dindgen(22)/2.0+6.75 
-  fname = 'rep_r3_'+strtrim(seg,2)+'x'+strtrim(round(fov),2)+'_'+strtrim(round(geomarea),2)+psfstr
+  fname = 'rep_r2p5_'+strtrim(seg,2)+'x'+strtrim(round(fov),2)+'_'+strtrim(round(geomarea),2)+psfstr
   period_boundary = [1.0, 2.0, 3.42, 5.85, 10.0, 17.1, 29.2, 50.0, $
 			85.5, 146.2]
   elatbins = dindgen(10)*10.
