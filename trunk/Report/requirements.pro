@@ -18,7 +18,7 @@ PRO requirements
   fname = 'req_r200_'+strtrim(seg,2)+'x'+strtrim(round(fov),2)+'.fits'
   period_boundary = [1.0, 2.0, 3.42, 5.85, 10.0, 17.1, 29.2, 50.0, $
 			85.5, 146.2]
-  mag_bins = findgen(51)/3. + 5.
+  mag_bins = findgen(46)/3. + 5.
   logsig_bins = findgen(31)/10. - 5.
   sig_bins  = 10.^logsig_bins
   n_mag = n_elements(mag_bins)-1
