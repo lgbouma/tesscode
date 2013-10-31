@@ -1,5 +1,5 @@
 PRO noise_calc 
-  imag = findgen(150)/10.+5.
+  imag = findgen(46)/3.+5.
   ;print, imag
   npix_min=1
   npix_max=49
@@ -22,7 +22,7 @@ PRO noise_calc
                  e_pix_ro = 10.,$
                  subexptime=2., $
                  geom_area = 74.6, $
-                 sys_lim = 60.0, $
+                 sys_lim = 120.0, $
                  pix_scale = 24.*3600./4096., $
                  elon=elon, $
                  elat=elat, $
@@ -57,7 +57,7 @@ PRO noise_calc
 			  noise_sys=sys_noise
  
   fitsout = [[imag], [npix], [noise], [shot_noise], [bknd_noise], [read_noise], [sys_noise], [satn], [diln]]
-  mwrfits, fitsout, 'noises.fits'
+  mwrfits, fitsout, 'noises_60ppm.fits'
   
 END
 
