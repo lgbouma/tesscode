@@ -1,6 +1,7 @@
-PRO simple_survey, fov, n_segs, infile, outfile
+PRO simple_survey, fov, n_segs, infile, outfile, offset=offset
 
   restore, infile
+  if (keyword_set(offset)) then offset=offset else offset=0.0
 
   ;fov = 23.0
   ;n_segs = 13
@@ -11,7 +12,7 @@ PRO simple_survey, fov, n_segs, infile, outfile
   ccd_ctr = [1.0,1.0]*float(ccd_pix)/2.0
   delt = [1.0,1.0]*pix_scale_deg
 
-  elat_cams = (indgen(n_cams)+0.5)*(fov)
+  elat_cams = (indgen(n_cams)+0.5)*(fov) + offset
   elon_cams = intarr(n_cams)
   elon_segs = 360.0*(findgen(n_segs))/float(n_segs)
  
