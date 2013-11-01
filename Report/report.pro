@@ -1,14 +1,14 @@
 PRO report, nstar3d=nstar3d, nplanet3d=nplanet3d
 
   psfsize = 1.0
-  ;psfstr = '_105_4700k'
-  psfstr = '_1p'+strtrim(round(10.*(psfsize-1.0)),2)
-  psfstr = '_asbuilt' + psfstr
-  filen = '../Sims/ss_mag_13x23.sav' 
-  frac_file = '../ExpTimeCalc/frac'+psfstr+'.fits' 
-  fov = 23.0
+  psfstr = '_105_3400k'
+  ;psfstr = '_1p'+strtrim(round(10.*(psfsize-1.0)),2)
+  ;psfstr = '_asbuilt' + psfstr
+  filen = '../Sims/ss_r2p5_13x24.sav' 
+  frac_file = '../ExpTimeCalc/frac24'+psfstr+'.fits' 
+  fov = 24.0
   seg = 13
-  geomarea = 73.0 ;82.3 ;74.6
+  geomarea = 82.3 ;74.6
   readnoise=10.0
   thresh = 7.0
   tranmin = 2.0
