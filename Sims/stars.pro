@@ -3,7 +3,7 @@ pro stars, outfile=outfile, verbose=verbose
   if (keyword_set(verbose)) then v=1 else v=0
   if (keyword_set(outfile)) then outfile=outfile else outfile='s.sav'
   restore, filen='../Stars/star_properties.sav'
-  nplanets = 11
+  nplanets = 2
 ; what kind of star catalog?
 
   ilim = 12.0 + 0.*r
@@ -54,7 +54,9 @@ pro stars, outfile=outfile, verbose=verbose
                     ntra_obs: 0, $
                     det: 0, $
                     snr: 0.0, $
- 		    snrtran: 0.0 $
+ 		    snrtran: 0.0, $
+		    durpar: 0.0, $
+		    snrgress: 0.0 $
                     }
 
 ;  template_planets = {$
