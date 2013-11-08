@@ -3,11 +3,12 @@ pro new_planets, struct=struct, infile=infile, outfile=outfile, verbose=verbose
   AU_IN_RSUN = 215.093990942D0          ; in solar radii
   REARTH_IN_RSUN = 0.0091705248         ; in solar radii
 
+  if (keyword_set(infile)) then infile=infile else infile = 'ss.sav'
+  restore, infile
 
   nstars = n_elements(star)
   if (keyword_set(outfile)) then fname=outfile else fname='sp.sav'
-  if (keyword_set(csr)) then begin
-     
+  if (keyword_set(verbose)) then verbose=1 else verbose=0     
 
      period_boundary = [0.8, 2.0, 3.4, 5.9, 10.0, 17.0, 29.0, 50.0, 85.0, 145.0, 245.0, 418.0]
      radius_boundary = [0.8, 1.25, 2.0, 4.0, 6.0, 22.0]
@@ -27,7 +28,7 @@ pro new_planets, struct=struct, infile=infile, outfile=outfile, verbose=verbose
      rate_fressin[10,*] =[0.0,  0.0,  0.0,   0.24,  1.05]
      rate_fressin = rate_fressin/100.
      
-     for i=10,0 do begin
+     for i=10,0,-1 do begin
         for j=0,4 do begin
            nplanets = round(rate_fressin[i,j] * nstars)
            if (nplanets gt 0) then begin
@@ -40,21 +41,35 @@ pro new_planets, struct=struct, infile=infile, outfile=outfile, verbose=verbose
            endif
         endfor
      endfor
+
+
+  star.cosi = cos((!DPI/2.0)*randomu(seed, nstars))
+  
+;  star.planet.n = 1
+;  star.planet.r = 2.0
+;  star.planet.p = 10.0
+;  star.cosi = 0.0
      
 ; Random orbital orientation
 
   pla = where(star.planet.n gt 0)
   nplanets = n_elements(pla)
 
-  ;star[pla].planet.cosi = -1.0 + 2.0*randomu(seed, nplanets)
-  ;star[pla].planet.cosi = cos((!DPI/2.0)*randomu(seed, nplanets))
-  star.cosi = cos((!DPI/2.0)*randomu(seed, nstars))
+  ; Random pixel offset
+  star.dx = floor(10.*randomu(seed, nstars))
+  star.dy = floor(10.*randomu(seed, nstars))
+  ; HZ
+  a_hz_in = star.r * (star.teff/5777.0)^2. / sqrt(1.5)
+  a_hz_out= star.r * (star.teff/5777.0)^2. / sqrt(0.5)
+  star.p_hz_in =  365.25 * sqrt(a_hz_in^3.  * star.m)
+  star.p_hz_out=  365.25 * sqrt(a_hz_out^3. * star.m)
+
 
 ; Work out orbital distance and impact parameter
 
   star[pla].planet.a = (star[pla].m)^(1./3.) * (star[pla].planet.p/365.25)^(2./3.); in AU
   star[pla].planet.s = (star[pla].r)^2.0 * (star[pla].teff/5777.0)^4. / (star[pla].planet.a)^2. ; indicent flux wrt sun-earth value
-  star[pla].planet.b = (star[pla].planet.a*AU_IN_RSUN / star[pla].r) * star[pla].planet.cosi; assumes circular orbit
+  star[pla].planet.b = (star[pla].planet.a*AU_IN_RSUN / star[pla].r) * star[pla].cosi; assumes circular orbit
 
 ; Work out transit properties
 
@@ -63,11 +78,16 @@ pro new_planets, struct=struct, infile=infile, outfile=outfile, verbose=verbose
   star[tra].planet.dep = (REARTH_IN_RSUN * star[tra].planet.r / star[tra].r )^2.0
   star[tra].planet.dur = star[tra].r * star[tra].planet.p * sqrt(1.-(star[tra].planet.b)^2.) / (!PI*star[tra].planet.a*AU_IN_RSUN)
 
+  star[tra].planet.durpar = star[tra].planet.r * $
+	REARTH_IN_RSUN * star[tra].planet.p / $
+        sqrt(1.-(star[tra].planet.b)^2.) / $
+        (!PI*star[tra].planet.a*AU_IN_RSUN)
+
   if keyword_set(outfile) then save,filen=outfile, star
 
   if (keyword_set(struct)) then struct=star
 
-  if (keyword_set(verbose)) then begin 
+  if (verbose) then begin 
 ; Report breakdown of different types of planets
 
   print, ' ' & print, 'Planet breakdown:'
@@ -88,7 +108,7 @@ pro new_planets, struct=struct, infile=infile, outfile=outfile, verbose=verbose
   print, ' ' & print, 'Transiting Planet breakdown:'
 
   readcol, 'planet_definitions.txt', /silent, comment='#', f='A,D,D,D,D', $
-           planet_type, p_min, p_max, r_min, r_max
+           planet_type, p_min, p_max, r_mn, r_max
            
   fmt = '(A20, A9, I3, A3, I3, A9, F5.2, A3, F5.2, A4, I9, F7.2, A1)'
   for i=0,n_elements(planet_type)-1 do begin

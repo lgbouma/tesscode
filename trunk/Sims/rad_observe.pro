@@ -22,7 +22,7 @@ pro rad_observe, struct=struct, infile=infile, outfile=outfile, filen=filen, $
   RMAX_HAB = 2.0 & SHZ_IN = 0.5 & SHZ_OUT = 1.5  ; radii, incident fluxes corresponding to inner/outer edge of HZ
   npix_max = 49
   npix_min = 1
-  if (keyword_set(frac_file)) then frac_file=frac_file else frac_file='../ExpTimeCalc/frac_1p0.fits'
+  if (keyword_set(frac_file)) then frac_file=frac_file else frac_file='../ExpTimeCalc/frac24_1p0.fits'
   frac_fits = mrdfits(frac_file)
   ;fov = 24.0
   ;n_segs = 13
@@ -53,8 +53,14 @@ pro rad_observe, struct=struct, infile=infile, outfile=outfile, filen=filen, $
 ; for each transiting planet, how many transits were observed?
 
   n_per = n_elements(star[0].planet.p)
+  print, 'periods: ', n_per
+ 
+  if (n_per gt 1) then begin
+    tra = where(total(star.planet.tra,1) gt 0)
+  endif else begin
+    tra = where(star.planet.tra gt 0)
+  endelse
 
-  tra = where(total(star.planet.tra,1) gt 0)
 ;  tra = indgen(n_elements(star))
   for kk=0,n_per-1 do begin
      star[tra].planet[kk].ntra_obs = $
@@ -64,8 +70,12 @@ pro rad_observe, struct=struct, infile=infile, outfile=outfile, filen=filen, $
 ; for each observed transiting planet, calculate snr
   ;if (total(star.planet.dep) eq 0) then begin
  
+  if (n_per gt 1) then begin
    obs = where((total(star.planet.tra,1) gt 0) and $
 		(total(star.planet.ntra_obs,1) gt 0))
+  endif else begin
+    obs = where(star.planet.ntra_obs gt 0)
+  endelse
 ;  obs = indgen(n_elements(star))
   fov_ind = intarr(n_elements(obs))
   fov_ind[where((star[obs].coord.fov_r ge 0.104*CCD_PIX) and $
@@ -140,6 +150,7 @@ pro rad_observe, struct=struct, infile=infile, outfile=outfile, filen=filen, $
 		 dilution=dil, $
 		 e_star_sub=estar
     if (total(star.planet[ii].dep) gt 0) then begin
+      print, 'Calculating SNR of pre-defined depth'
       star[obs].planet[ii].snr = star[obs].planet[ii].dep / ((1.0+dil)*noise)
     endif else begin
       star[obs].planet[ii].dep = SNR_MIN * noise * (1.0+dil)
@@ -166,6 +177,10 @@ pro rad_observe, struct=struct, infile=infile, outfile=outfile, filen=filen, $
      
     if (total(star.planet[ii].dep) gt 0) then begin
       star[obs].planet[ii].snrtran = star[obs].planet[ii].dep / ((1.0+dil)*noise)
+      star[obs].planet[ii].snrgress = star[obs].planet[ii].snrtran * $
+		sqrt(2. * star[obs].planet.ntra_obs * $
+		     REARTH_IN_RSUN * star[obs].planet[ii].r / $
+		    (6.0*star[obs].r*(1.0+star[obs].planet.b^2.)))
     endif else begin
       star[obs].planet[ii].snrtran = star[obs].planet[ii].dep / ((1.0+dil)*noise)
     endelse
