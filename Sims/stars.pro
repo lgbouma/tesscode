@@ -3,29 +3,29 @@ pro stars, outfile=outfile, verbose=verbose
   if (keyword_set(verbose)) then v=1 else v=0
   if (keyword_set(outfile)) then outfile=outfile else outfile='s.sav'
   restore, filen='../Stars/star_properties.sav'
-  nplanets = 2
+  nplanets = 1
 ; what kind of star catalog?
 
-  ilim = 12.0 + 0.*r
-  q = where(r le 0.5)
-  ilim[q] = 13.0
-  dmax = 10.*10.0^(0.2*(ilim-imag))
+;  ilim = 12.0 + 0.*r
+;  q = where(r le 0.5)
+;  ilim[q] = 13.0
+;  dmax = 10.*10.0^(0.2*(ilim-imag))
   
 ;  dmax = 200.+0.0*r ;72.0 + 128.*r;
 
-;  AU_IN_RSUN = 215.093990942
-;  REARTH_IN_RSUN = 0.0091705248 
-;  geom_area = 74.6
-;  a = m^(1./3.) * (10./365.25)^(2./3.)   ; in AU
- ; dur = r * 10. / (!DPI*a*AU_IN_RSUN)
- ; exptime = 2.*dur*24.*3600
-;  dep = (REARTH_IN_RSUN * 2.5 / r)^2.0
-;  sig = dep/7.0
-;  rn = 10.*sqrt(3.0*exptime/2.0)
-;  minphot = (1.+sqrt(1.+4.*sig^2.*rn^2.))/(2.*sig^2.)
-;  megaph_s_cm2_0mag = 1.6301336 + 0.14733937*(teff-5000.)/5000.
-;  ilim = -2.5*alog10(minphot/(megaph_s_cm2_0mag * 1D6 * geom_area * exptime))
-;  dmax = 10.*10.0^(0.2*(ilim-imag))
+  AU_IN_RSUN = 215.093990942
+  REARTH_IN_RSUN = 0.0091705248 
+  geom_area = 74.6
+  a = m^(1./3.) * (10./365.25)^(2./3.)   ; in AU
+  dur = r * 10. / (!DPI*a*AU_IN_RSUN)
+  exptime = 2.*dur*24.*3600
+  dep = (REARTH_IN_RSUN * 2.6 / r)^2.0
+  sig = dep/7.0
+  rn = 10.*sqrt(3.0*exptime/2.0)
+  minphot = (1.+sqrt(1.+4.*sig^2.*rn^2.))/(2.*sig^2.)
+  megaph_s_cm2_0mag = 1.6301336 + 0.14733937*(teff-5000.)/5000.
+  ilim = -2.5*alog10(minphot/(megaph_s_cm2_0mag * 1D6 * geom_area * exptime))
+  dmax = 10.*10.0^(0.2*(ilim-imag))
 
   h = 300.0 + 0.0*r
 
@@ -41,7 +41,7 @@ pro stars, outfile=outfile, verbose=verbose
   print, 'Nstars: ', min(nstars), max(nstars), total(nstars)
 
   template_planet = {$
-              ;      n: 0, $
+                    n: 0, $
                     r: 0.0, $ ; can eventually replace by dblarr(5), $
                     p: 0.0, $ 
                     a: 0.0, $
@@ -55,8 +55,8 @@ pro stars, outfile=outfile, verbose=verbose
                     det: 0, $
                     snr: 0.0, $
  		    snrtran: 0.0, $
-		    durpar: 0.0, $
-		    snrgress: 0.0 $
+		    durpar: 0.0, $    ; duration of in+engress (days)
+		    snrgress: 0.0 $   ; SNR of ingress/egress
                     }
 
 ;  template_planets = {$
