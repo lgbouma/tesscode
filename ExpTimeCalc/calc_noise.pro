@@ -79,6 +79,7 @@ pro calc_noise, $
 
 ; electrons from the star
 
+;  megaph_s_cm2_0mag = 1.3804467 - 0.06911869*(teff-5000.)/5000.
   megaph_s_cm2_0mag = 1.6301336 + 0.14733937*(teff-5000.)/5000.
   e_star = 10.0^(-0.4*imag) * 1D6 * megaph_s_cm2_0mag * geom_area * exptime * frac_aper
   e_star_sub = e_star*subexptime/exptime
