@@ -1,4 +1,4 @@
-PRO simple_survey, fov, n_segs, infile, outfile, offset=offset
+PRO simple_survey, n_segs, fov, infile, outfile, offset=offset
 
   restore, infile
   if (keyword_set(offset)) then offset=offset else offset=0.0

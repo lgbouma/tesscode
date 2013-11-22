@@ -92,7 +92,6 @@ pro planets, csr=csr, fressin=fressin, outfile=outfile
   nplanets = n_elements(pla)
 
   ;star[pla].planet.cosi = -1.0 + 2.0*randomu(seed, nplanets)
-  star[pla].planet.cosi = cos((!DPI/2.0)*randomu(seed, nplanets))
 
 ; Work out orbital distance and impact parameter
 

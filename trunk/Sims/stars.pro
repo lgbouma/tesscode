@@ -1,40 +1,54 @@
-pro stars, outfile=outfile, verbose=verbose
+pro stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=per
 
   if (keyword_set(verbose)) then v=1 else v=0
   if (keyword_set(outfile)) then outfile=outfile else outfile='s.sav'
-  restore, filen='../Stars/star_properties.sav'
+  if (keyword_set(csr)) then begin
+   readcol, '../PhotonFluxes/stars_table.txt', $
+           comment='#', f='D,D,D,D,D,D,D,D,D', $
+           vmag, m, r, teff, mbol, imag, kmag, ph2, number_density
+           dr = dblarr(n_elements(r))
+           dr[1:n_elements(r)-2] = (r[0:n_elements(r)-2]-r[2:n_elements(r)-1])/2.0
+           dr[0] = r[0]-r[1]
+           dr[n_elements(r)-1] = r[n_elements(r)-2]-r[n_elements(r)-1]
+	   phi = number_density 
+           dndr = (4./3.)*!dpi*10.^3*0.1*number_density/dr ; at 10 pc
+  endif else begin
+    restore, filen='../Stars/star_properties.sav'
+    vol10 = (4./3.)*!PI*(10.0^3.)
+    dr = r[1]-r[0] + dblarr(n_elements(r))
+    phi = dndr*dr/0.1/vol10       ; now phi is in stars per cubic parsec per radius bin
+  endelse
+  
   nplanets = 1
 ; what kind of star catalog?
-
-;  ilim = 12.0 + 0.*r
-;  q = where(r le 0.5)
-;  ilim[q] = 13.0
-;  dmax = 10.*10.0^(0.2*(ilim-imag))
-  
-;  dmax = 200.+0.0*r ;72.0 + 128.*r;
-
-  AU_IN_RSUN = 215.093990942
-  REARTH_IN_RSUN = 0.0091705248 
-  geom_area = 74.6
-  a = m^(1./3.) * (10./365.25)^(2./3.)   ; in AU
-  dur = r * 10. / (!DPI*a*AU_IN_RSUN)
-  exptime = 2.*dur*24.*3600
-  dep = (REARTH_IN_RSUN * 2.6 / r)^2.0
-  sig = dep/7.0
-  rn = 10.*sqrt(3.0*exptime/2.0)
-  minphot = (1.+sqrt(1.+4.*sig^2.*rn^2.))/(2.*sig^2.)
-  megaph_s_cm2_0mag = 1.6301336 + 0.14733937*(teff-5000.)/5000.
-  ilim = -2.5*alog10(minphot/(megaph_s_cm2_0mag * 1D6 * geom_area * exptime))
-  dmax = 10.*10.0^(0.2*(ilim-imag))
+  if (keyword_set(dst)) then begin
+    dmax = float(dst)+0.0*r ;72.0 + 128.*r;
+  endif else if (keyword_set(csr)) then begin
+    ilim = 12.0 + 0.*r
+    q = where(r le 0.5)
+    ilim[q] = 13.0
+    dmax = 10.*10.0^(0.2*(ilim-imag))
+  endif else if (keyword_set(det)) then begin
+    AU_IN_RSUN = 215.093990942
+    REARTH_IN_RSUN = 0.0091705248 
+    geom_area = 74.6
+    a = m^(1./3.) * (float(per)/365.25)^(2./3.)   ; in AU
+    dur = r * float(per) / (!DPI*a*AU_IN_RSUN)
+    exptime = 2.*dur*24.*3600
+    dep = (REARTH_IN_RSUN * float(det) / r)^2.0
+    sig = dep/7.0
+    rn = 10.*sqrt(4.0*exptime/2.0)
+    minphot = (1.+sqrt(1.+4.*sig^2.*rn^2.))/(2.*sig^2.)
+    megaph_s_cm2_0mag = 1.6301336 + 0.14733937*(teff-5000.)/5000.
+    ilim = -2.5*alog10(minphot/(megaph_s_cm2_0mag * 1D6 * geom_area * exptime))
+    dmax = 10.*10.0^(0.2*(ilim-imag))
+  endif
 
   h = 300.0 + 0.0*r
 
-  vol10 = (4./3.)*!PI*(10.0^3.)
-  dr = r[1]-r[0]
-  phi = dndr*dr/0.1/vol10       ; now phi is in stars per cubic parsec per radius bin
 
   nstars = number_of_stars_expz(dmax, phi, h)
-  nstars = round(nstars)
+  nstars = round(nstars,/L64)
   print, 'R_star: ', min(r), max(r)
  ; print, 'I: ', min(ilim), max(ilim)
   print, 'd: ', min(dmax), max(dmax)
@@ -48,6 +62,7 @@ pro stars, outfile=outfile, verbose=verbose
                     s: 0.0, $ ; incident flux in units of Sun-->Earth flux
               ;      cosi: 0.0, $
                     b: 0.0, $
+		    k: 0.0, $ ; rv amplitude
                     tra: 0, $
                     dep: 0.0, $
                     dur: 0.0, $
@@ -132,12 +147,13 @@ pro stars, outfile=outfile, verbose=verbose
      
      if (nstars[i] lt 1) then continue
      tmp_star = replicate(template_star, nstars[i])
-     tmp_star.r = r[i] + dr*(randomu(seed, nstars[i]) - 0.5)
+     tmp_star.r = r[i] + dr[i]*(randomu(seed, nstars[i]) - 0.5)
      tmp_star.m = m[i]
      tmp_star.teff = teff[i]
      tmp_star.mag.mv = vmag[i]
      tmp_star.mag.mi = imag[i]
-     tmp_star.mag.mj = jmag[i]
+     
+     if (keyword_set(csr)) then tmp_star.mag.mj = kmag[i] else tmp_star.mag.mj = jmag[i]
 
      assign_xyz, nstars[i], dmax[i], h[i], x, y, z, d
 

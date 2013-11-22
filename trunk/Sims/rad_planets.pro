@@ -32,7 +32,7 @@ pro rad_planets, struct=struct, infile=infile,outfile=outfile, verbose=verbose
 
   star.dx = floor(10.*randomu(seed, n_stars))
   star.dy = floor(10.*randomu(seed, n_stars))
-  star.cosi = cos((!DPI/2.0)*randomu(seed, n_stars))  
+  star.cosi = -1.0 + 2.0*randomu(seed, n_stars)
   
   a_hz_in = star.r * (star.teff/5777.0)^2. / sqrt(2.0)
   a_hz_out= star.r * (star.teff/5777.0)^2. / sqrt(0.5)
