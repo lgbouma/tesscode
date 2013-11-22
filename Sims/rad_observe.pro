@@ -11,7 +11,7 @@ pro rad_observe, struct=struct, infile=infile, outfile=outfile, filen=filen, $
 ;  DWELL_TIME = DWELL_TIME - 8.0d0/24.0d0  ; correct for downlink time
   if (keyword_set(thresh)) then SNR_MIN=thresh else SNR_MIN = 7.0
   if (keyword_set(tranmin)) then NTRA_OBS_MIN = tranmin else NTRA_OBS_MIN = 2
-  if (keyword_set(geomarea)) then GEOM_AREA=geomarea else GEOM_AREA=73.0; cm^2
+  if (keyword_set(geomarea)) then GEOM_AREA=geomarea else GEOM_AREA=74.6; cm^2
   if (keyword_set(fov)) then fov=fov else fov=24.0
   SYS_LIMIT = 60.0; ppm in 1 hour
   E_PIX_RO = 10.0 
@@ -176,7 +176,7 @@ pro rad_observe, struct=struct, infile=infile, outfile=outfile, filen=filen, $
 		 e_star_sub=estar
      
     if (total(star.planet[ii].dep) gt 0) then begin
-      star[obs].planet[ii].snrtran = star[obs].planet[ii].dep / ((1.0+dil)*noise)
+      star[obs].planet[ii].snrtran =  star[obs].planet[ii].dep / ((1.0+dil)*noise)
       star[obs].planet[ii].snrgress = star[obs].planet[ii].snrtran * $
 		sqrt(2. * star[obs].planet.ntra_obs * $
 		     REARTH_IN_RSUN * star[obs].planet[ii].r / $
@@ -191,6 +191,7 @@ pro rad_observe, struct=struct, infile=infile, outfile=outfile, filen=filen, $
 		(star.planet[ii].ntra_obs ge NTRA_OBS_MIN) and $
 		(star.planet[ii].snr ge SNR_MIN))
     star[detected].planet[ii].det = 1
+    print, 'Period ', ii, ' detected ', n_elements(detected), ' planets.'
   endfor
 ;  detected = where(star.planet_hz.tra gt 0 and star.planet_hz.ntra_obs ge NTRA_OBS_MIN and star.planet_hz.snr ge SNR_MIN)
 ;  star[detected].planet_hz.det = 1
