@@ -21,6 +21,8 @@ pro calc_noise, $
    pix_scale = pix_scale, $         ; arcsec per pixel
    sys_limit = sys_limit, $         ; minimum uncertainty in 1 hr of data, in ppm
    verbose=verbose, $               ; request verbose output
+   red=red, $		     	    ; consider a redder bandpass
+   al = al, $			    ; Use Al's sky background
 ;
 ; optional outputs
 ;
@@ -41,6 +43,8 @@ pro calc_noise, $
   if (keyword_set(pix_scale)) then pix_scale=pix_scale else pix_scale=20.0
   if (keyword_set(sys_limit)) then sys_limit=sys_limit else sys_limit=60.0
   if (keyword_set(verbose)) then v=1 else v=0
+  if (keyword_set(red)) then red=red else red=0
+  if (keyword_set(al)) then al=al else al=0
 
   if (keyword_set(npix_aper)) then begin
      npix_aper=npix_aper
@@ -79,8 +83,9 @@ pro calc_noise, $
 
 ; electrons from the star
 
-;  megaph_s_cm2_0mag = 1.3804467 - 0.06911869*(teff-5000.)/5000.
-  megaph_s_cm2_0mag = 1.6301336 + 0.14733937*(teff-5000.)/5000.
+  if (red) then  megaph_s_cm2_0mag = 1.3804467 - 0.06911869*(teff-5000.)/5000. $
+  else if (al) then megaph_s_cm2_0mag = 1.7129 + 0.5185*(teff-5000.)/5000. + 2.4616*((teff-5000.)/5000.)^2. $
+  else megaph_s_cm2_0mag = 1.6301336 + 0.14733937*(teff-5000.)/5000.
   e_star = 10.0^(-0.4*imag) * 1D6 * megaph_s_cm2_0mag * geom_area * exptime * frac_aper
   e_star_sub = e_star*subexptime/exptime
 
@@ -89,8 +94,10 @@ pro calc_noise, $
 ; e/pix from zodi
 
   dlat = (abs(elat)-90.)/90.
-  vmag_zodi = 23.345 - 1.148*dlat^2.
+  if (al) then vmag_zodi=22. $
+  else vmag_zodi = 23.345 - 1.148*dlat^2.
   e_pix_zodi = 10.0^(-0.4*(vmag_zodi-22.8)) * 2.39D-3 * geom_area * omega_pix * exptime
+  if (red) then e_pix_zodi = e_pix_zodi*0.828
 
   if (v) then print, 'vmag_zodi = ', vmag_zodi
   if (v) then print, 'e_pix_zodi = ', e_pix_zodi
@@ -108,19 +115,22 @@ pro calc_noise, $
 
   imag_bgstars = p[0] + p[1]*dlat + p[2]*dlon^(p[3])
   e_pix_bgstars = 10.0^(-0.4*imag_bgstars) * 1.7D6 * geom_area * omega_pix * exptime
+  if (red) then e_pix_bgstars = e_pix_bgstars*0.828
+  if (al) then e_pix_bgstars = 0.0
 
   if (v) then print, 'imag_bgstars = ', imag_bgstars
   if (v) then print, 'e_pix_bgstars = ', e_pix_bgstars
 
 ; compute noise sources
 
-  noise_star = sqrt(e_star) / e_star
-  noise_sky  = sqrt(npix_aper*(e_pix_zodi + e_pix_bgstars)) / e_star
-  noise_ro   = sqrt(npix_aper*n_exposures)*e_pix_ro / e_star
+  e_tot = npix_aper*(e_pix_zodi + e_pix_bgstars) + e_star
+  noise_star = sqrt(e_star) / e_tot
+  noise_sky  = sqrt(e_tot_sky) / e_tot
+  noise_ro   = sqrt(npix_aper*n_exposures)*e_pix_ro / e_tot
   noise_sys  = 0.0*noise_star + sys_limit/1d6/sqrt(exptime/3600.)
 
   dilution = npix_aper*(e_pix_zodi + e_pix_bgstars) / e_star
-
+  ;if (al) then noise = sqrt(1.0/(e_star + e_tot_sky) + noise_sys^2.) else $
   noise = sqrt( noise_star^2. + noise_sky^2. + noise_ro^2. + noise_sys^2. )
 
   if (v) then begin
