@@ -85,7 +85,11 @@ pro calc_noise, $
 
   if (red) then  megaph_s_cm2_0mag = 1.3804467 - 0.06911869*(teff-5000.)/5000. $
   else if (al) then megaph_s_cm2_0mag = 1.7129 + 0.5185*(teff-5000.)/5000. + 2.4616*((teff-5000.)/5000.)^2. $
-  else megaph_s_cm2_0mag = 1.6301336 + 0.14733937*(teff-5000.)/5000.
+  ;else megaph_s_cm2_0mag = 1.6301336 + 0.14733937*(teff-5000.)/5000.
+  else begin 
+	megaph_s_cm2_0mag = 1.5838 + 0.2878*(teff-3500.)/3500. - 0.1398*((teff-3500.)/3500.)^2.
+  	megaph_s_cm2_0mag[where(teff lt 3500)] = 1.5838
+  endelse
   e_star = 10.0^(-0.4*imag) * 1D6 * megaph_s_cm2_0mag * geom_area * exptime * frac_aper
   e_star_sub = e_star*subexptime/exptime
 
@@ -123,13 +127,14 @@ pro calc_noise, $
 
 ; compute noise sources
 
-  e_tot = npix_aper*(e_pix_zodi + e_pix_bgstars) + e_star
+  e_tot_sky = npix_aper*(e_pix_zodi + e_pix_bgstars) 
+  e_tot = e_tot_sky + e_star
   noise_star = sqrt(e_star) / e_tot
   noise_sky  = sqrt(e_tot_sky) / e_tot
   noise_ro   = sqrt(npix_aper*n_exposures)*e_pix_ro / e_tot
   noise_sys  = 0.0*noise_star + sys_limit/1d6/sqrt(exptime/3600.)
 
-  dilution = npix_aper*(e_pix_zodi + e_pix_bgstars) / e_star
+  dilution = e_tot_sky / e_star
   ;if (al) then noise = sqrt(1.0/(e_star + e_tot_sky) + noise_sys^2.) else $
   noise = sqrt( noise_star^2. + noise_sky^2. + noise_ro^2. + noise_sys^2. )
 
