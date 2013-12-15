@@ -1,10 +1,11 @@
 pro new_planets, struct=struct, infile=infile, outfile=outfile, verbose=verbose, $
-	csr=csr, fressin=fressin, petigura=petigura, dressing=dressing, req=req
+	csr=csr, fressin=fressin, petigura=petigura, dressing=dressing, req=req, nodep=nodep
 
   AU_IN_RSUN = 215.093990942D0          ; in solar radii
   REARTH_IN_RSUN = 0.0091705248         ; in solar radii
   MSUN_IN_MEARTH = 332946D0
-  AU_DAY_IN_M_S = 1731457D0
+  AU_DAY_IN_CM_S = 173145684D0
+  RV_AMP = 0.6395 ; in m/s
 
   if (keyword_set(infile)) then infile=infile else infile = 'ss.sav'
   restore, infile
@@ -52,8 +53,8 @@ pro new_planets, struct=struct, infile=infile, outfile=outfile, verbose=verbose,
            if (nplanets gt 0) then begin
               indices = round(double(nstars-1)*randomu(seed, nplanets))
   	      if (keyword_set(dressing)) then begin
-		periods = fltarr(nplanets) + (period_boundary[i]+period_boundary[i+1])/2.0
-		radii   = fltarr(nplanets) + (radius_boundary[j]+radius_boundary[j+1])/2.0
+		periods = fltarr(nplanets) + 10^((alog10(period_boundary[i])+alog10(period_boundary[i+1]))/2.0)
+		radii   = fltarr(nplanets) + 10^((alog10(radius_boundary[j])+alog10(radius_boundary[j+1]))/2.0)
               endif else begin
                 randomp, periods, -1.0, nplanets, range_x = [period_boundary[i], period_boundary[i+1]], seed=seed
                 randomp, radii, -2.0, nplanets, range_x = [radius_boundary[j], radius_boundary[j+1]], seed=seed
@@ -119,24 +120,29 @@ pro new_planets, struct=struct, infile=infile, outfile=outfile, verbose=verbose,
 
 ; Random orbital orientation
   if (keyword_set(req)) then begin
-	star[pla].cosi = star[pla].r/(AU_IN_RSUN * star[pla].planet.a) * (-1.0 + 2.0*randomu(seed, nplanets));
+	star[pla].cosi = 0.0 ;star[pla].r/(AU_IN_RSUN * star[pla].planet.a) * (-1.0 + 2.0*randomu(seed, nplanets));
   endif else begin
     star[pla].cosi = -1.0 + 2.0*randomu(seed, nplanets)
   endelse
 
   star[pla].planet.b = (star[pla].planet.a*AU_IN_RSUN / star[pla].r) * star[pla].cosi; assumes circular orbit
  
-  planet_mass = star[pla].planet.r^3.0 ; assume rocky composition 
+  planet_mass = 10.55*4.*!dpi/3.*(star[pla].planet.r/3.9)^3. * $ ; assume MgSiO_3 composition (Seager 2007)
+     (1.0 + (1.0 - 3./5.*0.541)*(2./3.*!dpi*(star[pla].planet.r/3.9)^2.)^0.541)
 
 ; RV amplitude
-  star[pla].planet.k = 2.0*!dpi*sqrt(1.0-star[pla].cosi^2.)*star[pla].planet.a * AU_DAY_IN_M_S * planet_mass /  $
-		(star[pla].planet.p * star[pla].m * MSUN_IN_MEARTH)
+  star[pla].planet.k = RV_AMP*star[pla].planet.p^(-1./3.) * planet_mass * $ 
+	sqrt(1.0-star[pla].cosi^2.) * (star[pla].m)^(-2./3.) 
+
+	;2.0*!dpi*sqrt(1.0-star[pla].cosi^2.)*star[pla].planet.a * AU_DAY_IN_CM_S * planet_mass /  $
+	;	(star[pla].planet.p * star[pla].m * MSUN_IN_MEARTH)
 
 ; Work out transit properties
 
   tra = where(star.planet.n gt 0 and abs(star.planet.b) lt 1.0)
   star[tra].planet.tra = 1
-  star[tra].planet.dep = (REARTH_IN_RSUN * star[tra].planet.r / star[tra].r )^2.0
+  if (keyword_set(nodep)) then star[tra].planet.dep = 0.0 else $
+    star[tra].planet.dep = (REARTH_IN_RSUN * star[tra].planet.r / star[tra].r )^2.0
   star[tra].planet.dur = star[tra].r * star[tra].planet.p * sqrt(1.-(star[tra].planet.b)^2.) / (!PI*star[tra].planet.a*AU_IN_RSUN)
 
   star[tra].planet.durpar = star[tra].planet.r * $

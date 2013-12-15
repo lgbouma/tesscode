@@ -1,4 +1,4 @@
-pro stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=per
+pro stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=per, mag=mag
 
   if (keyword_set(verbose)) then v=1 else v=0
   if (keyword_set(outfile)) then outfile=outfile else outfile='s.sav'
@@ -23,24 +23,28 @@ pro stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=per
 ; what kind of star catalog?
   if (keyword_set(dst)) then begin
     dmax = float(dst)+0.0*r ;72.0 + 128.*r;
-  endif else if (keyword_set(csr)) then begin
-    ilim = 12.0 + 0.*r
-    q = where(r le 0.5)
-    ilim[q] = 13.0
-    dmax = 10.*10.0^(0.2*(ilim-imag))
   endif else if (keyword_set(det)) then begin
     AU_IN_RSUN = 215.093990942
     REARTH_IN_RSUN = 0.0091705248 
-    geom_area = 74.6
+    geom_area = 70 ;74.6
     a = m^(1./3.) * (float(per)/365.25)^(2./3.)   ; in AU
     dur = r * float(per) / (!DPI*a*AU_IN_RSUN)
     exptime = 2.*dur*24.*3600
     dep = (REARTH_IN_RSUN * float(det) / r)^2.0
     sig = dep/7.0
-    rn = 10.*sqrt(4.0*exptime/2.0)
+    rn = 0.*sqrt(4.0*exptime/2.0)
     minphot = (1.+sqrt(1.+4.*sig^2.*rn^2.))/(2.*sig^2.)
     megaph_s_cm2_0mag = 1.6301336 + 0.14733937*(teff-5000.)/5000.
     ilim = -2.5*alog10(minphot/(megaph_s_cm2_0mag * 1D6 * geom_area * exptime))
+    if keyword_set(mag) then begin
+	ilim[where((r le 0.5) and (ilim gt 12))] = 12.0
+        ilim[where((r gt 0.5) and (ilim gt 13))] = 13.0
+    endif
+    dmax = 10.*10.0^(0.2*(ilim-imag))
+  endif else if (keyword_set(mag)) then begin
+    ilim = 12.0 + 0.*r
+    q = where(r le 0.5)
+    ilim[q] = 13.0
     dmax = 10.*10.0^(0.2*(ilim-imag))
   endif
 
@@ -55,23 +59,22 @@ pro stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=per
   print, 'Nstars: ', min(nstars), max(nstars), total(nstars)
 
   template_planet = {$
-                    n: 0, $
+                    n: 0, $   ; planets per star (set to one for now)
                     r: 0.0, $ ; can eventually replace by dblarr(5), $
-                    p: 0.0, $ 
-                    a: 0.0, $
+                    p: 0.0, $ ; Period (days)
+                    a: 0.0, $ ; Semimajor axis (AU)
                     s: 0.0, $ ; incident flux in units of Sun-->Earth flux
-              ;      cosi: 0.0, $
-                    b: 0.0, $
+                    b: 0.0, $ ; Impact parameter (0-1)
 		    k: 0.0, $ ; rv amplitude
-                    tra: 0, $
-                    dep: 0.0, $
-                    dur: 0.0, $
-                    ntra_obs: 0, $
-                    det: 0, $
-                    snr: 0.0, $
- 		    snrtran: 0.0, $
+                    tra: 0, $ ; Transit? (boolean)
+                    dep: 0.0, $ ; Transit depth (0-1)
+                    dur: 0.0, $ ; Transit duration (days)
+                    ntra_obs: 0, $ ; Number of transits observed
+                    det: 0, $  ; Detected?
+                    snr: 0.0, $ ; SNR in phase-folded lightcurve
+ 		    snrtran: 0.0, $ ; SNR per transit
 		    durpar: 0.0, $    ; duration of in+engress (days)
-		    snrgress: 0.0 $   ; SNR of ingress/egress
+		    snrgress: 0.0 $   ; SNR of ingress/egress 
                     }
 
 ;  template_planets = {$
@@ -92,14 +95,14 @@ pro stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=per
 ;                    }
 
   template_coord = {$
-                   ra: 0.0, $
-		   dec: 0.0, $
-                   elon: 0.0, $
-                   elat: 0.0, $
-                   glon: 0.0, $
-                   glat: 0.0, $
-                   d: 0.0, $
-                   fov_r: 0.0 $
+                   ra: 0.0, $   ; RA (deg)
+		   dec: 0.0, $  ; DEC (deg)
+                   elon: 0.0, $ ; Ecliptic Long. (deg)
+                   elat: 0.0, $ ; Ecliptic Lat. (deg)
+                   glon: 0.0, $ ; Galactic Long. (deg)
+                   glat: 0.0, $ ; Galactic Lat. (deg)
+                   d: 0.0, $    ; Distance (pc)
+                   fov_r: 0.0 $ ; Field angle (pixels from axis)
               }
   
   template_mag = {$
@@ -108,7 +111,7 @@ pro stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=per
                  mj: 0.0, $ ; absolute
                  v: 0.0, $ ; apparent
                  i: 0.0, $ ; apparent
-                 j: 0.0 $ 
+                 j: 0.0 $  ; apparent
                  }
  
   template_companion = { $
@@ -121,23 +124,23 @@ pro stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=per
 		 }
 
   template_star = {$
-                  r: 0.0, $
-                  m: 0.0, $
-                  teff: 0.0, $
- 		  cosi: 0.0, $
-                  npointings: 0, $
-                  coord: template_coord, $
+                  r: 0.0, $     ; Radius (solar)
+                  m: 0.0, $     ; Mass (solar)
+                  teff: 0.0, $  ; Effective T (Kelvin)
+ 		  cosi: 0.0, $  ; cos inclination of planets
+                  npointings: 0, $ ; Number of TESS pointings this star gets
+                  coord: template_coord, $ 
                   mag: template_mag, $
                   planet: replicate(template_planet,nplanets), $
-                  p_hz_in: 0.0, $
-                  p_hz_out: 0.0, $
-		  ang_sep: 0.0, $
-		  dx: 0, $ 
-   		  dy: 0, $
-		  npix: 0, $
-		  snr: 0.0, $
- 		  sat: 0, $		;saturation flag
-		  dil: 0.0, $		; dilution factor
+                  p_hz_in: 0.0, $  ; Inner HZ period
+                  p_hz_out: 0.0, $ ; Outer HZ period
+		  ang_sep: 0.0, $  ; Nearest Neighbor (not yet implemented)
+		  dx: 0, $ 	   ; Random subpixel offset
+   		  dy: 0, $	   ; 
+		  npix: 0, $       ; Optimal number of pix in aperture
+		  snr: 0.0, $      ; SNR per hour
+ 		  sat: 0, $        ; saturation flag
+		  dil: 0.0, $      ; dilution factor (0+)
 		  companion: template_companion $
                   }
 

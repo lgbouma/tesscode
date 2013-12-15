@@ -22,7 +22,9 @@ pro calc_noise, $
    sys_limit = sys_limit, $         ; minimum uncertainty in 1 hr of data, in ppm
    verbose=verbose, $               ; request verbose output
    red=red, $		     	    ; consider a redder bandpass
-   al = al, $			    ; Use Al's sky background
+   al_bk = al_bk, $		    ; Use Al's sky background
+   al_phot = al_phot, $             ; Use Al's photomery
+   field_angle=field_angle, $	    ; Field angle for effective area
 ;
 ; optional outputs
 ;
@@ -31,6 +33,7 @@ pro calc_noise, $
    noise_ro=noise_ro,$              ; noise from readout only
    noise_sys=noise_sys, $           ; noise from systematic limit only
    e_star_sub=e_star_sub, $ 	    ; subexposure electron count (for saturation check)
+   
    dilution=dilution		    ; background dilution factor
 ;
 ;
@@ -44,7 +47,11 @@ pro calc_noise, $
   if (keyword_set(sys_limit)) then sys_limit=sys_limit else sys_limit=60.0
   if (keyword_set(verbose)) then v=1 else v=0
   if (keyword_set(red)) then red=red else red=0
-  if (keyword_set(al)) then al=al else al=0
+  if (keyword_set(al_phot)) then al_phot=al_phot else al_phot=0
+  if (keyword_set(al_bk)) then al_bk=al_bk else al_bk=0
+  if (keyword_set(field_angle)) then field_angle=field_angle else field_angle=0.0
+  if (keyword_set(al_phot)) then field_angle=0.0
+  
 
   if (keyword_set(npix_aper)) then begin
      npix_aper=npix_aper
@@ -84,13 +91,15 @@ pro calc_noise, $
 ; electrons from the star
 
   if (red) then  megaph_s_cm2_0mag = 1.3804467 - 0.06911869*(teff-5000.)/5000. $
-  else if (al) then megaph_s_cm2_0mag = 1.7129 + 0.5185*(teff-5000.)/5000. + 2.4616*((teff-5000.)/5000.)^2. $
+  else if (al_phot) then megaph_s_cm2_0mag = 1.7129 + 0.5185*(teff-5000.)/5000. + 2.4616*((teff-5000.)/5000.)^2. $
   ;else megaph_s_cm2_0mag = 1.6301336 + 0.14733937*(teff-5000.)/5000.
   else begin 
 	megaph_s_cm2_0mag = 1.5838 + 0.2878*(teff-3500.)/3500. - 0.1398*((teff-3500.)/3500.)^2.
-  	megaph_s_cm2_0mag[where(teff lt 3500)] = 1.5838
+        cool = where(teff lt 3500.)
+        if (cool[0] ne -1) then megaph_s_cm2_0mag[cool] = 1.5838
   endelse
-  e_star = 10.0^(-0.4*imag) * 1D6 * megaph_s_cm2_0mag * geom_area * exptime * frac_aper
+  e_star = 10.0^(-0.4*imag) * 1D6 * megaph_s_cm2_0mag * $
+	geom_area * cos(!DPI * field_angle/180.)* exptime * frac_aper
   e_star_sub = e_star*subexptime/exptime
 
   if (v) then print, 'e_star = ', e_star
@@ -98,9 +107,10 @@ pro calc_noise, $
 ; e/pix from zodi
 
   dlat = (abs(elat)-90.)/90.
-  if (al) then vmag_zodi=22. $
+  if (al_bk) then vmag_zodi=22. $
   else vmag_zodi = 23.345 - 1.148*dlat^2.
-  e_pix_zodi = 10.0^(-0.4*(vmag_zodi-22.8)) * 2.39D-3 * geom_area * omega_pix * exptime
+  e_pix_zodi = 10.0^(-0.4*(vmag_zodi-22.8)) * 2.39D-3 * $
+	geom_area * cos(!DPI * field_angle/180.) * omega_pix * exptime
   if (red) then e_pix_zodi = e_pix_zodi*0.828
 
   if (v) then print, 'vmag_zodi = ', vmag_zodi
@@ -118,9 +128,10 @@ pro calc_noise, $
   p = [18.9733D0, 8.833D0, 4.007D0, 0.805D0]
 
   imag_bgstars = p[0] + p[1]*dlat + p[2]*dlon^(p[3])
-  e_pix_bgstars = 10.0^(-0.4*imag_bgstars) * 1.7D6 * geom_area * omega_pix * exptime
+  e_pix_bgstars = 10.0^(-0.4*imag_bgstars) * 1.7D6 * $
+	geom_area * cos(!DPI * field_angle/180.) * omega_pix * exptime
   if (red) then e_pix_bgstars = e_pix_bgstars*0.828
-  if (al) then e_pix_bgstars = 0.0
+  if (al_bk) then e_pix_bgstars = 0.0
 
   if (v) then print, 'imag_bgstars = ', imag_bgstars
   if (v) then print, 'e_pix_bgstars = ', e_pix_bgstars
