@@ -33,7 +33,7 @@
    Astrophysics and Space Research, Massachusetts Institute of
    Technology, Cambridge, MA 02139}
 
-\slugcomment{TESS Science Memo No.\ 1, Version 3, 2013~December~15}
+\slugcomment{TESS Science Memo No.\ 2, Version 3, 2013~December~15}
 
 \begin{abstract}
 
@@ -130,24 +130,24 @@ Finally, we multiply all of the spectra by $10^{0.4(0.035)}\approx
 1.033$ because the $I$ magnitude of Vega is $0.035$ (Bessell et al.\
 1998, Table A1).
 
-Our model for the TESS spectral response function is the product of the CCD's quantum efficiency and the filter transmission profile. The quantum efficiency is described in the file file\footnote{{\tt QE75um\_m70.dat}} provided to the author by Roland Vanderspek. The optical filter is currently assumed to be a long-pass filter with a cut-on wavelength of 6000 $\AA$. The resulting spectral response function is also plotted in Figure~\ref{fig:bandpass} along with the traditional $VRI$ bandpasses (obtained from Table~7 of Pickles 1998). We also budget a filter transmission of 95$\%$, but that factor is considered part of the effective area in Section \ref{sec:aeff}.
+\section{TESS Spectral Response}
+
+Our model for the TESS spectral response function is the product of the CCD's quantum efficiency and the filter transmission profile. The other factors that describe the instrumental throughput have little spectral dependence, so they are factored out and considered when calculating the effective area in Section \ref{sec:aeff}. 
+
+The quantum efficiency is provided from Lincoln Labs\footnote{{\tt QE100um\_m70.dat}} (the CCD manufacturer) for a silicon depletion depth of 100 $\mu$m. The optical filter is currently assumed to be a long-pass filter with a cut-on wavelength of 6000 $\rm \AA$. The resulting spectral response function is also plotted in Figure~\ref{fig:bandpass} along with the Sloan $griz$ bandpasses and the Cousins $I$ band (obtained from Table~7 of Pickles 1998). The instrument throughput requirements budget a transmission efficiency for the filter of 95$\%$ redward of 6000 $\rm \AA$, but that factor is considered part of the effective area in Section \ref{sec:aeff}.
 %As a function of wavelength, this file tabulates the product of $25\pi$~cm$^{2}$ (the geometric area of the lens design at that time), the lens throughput, and the CCD quantum efficiency.  To obtain the dimensionless response function $T_\lambda$ we divide by $25\pi$~cm$^{2}$. 
 \begin{figure}
 \begin{center}
 \includegraphics[width=0.7\textwidth]{bandpass.eps}
 \end{center}
-\caption{Spectral response functions for the TESS bandpass (blue)
-and the traditional $VRI$ bandpasses (green, red, and yellow).
-The $VRI$ functions have been arbitrarily normalized to
-a maximum of unity. The TESS function gives the actual
-probability for a photon of a given wavelength to reach the
-detector and be recorded.}
+\caption{Spectral response functions for the TESS bandpass (blue), the Sloan $griz$ bandpasses (green, red, brown, and yellow), and Cousins $I$ (magenta). The $griz$ functions have been normalized to
+a unity at the maximum of the $r$ band; their relative shapes are enveloped by the CCD quantum effieciency. The Cousins $I$ band is arbitrarily normalized to unity. The TESS function gives shows the product of the quantum efficiency and longpass filter.}
 \label{fig:bandpass}
 \end{figure}
  
 Figures \ref{fig:pickles1} and \ref{fig:pickles2} show the photon flux
 densities $\Gamma(0,s)$ for various spectral types, after performing
-these calibrations. These plots also show the $VRI$ and TESS bandpasses.
+these calibrations. These plots also show the Sloan $gr$, Cousins $I$, and TESS bandpasses.
 
 \begin{figure}
 \begin{center}
@@ -156,7 +156,7 @@ these calibrations. These plots also show the $VRI$ and TESS bandpasses.
 \caption{Photon flux densities $\Gamma(0,s)$ for stars of various
 spectral types, based on the empirical library of Pickles~(1998) and
 calibrated as described in the text. Spectral response functions are also shown
-for Johnson $V$ (green), Cousins $R$ (red), Cousins $I$ (yellow)
+for Sloan $g$ (green) and $r$ (red), Cousins $I$ (magenta), 
 and TESS (blue).}
 \label{fig:pickles1}
 \end{figure}
@@ -168,7 +168,7 @@ and TESS (blue).}
 \caption{Photon flux densities $\Gamma(0,s)$ for stars of various
 spectral types, based on the empirical library of Pickles~(1998) and
 calibrated as described in the text. Spectral response functions are also shown
-for Johnson $V$ (green), Cousins $R$ (red), Cousins $I$ (yellow)
+for Sloan $g$ (green) and $r$ (red), Cousins $I$ (magenta), 
 and TESS (blue).}
 \label{fig:pickles2}
 \end{figure}
@@ -188,12 +188,12 @@ between $T_{\rm eff}$ and spectral type is from Pickles (1998).}. The mean is ab
 that was expected, based on the considerations of Section 1.
 The piecewise-polynomial fit shown in Figure~\ref{fig:ph_versus_teff} is
 \be
-\Gamma_T(0,s)~[10^6~{\rm ph~s}^{-1}{\rm cm}^{-2}] = 1.5838, ~~ T \le 3500~{\rm K} 
+\Gamma_T(0,s)~[10^6~{\rm ph~s}^{-1}{\rm cm}^{-2}] = 1.6685, ~~ T \le 3500~{\rm K} 
 \ee
 \be
-\Gamma_T(0,s) = 1.5838 + 
-0.2878 \left( \frac{T_{\rm eff} - 3500}{3500~{\rm K}} \right)
--0.1398 \left( \frac{T_{\rm eff} - 3500}{3500~{\rm K}} \right)^2, ~~ T > 3500~{\rm K}
+\Gamma_T(0,s) = 1.6685 + 
+0.2145 \left( \frac{T_{\rm eff} - 3500~{\rm K}}{3500~{\rm K}} \right)
+-0.0945 \left( \frac{T_{\rm eff} - 3500~{\rm K}}{3500~{\rm K}} \right)^2, ~~ T > 3500~{\rm K}
 %\Gamma_T(0,s)~[10^6~{\rm ph~s}^{-1}{\rm cm}^{-2}] = 1.6301 + (2.9468\times 10^{-5}) (T_{\rm eff}~[{\rm K}] - 5000)
 \ee
 The results are also given in Table~1.  To obtain the TESS count rate
@@ -204,16 +204,15 @@ of the TESS aperture described in the next section.
 
 \section{Effective Area}
 \label{sec:aeff}
-While the quantum efficiency and filter bandpass capture the TESS spectral response, 
-we still must account for the optical throughput and its effect on the geometric area of the lens. 
+While the TESS spectral response captures the quantum efficiency and filter bandpass, 
+we still must account for the optical throughput and its effect on the geometric area of the lens. The throughput factors are assumed to have little or no spectral dependence; they simply convert the geometric area to the effective area of the lens.
+
 The geometric area is calculated simply from the entrance pupil diameter (EPD):
 \be
 A_{\rm geom} = \frac{\pi}{4} \left( \frac{\rm EPD} {\rm cm} \right )^2
 \ee
-The throughput factors are wrapped into the effective area since they are assumed to have little or no spectral dependence. 
-Here, we budget an optical efficiency of 0.84 and a filter transmission of 0.95.
-The effective area also departs from the geometric area as one moves off-axis by a factor of $\cos\theta$, 
-where $\theta$ is the field angle. Putting these factors together, we define the effective area as
+The TESS throughput requirement budgets a filter transmission of 0.95 and an efficiency for the remaining optical elements (14 vacuum-glass interfaces and one vacuum-CCD interface) of 0.84. The effective area also departs from the geometric area as one moves off-axis by a factor of $\cos\theta$, 
+where $\theta$ is the field angle (measured from the optical axis). Putting these factors together, we define the effective area as
 \be
 A_{\rm eff} = (0.84)(0.95) \frac{\pi}{4} \left( \frac{\rm EPD} {\rm cm} \right )^2 \cos\theta
 \ee
@@ -228,13 +227,14 @@ From the CSR design, where the EPD was 9.7 cm, $A_{\rm eff}$ is $(57.6)\cos\thet
 a given spectral type or effective temperature.
 Black points are computed as described in this memo.
 Red points are from prior calculations during the Concept Study,
-based on blackbody spectra.}
+based on blackbody spectra. While the photon fluxes are similar at 5000 k,
+the CSR assumed an effective area of 70 cm$^2$ rather than 57.6 cm$^2$.}
 \label{fig:ph_versus_teff}
 \end{figure}
 
 Finally, one should also
-account for any loss of light due to the finite photometric aperture,
-as well as any other inefficiencies that are not captured above. 
+account for any loss of light due to the finite photometric aperture, which is covered in the exposure time calculator, 
+as well as any other inefficiencies that are not captured above. For instance, antireflection coatings may lose efficiency off-axis, and the filter cut-on wavelength will vary slightly with field angle. However, these effects cannot be modeled until the design evolves further.
 
 \section{Checks and comparisons}
 
@@ -266,28 +266,28 @@ Table F-3 of the CSR Table F-3 states that a signal-to-noise ratio of 120 will b
 }
 
 \startdata
-   a0v &   9549 &   1.82 \\
-   f5v &   6531 &   1.73 \\
-   f6v &   6280 &   1.71 \\
-   f8v &   6039 &   1.72 \\
-   g0v &   5807 &   1.69 \\
-   g2v &   5636 &   1.70 \\
-   g5v &   5584 &   1.70 \\
-   g8v &   5333 &   1.68 \\
-   k0v &   5187 &   1.69 \\
-   k2v &   4886 &   1.69 \\
-   k3v &   4497 &   1.66 \\
-   k4v &   4345 &   1.65 \\
-   k5v &   4187 &   1.64 \\
-   k7v &   3999 &   1.62 \\
-   m0v &   3801 &   1.62 \\
-   m1v &   3681 &   1.59 \\
-   m2v &   3548 &   1.60 \\
- m2.5v &   3443 &   1.57 \\
-   m3v &   3303 &   1.56 \\
-   m4v &   3111 &   1.58 \\
-   m5v &   2951 &   1.59 \\
-   m6v &   2697 &   1.76 \\
+   a0v &   9549 &   1.87 \\
+   f5v &   6531 &   1.79 \\
+   f6v &   6280 &   1.77 \\
+   f8v &   6039 &   1.78 \\
+   g0v &   5807 &   1.75 \\
+   g2v &   5636 &   1.76 \\
+   g5v &   5584 &   1.76 \\
+   g8v &   5333 &   1.74 \\
+   k0v &   5187 &   1.75 \\
+   k2v &   4886 &   1.75 \\
+   k3v &   4497 &   1.73 \\
+   k4v &   4345 &   1.72 \\
+   k5v &   4187 &   1.71 \\
+   k7v &   3999 &   1.69 \\
+   m0v &   3801 &   1.69 \\
+   m1v &   3681 &   1.67 \\
+   m2v &   3548 &   1.68 \\
+ m2.5v &   3443 &   1.66 \\
+   m3v &   3303 &   1.65 \\
+   m4v &   3111 &   1.69 \\
+   m5v &   2951 &   1.71 \\
+   m6v &   2697 &   1.91 \\
 \enddata
 
 \end{deluxetable}
