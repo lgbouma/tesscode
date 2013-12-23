@@ -94,9 +94,14 @@ pro calc_noise, $
   else if (al_phot) then megaph_s_cm2_0mag = 1.7129 + 0.5185*(teff-5000.)/5000. + 2.4616*((teff-5000.)/5000.)^2. $
   ;else megaph_s_cm2_0mag = 1.6301336 + 0.14733937*(teff-5000.)/5000.
   else begin 
-	megaph_s_cm2_0mag = 1.5838 + 0.2878*(teff-3500.)/3500. - 0.1398*((teff-3500.)/3500.)^2.
-        cool = where(teff lt 3500.)
-        if (cool[0] ne -1) then megaph_s_cm2_0mag[cool] = 1.5838
+; 75 um depletion
+;	megaph_s_cm2_0mag = 1.5838 + 0.2878*(teff-3500.)/3500. - 0.1398*((teff-3500.)/3500.)^2.
+;       cool = where(teff lt 3500.)
+;       if (cool[0] ne -1) then megaph_s_cm2_0mag[cool] = 1.5838
+; 100 um depletion
+       megaph_s_cm2_0mag = 1.6685 + 0.2145*(teff-3500.)/3500. - 0.0945*((teff-3500.)/3500.)^2.
+       cool = where(teff lt 3500.)
+       if (cool[0] ne -1) then megaph_s_cm2_0mag[cool] = 1.6685
   endelse
   e_star = 10.0^(-0.4*imag) * 1D6 * megaph_s_cm2_0mag * $
 	geom_area * cos(!DPI * field_angle/180.)* exptime * frac_aper
