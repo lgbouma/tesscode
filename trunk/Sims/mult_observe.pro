@@ -1,6 +1,7 @@
 pro mult_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, outfile=outfile, $
 	fov=fov, geomarea=geomarea, readnoise=readnoise, tranmin=tranmin, thresh=thresh, $
-	frac_file=frac_file, nodil=nodil, red=red, al_bk=al_bk, al_phot=al_phot, sys_limit=sys_limit, keep_ntra=keep_ntra
+	frac_file=frac_file, nodil=nodil, red=red, al_bk=al_bk, al_phot=al_phot, al_aper=al_aper, $
+	sys_limit=sys_limit, keep_ntra=keep_ntra, duty_cycle=duty_cycle
 
  REARTH_IN_RSUN = 0.0091705248
 ;;;;;; basic parameters here
@@ -17,7 +18,9 @@ pro mult_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
   if (keyword_set(al_bk)) then al_bk=al_bk else al_bk=0
   if (keyword_set(al_phot)) then al_phot=al_phot else al_phot=0
   if (keyword_set(sys_limit)) then sys_limit=sys_limit else sys_limit=60.0
-  ;SYS_LIMIT = 60.0; ppm in 1 hour
+  if (keyword_set(duty_cycle)) then duty_cycle=duty_cycle else duty_cycle=100.0
+  apo_blank = (DWELL_TIME-DOWNLINK_TIME)*(1.0-duty_cycle/100.0)
+ ;SYS_LIMIT = 60.0; ppm in 1 hour
   E_PIX_RO = 10.0 
   SUB_EXP_TIME = 2.0
   ; PIX_SCALE = 20.0; arcsec per pixel side
@@ -53,7 +56,7 @@ pro mult_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
   if ~(keyword_set(keep_ntra)) then begin
     planet[tra].ntra_obs = $
       n_eclip_blank(planet[tra].p, DWELL_TIME, $
-      2.0*double(star[traid].npointings), periblank=DOWNLINK_TIME)
+      2.0*double(star[traid].npointings), periblank=DOWNLINK_TIME, apoblank=apo_blank)
   endif
 
 ; for each observed transiting planet, calculate snr
@@ -117,9 +120,15 @@ pro mult_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
   ; Calculate SNR in phase-folded lightcurve
   exptime = double(planet[obs].ntra_obs) * $
     planet[obs].dur * 24.0 * 3600.
-  frac = frac_fits[star[obsid].dx, star[obsid].dy, fov_ind,star[obsid].npix-1]
+  if (keyword_set(al_aper)) then begin
+	frac=1.0
+	npix_use=9.
+  endif  else begin 
+	frac = frac_fits[star[obsid].dx, star[obsid].dy, fov_ind,star[obsid].npix-1]
+	npix_use = star[obsid].npix
+  endelse
   calc_noise, star[obsid].mag.i, exptime, noise, $
-		 npix_aper = star[obsid].npix, $
+		 npix_aper = npix_use, $
 		 frac_aper = frac, $
   		 field_angle = field_angle, $
                  teff=star[obsid].teff, $
@@ -148,9 +157,15 @@ pro mult_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
 
   ; Calculate SNR per transit
   exptime =  planet[obs].dur * 24.0 * 3600.
-  frac = frac_fits[star[obsid].dx, star[obsid].dy, fov_ind, star[obsid].npix-1]
+  if (keyword_set(al_aper)) then begin
+	frac=1.0
+	npix_use=9.
+  endif  else begin 
+	frac = frac_fits[star[obsid].dx, star[obsid].dy, fov_ind,star[obsid].npix-1]
+	npix_use = star[obsid].npix
+  endelse
   calc_noise, star[obsid].mag.i, exptime, noise, $
-		 npix_aper = star[obsid].npix, $
+		 npix_aper = npix_use, $
 		 frac_aper = frac, $
  		 field_angle = field_angle, $
                  teff = star[obsid].teff, $

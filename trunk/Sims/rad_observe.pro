@@ -1,6 +1,7 @@
 pro rad_observe, struct=struct, infile=infile, outfile=outfile, filen=filen, $
 	fov=fov, geomarea=geomarea, readnoise=readnoise, tranmin=tranmin, thresh=thresh, $
-	frac_file=frac_file, nodil=nodil, red=red, al_bk=al_bk, al_phot=al_phot, sys_limit=sys_limit, keep_ntra=keep_ntra
+	frac_file=frac_file, nodil=nodil, red=red, al_bk=al_bk, al_phot=al_phot, sys_limit=sys_limit, $ 
+	keep_ntra=keep_ntra, duty_cycle=duty_cycle
 
  REARTH_IN_RSUN = 0.0091705248
 ;;;;;; basic parameters here
@@ -17,6 +18,8 @@ pro rad_observe, struct=struct, infile=infile, outfile=outfile, filen=filen, $
   if (keyword_set(al_bk)) then al_bk=al_bk else al_bk=0
   if (keyword_set(al_phot)) then al_phot=al_phot else al_phot=0
   if (keyword_set(sys_limit)) then sys_limit=sys_limit else sys_limit=60.0
+  if (keyword_set(duty_cyce)) then duty_cycle=duty_cycle else duty_cycle=100.0
+  apo_blank = (DWELL_TIME-DOWNLINK_TIME)*duty_cycle/100.0
   ;SYS_LIMIT = 60.0; ppm in 1 hour
   E_PIX_RO = 10.0 
   SUB_EXP_TIME = 2.0

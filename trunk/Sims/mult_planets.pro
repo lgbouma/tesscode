@@ -1,5 +1,5 @@
 pro mult_planets, sstruct=sstruct, pstruct=pstruct, infile=infile, outfile=outfile, verbose=verbose, $
-	csr=csr, fressin=fressin, petigura=petigura, dressing=dressing, req=req, nodep=nodep
+	csr=csr, fressin=fressin, petigura=petigura, dressing=dressing, req=req, nodep=nodep, plotname=plotname
 
   AU_IN_RSUN = 215.093990942D0          ; in solar radii
   REARTH_IN_RSUN = 0.0091705248         ; in solar radii
@@ -42,7 +42,7 @@ pro mult_planets, sstruct=sstruct, pstruct=pstruct, infile=infile, outfile=outfi
   if (keyword_set(csr)) then begin
 
 ; Previous CSR assumptions
-
+     nplanets=nstars
      planet = replicate(template_planet, nstars)
      randomp, period_ran, -1.0, nstars, range_x = [2., 500.], seed=seed
      planet.p = period_ran
@@ -83,7 +83,7 @@ pro mult_planets, sstruct=sstruct, pstruct=pstruct, infile=infile, outfile=outfi
 		periods = fltarr(binplanets) + 10^((alog10(period_boundary[i])+alog10(period_boundary[i+1]))/2.0)
 		radii   = fltarr(binplanets) + 10^((alog10(radius_boundary[j])+alog10(radius_boundary[j+1]))/2.0)
               endif else begin
-                if(j eq 0) then radpow = 0.0 else radpow = -1.8
+                if(j eq 0) then radpow = 0.0 else radpow = -1.7
                 randomp, periods, -1.0, binplanets, range_x = [period_boundary[i], period_boundary[i+1]], seed=seed
                 randomp, radii, radpow, binplanets, range_x = [radius_boundary[j], radius_boundary[j+1]], seed=seed
               endelse 
@@ -220,13 +220,13 @@ pro mult_planets, sstruct=sstruct, pstruct=pstruct, infile=infile, outfile=outfi
             ') = ', n_elements(q), 100.*float(n_elements(q))/float(n_elements(planet)), '%'
   endfor
 
-; Plot the period and radius distributions
-
   !p.multi=[0,2,2]
   plotsym,0,/fill
   !p.charsize=2
 
-  plot, planet.p, planet.r, psym=3, /ynozero, $
+  plotind = floor(double(nplanets)*randomu(seed, round(double(nplanets)/100.)))
+  print, 'Plotting ', n_elements(plotind), ' points'
+  plot, planet[plotind].p, planet[plotind].r, psym=3, /ynozero, $
         title='All planets', $
         /xlog, xsty=1, xra=[0.5,100], $
       ;  ysty=1, yra=[0.5,4.5], $
@@ -251,4 +251,40 @@ pro mult_planets, sstruct=sstruct, pstruct=pstruct, infile=infile, outfile=outfi
 
   endif
 
+
+  if (keyword_set(plotname)) then begin
+    ; Plot the period and radius distributions 
+    set_plot, 'ps'
+    device,filen=plotname,/encapsulated,xsize=7.0,ysize=7.0,/inches,$
+           /color,bits_per_pixel=8,/isolatin,/helvetica
+    !p.font=0
+    !p.charsize=0.8
+    !p.multi=[0,2,2]
+    plotsym,0,/fill
+
+  plotind = floor(double(nplanets)*randomu(seed, round(double(nplanets)/10.)))
+  print, 'Plotting ', n_elements(plotind), ' points'
+  plot, planet[plotind].p, planet[plotind].r, psym=3, /ynozero, $
+        title='10% of all planets', $
+        /xlog, /ylog, xsty=1, xra=[0.5,500], $
+        ysty=1, yra=[0.5,30], $
+        xtit='Period [d]', ytit='Planet radius'
+
+  cgHistoPlot, alog10(planet.r), nbins=80, xtitle='log(Planet Radius)', ytitle='', title='Radius Distribution'
+
+  cgHistoPlot, alog10(planet.p), nbins=80, xtitle='log(Period [days])', ytitle='', title='Period Distribution'
+
+  plot, planet[tra].p, planet[tra].r, psym=3, /ynozero, $
+        title='All transiting planets', $
+        /xlog, /ylog, xsty=1, xra=[0.5,500], $
+        ysty=1, yra=[0.5,30], $
+        xtit='Period [d]', ytit='Planet radius'
+
+  device,/close
+
+  set_plot,'x'
+  !p.font=-1
+  !p.thick=1 & !x.thick=1 & !y.thick=1 & !p.charthick=1 & !p.charsize=1
+
+  endif
 end
