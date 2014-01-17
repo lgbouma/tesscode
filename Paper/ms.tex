@@ -4,11 +4,13 @@
 
 \def \teff {T_{\rm eff}}
 
+\def \phir {\Phi_{\rm R}}
+
 \begin{document}
 
 \title{Simulating the Planet Yield of the Transiting Exoplanet Survey Satellite}
 
-\author{Peter W. Sullivan, Josua N. Winn, Roland K. Vanderspek, George R. Ricker}
+\author{Peter W. Sullivan, Courtney D. Dressing, Josua N. Winn, Roland K. Vanderspek, George R. Ricker}
 %\altaffiltext{1}{MIT-Kavli Institute for Astrophysics and Space Research}
 
 %\begin{abstract}
@@ -16,21 +18,23 @@
 %\end{abstract}
 
 \section{Introduction}
-Discuss Kepler results, shortcomings of ground-based surveys.
+\subsection{Stellar population}
+What is the radius function of the local solar neighborhood? (plot of $\phir$)
+\subsection{Planet population}
+Kepler results and the number of expected (transiting) planets in the nearest $\sim$100 pc. Should we include Petigura rates or Dressing-Charbonneau rates?
 
 \section{Description of TESS}
 \subsection{Mission and survey}
 Image showing number of pointings vs. ecliptic latitude
 \subsection{Optics and CCD}
-FOV, EPD, PSF, bandpass, noise
+FOV, EPD, PSF, bandpass, noise. 
+Can we say ``as we will present at PDR"?
 
 \section{Simulations}
 \subsection{Star Catalog}
-Luminosity function, counts vs. spectral type
+How we select from $\phir$, Counts vs. spectral type
 \subsection{Background Model}
-Zodiacal light, unresolved stars
-\subsection{Planet Distribution}
-Fressin rates, plot of radius vs. period
+Zodiacal light, Redo unresolved star analysis?
 \subsection{Observing model}
 Noise model, observed number of transits, detection thresholds
 
@@ -39,7 +43,7 @@ Noise model, observed number of transits, detection thresholds
 \subsection{Habitability of the TESS-detected planets}
 Plot of $S$ vs. $\teff$ for detected planets
 \subsection{Observations of the Kepler Objects of Interest}
-Histogram of transit timing precision
+Histogram of transit timing precision.
 
 \section{Follow-up of the TESS detections}
 \subsection{Photometry}
@@ -58,7 +62,39 @@ Plot of RV $K$ vs. ($I_C$ and/or $V$) magnitude.
 
 \acknowledgements
 
-%\clearpage
-%\bibliography{ms}
+\clearpage
+
+\begin{thebibliography}{}
+
+\bibitem[Binney \& Merrifield(1998)]{1998gaas.book.....B} Binney, J.,
+  \& Merrifield, M.\ 1998, Galactic astronomy (Princeton University
+  Press)
+
+\bibitem[Bochanski et al.(2010)]{2010AJ....139.2679B} Bochanski,
+  J.~J., Hawley, S.~L., Covey, K.~R., et al.\ 2010, \aj, 139, 2679
+
+%\bibitem[Boyajian et al.(2012)]{2012ApJ...757..112B} Boyajian, T.~S.,
+%  von Braun, K., van Belle, G., et al.\ 2012, \apj, 757, 112
+
+\bibitem[Covey et al.(2008)]{2008AJ....136.1778C} Covey, K.~R.,
+  Hawley, S.~L., Bochanski, J.~J., et al.\ 2008, \aj, 136, 1778
+
+\bibitem[Cruz et al.(2007)]{2007AJ....133..439C} Cruz, K.~L., Reid,
+  I.~N., Kirkpatrick, J.~D., et al.\ 2007, \aj, 133, 439
+
+\bibitem[Reid et al.(2002)]{2002AJ....124.2721R} Reid, I.~N., Gizis,
+  J.~E., \& Hawley, S.~L.\ 2002, \aj, 124, 2721
+
+\bibitem[Reid \& Hawley(2005)]{2005nlds.book.....R} Reid, I.~N., \&
+  Hawley, S.~L.\ 2005, New Light on Dark Stars: Red Dwarfs, Low-Mass
+  Stars, Brown Dwarfs (Springer-Praxis)
+
+\bibitem[Zheng et al.(2001)]{2001ApJ...555..393Z} Zheng, Z., Flynn,
+  C., Gould, A., Bahcall, J.~N., \& Salim, S.\ 2001, \apj, 555, 393
+
+\bibitem[Zheng et al.(2004)]{2004ApJ...601..500Z} Zheng, Z., Flynn,
+  C., Gould, A., Bahcall, J.~N., \& Salim, S.\ 2004, \apj, 601, 500
+
+\end{thebibliography}
 
 \end{document}
