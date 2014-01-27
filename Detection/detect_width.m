@@ -23,7 +23,7 @@ NTmin = ceil(NW./Pwmin);
 NTmax = ceil(NW./Pwmax);
 
 %Number of stars
-Nstar = 5e2;
+Nstar = 5e5;
 % Mean of transit trials:
 TSM = zeros(1,sum(NW));
 tsmind = cumsum(NW);
@@ -71,17 +71,17 @@ for jj=1:Nstar
       % Take the ntransit>1 cases 
       TSMmin = TSPmin(csmin>1).*sqrt(W(ii)*csmin(csmin>1));
       TSMmax = TSPmax(csmax>1).*sqrt(W(ii)*csmax(csmax>1));
-      minevent = (TSPmin>NSIG);
-      maxevent = (TSPmax>NSIG);
+      minevent = (TSMmin>NSIG);
+      maxevent = (TSMmax>NSIG);
       nminevents = sum(minevent);
       nmaxevents = sum(maxevent);
       %display([num2str(nevents) ' events on trial ' num2str(jj)]);
       if (nminevents>0)
-        hisigs = [hisigs TSMmin(minevent)];
+        hisigs = [hisigs TSMmin(minevent)'];
         %display([num2str(nminevents) ' events on trial ' num2str(jj)]);
       end 
       if (nmaxevents>0)
-        hisigs = [hisigs TSMmax(maxevent)];
+        hisigs = [hisigs TSMmax(maxevent)'];
       end 
     end
   end
