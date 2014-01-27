@@ -69,8 +69,8 @@ for jj=1:Nstar
       TSPmax = sum(reshape(TSWmax, Pwmax(ii), NTmax(ii)),2)./csmax;
       
       % Take the ntransit>1 cases 
-      TSMmin = TSPmin(csmin>1);
-      TSMmax = TSPmax(csmax>1);
+      TSMmin = TSPmin(csmin>1).*sqrt(W(ii)*csmin(csmin>1));
+      TSMmax = TSPmax(csmax>1).*sqrt(W(ii)*csmax(csmax>1));
       minevent = (TSPmin>NSIG);
       maxevent = (TSPmax>NSIG);
       nminevents = sum(minevent);
