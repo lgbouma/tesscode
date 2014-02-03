@@ -1,7 +1,7 @@
 pro mult_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, outfile=outfile, $
 	fov=fov, geomarea=geomarea, readnoise=readnoise, tranmin=tranmin, thresh=thresh, $
 	frac_file=frac_file, nodil=nodil, red=red, al_bk=al_bk, al_phot=al_phot, al_aper=al_aper, $
-	sys_limit=sys_limit, keep_ntra=keep_ntra, duty_cycle=duty_cycle
+	sys_limit=sys_limit, keep_ntra=keep_ntra, duty_cycle=duty_cycle, bk_file=bk_file
 
  REARTH_IN_RSUN = 0.0091705248
 ;;;;;; basic parameters here
@@ -30,6 +30,7 @@ pro mult_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
   npix_max = 49
   npix_min = 1
   if (keyword_set(frac_file)) then frac_file=frac_file else frac_file='../ExpTimeCalc/frac24_1p0.fits'
+  if (keyword_set(bk_file)) then bk_fits = mrdfits(bk_file) else bk_fits=0
   frac_fits = mrdfits(frac_file)
   ;fov = 24.0
   ;n_segs = 13
@@ -91,12 +92,14 @@ pro mult_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
 		 npix_aper=(ii+1), $
 		 frac_aper=frac, $
                  field_angle=field_angle, $
+  		 fov_ind=fov_ind, $
                  teff=star[obsid].teff, $
                  e_pix_ro = E_PIX_RO,$
 		 subexptime=SUB_EXP_TIME, $
                  geom_area = GEOM_AREA, $
                  sys_lim = SYS_LIMIT, $
                  pix_scale = PIX_SCALE, $
+		 bk_p = bk_fits, $
                  elon=star[obsid].coord.elon, $
                  elat=star[obsid].coord.elat, $
 		 dilution=dil, $
@@ -131,12 +134,14 @@ pro mult_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
 		 npix_aper = npix_use, $
 		 frac_aper = frac, $
   		 field_angle = field_angle, $
+		 fov_ind = fov_ind, $
                  teff=star[obsid].teff, $
                  e_pix_ro = E_PIX_RO,$
 		 subexptime=SUB_EXP_TIME, $
                  geom_area = GEOM_AREA, $
                  sys_lim = SYS_LIMIT, $
                  pix_scale = PIX_SCALE, $
+		 bk_p = bk_fits, $
                  elon=star[obsid].coord.elon, $
                  elat=star[obsid].coord.elat, $
 		 dilution=dil, $
@@ -168,12 +173,14 @@ pro mult_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
 		 npix_aper = npix_use, $
 		 frac_aper = frac, $
  		 field_angle = field_angle, $
+		 fov_ind=fov_ind, $
                  teff = star[obsid].teff, $
-                 e_pix_ro = E_PIX_RO,$
+                 e_pix_ro = E_PIX_RO, $
 		 subexptime=SUB_EXP_TIME, $
                  geom_area = GEOM_AREA, $
                  sys_lim = SYS_LIMIT, $
                  pix_scale = PIX_SCALE, $
+		 bk_p = bk_fits, $
                  elon=star[obsid].coord.elon, $
                  elat=star[obsid].coord.elat, $
 		 dilution=dil, $

@@ -25,6 +25,8 @@ pro calc_noise, $
    al_bk = al_bk, $		    ; Use Al's sky background
    al_phot = al_phot, $             ; Use Al's photomery
    field_angle=field_angle, $	    ; Field angle for effective area
+   fov_ind=fov_ind, $ 		    ; FOV index for bk model (0-3)
+   bk_p=bk_p, $		    	    ; Background polynomial fit
 ;
 ; optional outputs
 ;
@@ -126,13 +128,23 @@ pro calc_noise, $
   euler, elon, elat, glon, glat, select=5
   if (v) then print, 'glon, glat = ', glon, glat
 
-  dlat = abs(glat)/40.0D0
   dlon = glon
   q = where(dlon gt 180.) & if(q[0] ne -1) then dlon[q] = 360.-dlon[q]
   dlon = abs(dlon)/180.0D0
-  p = [18.9733D0, 8.833D0, 4.007D0, 0.805D0]
-
-  imag_bgstars = p[0] + p[1]*dlat + p[2]*dlon^(p[3])
+  if keyword_set(bk_p) then begin
+    ;print, 'Using new model'
+    p = bk_p[fov_ind,*]
+    dlat = abs(glat)/90.0D0
+    imag_bgstars = p[*,0] + $
+	p[*,1]*(1.0-exp(-dlon/p[*,2])) + $
+	p[*,3]*(1.0-exp(-dlat/p[*,4])) + $
+	p[*,5]*sqrt(dlon*dlat)
+  endif else begin 
+    dlat = abs(glat)/40.0D0
+    p = [18.9733D0, 8.833D0, 4.007D0, 0.805D0]
+    imag_bgstars = p[0] + p[1]*dlat + p[2]*dlon^(p[3])
+  endelse
+  
   e_pix_bgstars = 10.0^(-0.4*imag_bgstars) * 1.7D6 * $
 	geom_area * cos(!DPI * field_angle/180.) * omega_pix * exptime
   if (red) then e_pix_bgstars = e_pix_bgstars*0.828
