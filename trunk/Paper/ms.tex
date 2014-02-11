@@ -2,15 +2,20 @@
 
 \bibliographystyle{apj}
 
+%COMPILE WITH LaTeX->PS. FIGURES ARE EPS
+
 \def \teff {T_{\rm eff}}
 
 \def \phir {\Phi_{\rm R}}
+
+\def \fov {24$^{\circ}$ }
+\def \aeff {69.1 cm$^2$ }
 
 \begin{document}
 
 \title{Simulating the Planet Yield of the Transiting Exoplanet Survey Satellite}
 
-\author{Peter W. Sullivan, Courtney D. Dressing, Josua N. Winn, Roland K. Vanderspek, George R. Ricker}
+\author{Peter W. Sullivan, Courtney D. Dressing, Josua N. Winn, Alan M. Levine, Roland K. Vanderspek, George R. Ricker}
 %\altaffiltext{1}{MIT-Kavli Institute for Astrophysics and Space Research}
 
 %\begin{abstract}
@@ -25,18 +30,48 @@ Kepler results and the number of expected (transiting) planets in the nearest $\
 
 \section{Description of TESS}
 \subsection{Mission and survey}
-Image showing number of pointings vs. ecliptic latitude
+
+\begin{figure}[hbtp]
+\begin{center}
+\includegraphics[width=0.5\textwidth]{npnt.eps}
+\caption{The number of 26.7-day pointings TESS spends on a given star is a function of its ecliptic coordinates. Here, the number of pointings are shown in a polar ecliptic projection; the pointings in the northern and southern ecliptic hemispheres are symmetric. Coverage near the ecliptic (dashed line) is sacrificed in favor of coverage near the ecliptic poles, which receive continuous coverage for 360 days.}
+\end{center}
+\end{figure}
+
 \subsection{Optics and CCD}
-FOV, EPD, PSF, bandpass, noise. 
-Can we say ``as we will present at PDR"?
+FOV, EPD, PSF, bandpass, noise. \\
+Can we say ``as we will present at PDR"? \\
+Counts vs. spectral type
 
 \section{Simulations}
 \subsection{Star Catalog}
-How we select from $\phir$, Counts vs. spectral type
+How we select from $\phir$
+\subsection{Planet Population}
+
+\begin{figure}[hbtp]
+\begin{center}
+\includegraphics[width=0.7\textwidth]{fress.eps}
+\caption{We adopt the planet occurrence rates as a function of radius and period from \citet{fressin2013}, which are calculated from the \textit{Kepler} mission. Within the coarse bins in the radius-period plane (\textit{upper left panel}), we assume the periods are distributed according to $P^{-1}$, giving a flat distributions in $\log{P}$ (\textit{lower left panel}). For planet radii $R_p>1.25R_{\oplus}$, we assume the radii are distributed by $R_p^{-1.7}$, and for $R_p<1.25R_{\oplus}$, we assume a flat distribution in $R_p$. This gives a fairly smooth distribution in $R_p$ (\textit{upper right panel}).}
+\end{center}
+\end{figure}
+
 \subsection{Background Model}
-Zodiacal light, Redo unresolved star analysis?
-\subsection{Observing model}
-Noise model, observed number of transits, detection thresholds
+\subsection{Zodiacal Light}
+HST spectrum
+\subsection{Background Stars}
+Besan\c{c}on model
+\subsection{Noise model}
+Read noise, optimal apertures
+\subsection{Detection criteria}
+Observed number of transits
+Detection thresholds (7$\sigma$)
+
+\begin{figure}[hbtp]
+\begin{center}
+\includegraphics[width=0.9\textwidth]{npix.eps}
+\caption{The TESS optics serve two purposes: to focus the light from a target star into as few pixels as possible and to reject the light from nearby stars as much as possible. On the left, we plot the fraction of accumulated flux over the number of pixels in the photometric aperture. On the right, we plot the point source rejection ratio (PSRR), expressed as a difference in astronomical magnitudes, over the distance between a target pixel and a contaminating star.}
+\end{center}
+\end{figure}
 
 \section{Results}
 \subsection{Planet Yields}
@@ -81,6 +116,9 @@ Plot of RV $K$ vs. ($I_C$ and/or $V$) magnitude.
 
 \bibitem[Cruz et al.(2007)]{2007AJ....133..439C} Cruz, K.~L., Reid,
   I.~N., Kirkpatrick, J.~D., et al.\ 2007, \aj, 133, 439
+  
+\bibitem[Fressin et al.(2013)]{fressin2013} Fressin, F., Torres, 
+G., Charbonneau, D., et al.\ 2013, \apj, 766, 81 
 
 \bibitem[Reid et al.(2002)]{2002AJ....124.2721R} Reid, I.~N., Gizis,
   J.~E., \& Hawley, S.~L.\ 2002, \aj, 124, 2721
