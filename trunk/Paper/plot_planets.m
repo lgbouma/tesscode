@@ -31,18 +31,18 @@ pgrid = 10.^logpgrid;
 
 ptick = interp1(logpgrid, 1:length(pgrid), logp_label, 'nearest', length(pgrid));
 rtick = interp1(logrgrid, 1:length(rgrid), logr_label, 'nearest', length(rgrid));
-% 
-% hist2d = zeros(length(rgrid)-1, length(pgrid)-1);
-% 
-% for ii=1:(length(rgrid)-1)
-% 	for jj=1:(length(pgrid)-1)
-%         hist2d(ii,jj) = sum((r>rgrid(ii)) & (r<rgrid(ii+1)) & ...
-%             (p>pgrid(jj)) & (p<pgrid(jj+1)));
-%     end
-% end
-%      
-% histr = sum(hist2d,2)/nstars/dr;
-% histp = sum(hist2d,1)/nstars/dp;
+
+hist2d = zeros(length(rgrid)-1, length(pgrid)-1);
+
+for ii=1:(length(rgrid)-1)
+	for jj=1:(length(pgrid)-1)
+        hist2d(ii,jj) = sum((r>rgrid(ii)) & (r<rgrid(ii+1)) & ...
+            (p>pgrid(jj)) & (p<pgrid(jj+1)));
+    end
+end
+     
+histr = sum(hist2d,2)/nstars/dr;
+histp = sum(hist2d,1)/nstars/dp;
 
 figure;
 subplot(2,2,1);
