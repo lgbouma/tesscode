@@ -307,9 +307,9 @@ the optical to take advantage of the desirable properties and heritage
 of CCDs. But we wanted to move as far as possible toward the red,
 where M dwarfs are relatively brighter.
 
-Deep-depletion CCDs manufactured by MIT-Lincoln Laboratry will be used for their high quantum efficiency at near-infrared wavelengths.
+Deep-depletion CCDs manufactured by MIT-Lincoln Laboratry will be used for their high quantum efficiency at near-infrared wavelengths. The CCDs are specified to have a read noise of 10 $e-$ per pixel.
 
-Since the lens must deliver a small PSF over a large focal plane and over a wide bandpass, the lens requires seven lenses.
+Since the lens must deliver a small PSF over a large focal plane and over a wide bandpass, it requires seven lenses with two aspheres.
 
 
 \subsection{Spacecraft and orbit} 
@@ -321,15 +321,14 @@ Three-axis stabilization will be accomplished with reaction wheels, and fine poi
 \begin{figure}[ht]
 \epsscale{1.0}
 \plotone{npnt.eps}
-\caption{The number of 26.7-day pointings TESS spends on a given star is a function of its ecliptic coordinates. Here, the number of pointings are shown in a polar ecliptic projection; the pointings in the northern and southern ecliptic hemispheres are symmetric. Coverage near the ecliptic (dashed line) is sacrificed in favor of coverage near the ecliptic poles, which receive continuous coverage for 360 days.}
+\caption{The number of 26.7-day pointings TESS spends on a given star is a function of its ecliptic coordinates. Here, the number of pointings are shown in a polar ecliptic projection; the pointings in the northern and southern ecliptic hemispheres are symmetric. Coverage near the ecliptic (dashed line) is sacrificed in favor of coverage near the ecliptic poles, which receive continuous coverage for 351 days.}
 \label{fig:npoint}
 \end{figure}
 
 
 \subsection{Survey} 
 
-Schedule of telescope pointings. Image showing sky coverage, and
-overlap regions. Number of pointings vs.\ ecliptic latitude.
+Schedule of telescope pointings (Figure \ref{fig:npoint}).
 
 Cadence of observations. Postage stamps of catalog stars, and full
 frame images.  How the data are returned to Earth.
@@ -346,6 +345,7 @@ scale, optimized for planet detectability.
 \epsscale{1.0}
 \plotone{npix.eps}
 \caption{The TESS optics serve two purposes: to focus the light from a target star into few pixels to reject the light from nearby stars. On the left, we plot the fraction of accumulated flux over the number of pixels in the photometric aperture. On the right, we plot the point source rejection ratio (PSRR), expressed as a difference in astronomical magnitudes, over the distance between a target pixel and a contaminating star.}
+\label{fig:npix}
 \end{figure*}
 
 \subsection{Noise model}
@@ -354,15 +354,27 @@ scale, optimized for planet detectability.
 \epsscale{1.0}
 \plotone{bgmap.eps}
 \caption{We model the zodiacal light as a function of eclipic coordinates (\textit{upper left}) and the background stellar flux as a function of galactic coordinates (\textit{upper right}). The lower panels show the combined surface brightness.}
+\label{fig:bgmap}
 \end{figure*}
 
-Photon counting noise. Read noise. Background noise from faint stars, and zodiacal
-light. Pointing jitter.
+\begin{figure}[ht]
+\epsscale{1.2}
+\plotone{noise.eps}
+\caption{\textit{Upper panel:} The dominant source of noise changes across the magnitudes of stars \tess will survey. The photometic precision on the brightest stars is limited by the systematic noise floor of 60 ppm, and the precision on the faintest stars is limited by background. In between, shot noise from the star dominates. The number of pixels in the photometric aperture (\textit{lower panel}) is chosen to minimize the total noise. Here, we adopt an effective stellar temperature of 3400K and ecliptic and galatic latitudes of 30$^{\circ}$.}
+\label{fig:noise}
+\end{figure}
 
-Present noise in one hour versus apparent magnitude, an ``exposure
-time calculator''. Compare to the ``detectability space'' plot that
+Photon counting noise. 
+Read noise. 
+Background noise from faint stars zodiacal
+light (Figure \ref{fig:bgmap}).
+
+Pointing jitter: on short timescales, jitter enlarges the PSF of the 1-minute postage stamps, since they are stacked without compensation for pointing errors. On longer timescales, jitter couples with uncertainty in the pixel response to give systematic errors.
+
+Present noise in one hour versus apparent magnitude (Figure \ref{fig:noise})
+
+Compare to the ``detectability space'' plot that
 was made earlier.
-
 
 \subsection{Detection model}
 
