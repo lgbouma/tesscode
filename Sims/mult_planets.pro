@@ -11,8 +11,17 @@ pro mult_planets, sstruct=sstruct, pstruct=pstruct, infile=infile, outfile=outfi
 
   nstars = n_elements(star)
 
-  nhotstars = total(star.teff ge 4000.)
-  ncoolstars = total(star.teff lt 4000.)
+  if(keyword_set(dressing)) then begin
+    hotstars = where(star.teff ge 4000.)
+    nhotstars = total(star.teff ge 4000.)
+    coolstars = where(star.teff lt 4000.)
+    ncoolstars = total(star.teff lt 4000.)
+  endif else begin
+    hotstars = lindgen(nstars)
+    nhotstars = nstars
+    coolstars = -1
+    ncoolstars = 0
+  endelse
 
   template_planet = {$
                     n: 0, $   ; planets per star (set to one for now)
@@ -69,24 +78,22 @@ pro mult_planets, sstruct=sstruct, pstruct=pstruct, infile=infile, outfile=outfi
      rate_fressin[10,*] =[0.0,  0.0,  0.0,   0.24,  1.05]
      rate_fressin = rate_fressin/100.
  
-     nplanets = total(round(rate_fressin * nstars))
+     rate_dressing = rate_fressin ;just for now
+     
+     nplanets = total(round(rate_fressin * nhotstars)) + $
+		total(round(rate_dressing * ncoolstars))
      ; Pre-allocate for speed
      planet = replicate(template_planet, total(nplanets))
      idx0 = 0L
      for i=10,0,-1 do begin
         for j=4,0,-1 do begin
-           binplanets = round(rate_fressin[i,j] * nstars)
+           binplanets = round(rate_fressin[i,j] * nhotstars)
            if (binplanets gt 0) then begin
 	      tmp_planet = replicate(template_planet, binplanets)
-	      tmp_planet.hostid = floor(double(nstars)*randomu(seed, binplanets))
-  	      if (keyword_set(dressing)) then begin
-		periods = fltarr(binplanets) + 10^((alog10(period_boundary[i])+alog10(period_boundary[i+1]))/2.0)
-		radii   = fltarr(binplanets) + 10^((alog10(radius_boundary[j])+alog10(radius_boundary[j+1]))/2.0)
-              endif else begin
-                if(j eq 0) then radpow = 0.0 else radpow = -1.7
-                randomp, periods, -1.0, binplanets, range_x = [period_boundary[i], period_boundary[i+1]], seed=seed
-                randomp, radii, radpow, binplanets, range_x = [radius_boundary[j], radius_boundary[j+1]], seed=seed
-              endelse 
+	      tmp_planet.hostid = hotstars[floor(double(nhotstars)*randomu(seed, binplanets))]
+              if(j eq 0) then radpow = 0.0 else radpow = -1.7
+              randomp, periods, -1.0, binplanets, range_x = [period_boundary[i], period_boundary[i+1]], seed=seed
+              randomp, radii, radpow, binplanets, range_x = [radius_boundary[j], radius_boundary[j+1]], seed=seed
               tmp_planet.r = radii
               tmp_planet.p = periods
               idx = lindgen(binplanets) + idx0
@@ -97,6 +104,27 @@ pro mult_planets, sstruct=sstruct, pstruct=pstruct, infile=infile, outfile=outfi
            endif
         endfor
      endfor
+     if (keyword_set(dressing)) then begin
+       for i=10,0,-1 do begin
+        for j=4,0,-1 do begin
+           binplanets = round(rate_dressing[i,j] * ncoolstars)
+           if (binplanets gt 0) then begin
+	      tmp_planet = replicate(template_planet, binplanets)
+	      tmp_planet.hostid = coolstars[floor(double(ncoolstars)*randomu(seed, binplanets))]
+              if(j eq 0) then radpow = 0.0 else radpow = -1.7
+              randomp, periods, -1.0, binplanets, range_x = [period_boundary[i], period_boundary[i+1]], seed=seed
+              randomp, radii, radpow, binplanets, range_x = [radius_boundary[j], radius_boundary[j+1]], seed=seed
+              tmp_planet.r = radii
+              tmp_planet.p = periods
+              idx = lindgen(binplanets) + idx0
+              ;print, i, j, binplanets, n_elements(tmp_planet), n_elements(idx), max(idx)/float(total(nplanets))
+              planet[idx] = tmp_planet
+              delvar, tmp_planet
+              idx0 = max(idx) + 1
+           endif
+        endfor
+     endfor
+     endif
   endif else if (keyword_set(petigura)) then begin
     radius_boundary = [1.0, 2.0, 4.0, 8.0, 16.0]
     period_boundary = [0.8, 2.0, 3.4, 6.25, 12.5, 25.0, 50.0, 100.0, 200.0, 400.0]

@@ -13,9 +13,10 @@ pro mult_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per
 	   phi = number_density 
            dndr = (4./3.)*!dpi*10.^3*0.1*number_density/dr ; at 10 pc
   endif else begin
-    restore, filen='../Stars/star_properties.sav'
+    restore, filen='../Stars/star_properties_vijk.sav'
     vol10 = (4./3.)*!PI*(10.0^3.)
     dr = r[1]-r[0] + dblarr(n_elements(r))
+    dt = deriv(teff)
     phi = dndr*dr/0.1/vol10       ; now phi is in stars per cubic parsec per radius bin
   endelse
   
@@ -33,7 +34,7 @@ pro mult_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per
     sig = dep/7.0
     rn = 0.*sqrt(4.0*exptime/2.0)
     minphot = (1.+sqrt(1.+4.*sig^2.*rn^2.))/(2.*sig^2.)
-    megaph_s_cm2_0mag = 1.6301336 + 0.14733937*(teff-5000.)/5000.
+    megaph_s_cm2_0mag = 1.67
     ilim = -2.5*alog10(minphot/(megaph_s_cm2_0mag * 1D6 * geom_area * exptime))
     if keyword_set(mag) then begin
 	ilim[where((r le 0.5) and (ilim gt 12))] = 12.0
@@ -72,9 +73,11 @@ pro mult_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per
                  mv: 0.0, $ ; absolute
                  mi: 0.0, $ ; absolute
                  mj: 0.0, $ ; absolute
+                 mk: 0.0, $ ; absolute
                  v: 0.0, $ ; apparent
                  i: 0.0, $ ; apparent
-                 j: 0.0 $  ; apparent
+                 j: 0.0, $  ; apparent
+                 k: 0.0 $  ; apparent
                  }
  
   template_companion = { $
@@ -112,9 +115,10 @@ pro mult_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per
      tmp_star = replicate(template_star, nstars[i])
      tmp_star.r = r[i] + dr[i]*(randomu(seed, nstars[i]) - 0.5)
      tmp_star.m = m[i]
-     tmp_star.teff = teff[i]
+     tmp_star.teff = teff[i] + dt[i]*(randomu(seed, nstars[i])-0.5)
      tmp_star.mag.mv = vmag[i]
      tmp_star.mag.mi = imag[i]
+     tmp_star.mag.mk = kmag[i]
      
      if (keyword_set(csr)) then tmp_star.mag.mj = kmag[i] else tmp_star.mag.mj = jmag[i]
 
@@ -125,6 +129,7 @@ pro mult_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per
      tmp_star.mag.v = tmp_star.mag.mv + dm
      tmp_star.mag.i = tmp_star.mag.mi + dm
      tmp_star.mag.j = tmp_star.mag.mj + dm
+     tmp_star.mag.k = tmp_star.mag.mk + dm
 
      tmp_star.coord.glat = 180./!PI*atan(z,sqrt(x^2. + y^2.))
      tmp_star.coord.glon = 180./!PI*atan(y,x)

@@ -116,7 +116,7 @@ pro calc_noise, $
   dlat = (abs(elat)-90.)/90.
   if (al_bk) then vmag_zodi=22. $
   else vmag_zodi = 23.345 - 1.148*dlat^2.
-  e_pix_zodi = 10.0^(-0.4*(vmag_zodi-22.8)) * 2.39D-3 * $
+  e_pix_zodi = 10.0^(-0.4*(vmag_zodi-22.8)) * 2.56D-3 * $
 	geom_area * cos(!DPI * field_angle/180.) * omega_pix * exptime
   if (red) then e_pix_zodi = e_pix_zodi*0.828
 
