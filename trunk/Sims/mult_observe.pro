@@ -28,7 +28,7 @@ pro mult_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
   SATURATION = 150000.
   RMAX_HAB = 2.0 & SHZ_IN = 0.5 & SHZ_OUT = 1.5  ; radii, incident fluxes corresponding to inner/outer edge of HZ
   npix_max = 49
-  npix_min = 1
+  npix_min = 3
   if (keyword_set(frac_file)) then frac_file=frac_file else frac_file='../ExpTimeCalc/frac24_1p0.fits'
   if (keyword_set(bk_file)) then bk_fits = mrdfits(bk_file) else bk_fits=0
   frac_fits = mrdfits(frac_file)
@@ -79,17 +79,17 @@ pro mult_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
   ;print, total(fov_ind eq 2)
   ;print, total(fov_ind eq 3)
  
-  noises = dblarr(n_elements(obs), npix_max)
-  dilution = dblarr(n_elements(obs), npix_max)
-  shot_noises = dblarr(n_elements(obs), npix_max)
+  noises = dblarr(n_elements(obs), npix_max-npix_min+1)
+  dilution = dblarr(n_elements(obs), npix_max-npix_min+1)
+  shot_noises = dblarr(n_elements(obs), npix_max-npix_min+1)
   ;exptime = double(star[obs].planet.ntra_obs) * star[obs].planet.dur * 24.0 * 3600.
   exptime = dblarr(n_elements(obs)) + 3600.
-  for ii=(npix_min-1),(npix_max-1) do begin
+  for ii=0,(npix_max-npix_min) do begin
      ;print, 'npix = ', ii+1
-     thisfrac = frac_fits[*,*,*,ii]
+     thisfrac = frac_fits[*,*,*,(ii+npix_min-1)]
      frac = thisfrac[star[obsid].dx, star[obsid].dy,fov_ind]
      calc_noise, star[obsid].mag.i, exptime, noise, $
-		 npix_aper=(ii+1), $
+		 npix_aper=(ii+npix_min), $
 		 frac_aper=frac, $
                  field_angle=field_angle, $
   		 fov_ind=fov_ind, $
@@ -116,7 +116,7 @@ pro mult_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
     if (ii eq 0) then star[obsid].sat = (estar gt SATURATION)
   end
   minnoise = min(noises, ind, dimension=2)
-  star[obsid].npix = ind / n_elements(obs) + 1
+  star[obsid].npix = ind / n_elements(obs) + npix_min
   star[obsid].snr = 1.0/minnoise
   star[obsid].dil = dilution[ind]
   

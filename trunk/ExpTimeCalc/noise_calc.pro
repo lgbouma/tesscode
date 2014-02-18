@@ -4,13 +4,14 @@ PRO noise_calc
   npix_min=1
   npix_max=49
   frac_fits = mrdfits('frac24_1p0.fits')
+  bk_fits = mrdfits('fov24_1p0_bkgnd_param.fits')
   frac_3d = mean(frac_fits, dimension=1)
   frac_2d = mean(frac_3d, dimension=1)
   frac = frac_2d[1,*]
   elon=110.
   elat=30.
-  noises = dblarr(n_elements(imag), npix_max)
-  dilution = dblarr(n_elements(imag), npix_max)
+  noises = dblarr(n_elements(imag), npix_max-npix_min+1)
+  dilution = dblarr(n_elements(imag), npix_max-npix_min+1)
   diln = dblarr(n_elements(imag))
   satn = dblarr(n_elements(imag))
   exptime = dblarr(n_elements(imag)) + 3600. ; what's the noise per hour?
