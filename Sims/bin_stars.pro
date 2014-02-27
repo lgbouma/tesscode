@@ -1,4 +1,4 @@
-pro bin_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=per, mag=mag
+pro bin_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=per, mag=mag, bin=bin
 
   if (keyword_set(verbose)) then v=1 else v=0
   if (keyword_set(outfile)) then outfile=outfile else outfile='s.sav'
@@ -32,13 +32,14 @@ pro bin_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=
     exptime = 2.*dur*24.*3600
     dep = (REARTH_IN_RSUN * float(det) / r)^2.0
     sig = dep/7.0
-    rn = 0.*sqrt(4.0*exptime/2.0)
+    rn = 10.*sqrt(4.0*exptime/2.0)
     minphot = (1.+sqrt(1.+4.*sig^2.*rn^2.))/(2.*sig^2.)
     megaph_s_cm2_0mag = 1.67
     ilim = -2.5*alog10(minphot/(megaph_s_cm2_0mag * 1D6 * geom_area * exptime))
     if keyword_set(mag) then begin
-	ilim[where((r le 0.5) and (ilim gt 12))] = 12.0
-        ilim[where((r gt 0.5) and (ilim gt 13))] = 13.0
+ 	ilim[where((r le 0.5) and (ilim lt 12))] = 13.0
+        ilim[where((r gt 0.5) and (ilim lt 13))] = 12.0
+;      ilim[where(ilim lt 12.5)] = 12.5      
     endif
     dmax = 10.*10.0^(0.2*(ilim-imag))
   endif else if (keyword_set(mag)) then begin
@@ -47,7 +48,7 @@ pro bin_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=
     ilim[q] = 13.0
     dmax = 10.*10.0^(0.2*(ilim-imag))
   endif
-
+  print, dmax
   h = 300.0 + 0.0*r
 
 
@@ -83,9 +84,9 @@ pro bin_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=
                  k: 0.0 $  ; apparent
                  }
  
-  template_companion = { $
-  		 ind: 0L, $
-		 sep: 0.0, $; Angular separation on sky (arcsec)
+  template_companion = { $	; Mutual properties
+  		 ind: 0L, $ 	; Cross-reference to companion
+		 sep: 0.0, $	; Angular separation on sky (arcsec)
 		 a: 0.0, $	; Semimajor axis (AU)
 		 p: 0.0, $	; Period (days)
   		 m: 0.0 $	; Mass (Solar)
@@ -100,14 +101,13 @@ pro bin_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=
                   coord: template_coord, $ 
                   mag: template_mag, $
                   companion: template_companion, $
-		  dx: 0, $ 	   ; Random subpixel offset
-   		  dy: 0, $	   ; 
 		  npix: 0, $       ; Optimal number of pix in aperture
 		  snr: 0.0, $      ; SNR per hour
  		  sat: 0, $        ; saturation flag
 		  dil: 0.0, $      ; dilution factor (0+)
                   pri: 0, $	   ; Primary of binary?
-		  sec: 0 $	   ; Secondary of binary? 
+		  sec: 0, $	   ; Secondary of binary? 
+  		  ffi: 0 $	   ; Full-frame only (default is postage stamp)
 		}
 
   star = replicate(template_star, total(nstars))
@@ -153,10 +153,17 @@ pro bin_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=
   endfor
 
   ; Binarity
+  if (keyword_set(bin)) then begin
   ; Indices of the hosts
-  bin1 = where((randomu(seed, total(nstars)) lt 0.26) and (star.m le 0.5))
+  bin1 = where((randomu(seed, total(nstars)) lt 0.26) and (star.m le 0.6))
+  ; Generate mass of companion
+  randomp, q, 0.4, n_elements(bin1), range_x=[0.0, 1.0], seed=seed
+  newm = star[bin1].m*q
+  gdbin = where(newm ge min(m)) ; Enforce brown dwarf desert
+  bin1 = bin1[gdbin]
   ; Struct to hold the companions
   bin_star = replicate(template_star, n_elements(bin1))
+  bin_star.m = newm[gdbin]
   ; Indices of the binaries
   bin_inds = lindgen(n_elements(bin1))+max(idx)
   idx = max(idx) + n_elements(bin1)
@@ -167,9 +174,6 @@ pro bin_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=
   ; Cross-reference the indices
   star[bin1].companion.ind = bin_inds
   bin_star.companion.ind = bin1
-  ; Generate mass of companion
-  randomp, q, 0.4, n_elements(bin1), range_x=[0.0, 1.0], seed=seed
-  bin_star.m = star[bin1].m*q
   ; Generate period of companion
   logpbar = alog10(365.25*5.3^(1.5)*(star[bin1].m*(1.0+q))^(-0.5))
   print, median(logpbar)
@@ -181,6 +185,8 @@ pro bin_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=
   star[bin1].companion.a = bin_star.companion.a
   ; Now fill in the other stellar parameters (interpolate based on mass)
   bin_star.r = interpol(r, m, bin_star.m)
+  ; Enforce minimum radius
+  bin_star[where(bin_star.r lt 0.1)].r = 0.1
   bin_star.teff = interpol(teff, m, bin_star.m)
   bin_star.coord = star[bin1].coord
   bin_star.mag.mv = interpol(vmag, m, bin_star.m)
@@ -192,15 +198,24 @@ pro bin_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=
   bin_star.mag.j = bin_star.mag.mj + 5.0*alog10(bin_star.coord.d/10.)
   bin_star.mag.k = bin_star.mag.mk + 5.0*alog10(bin_star.coord.d/10.)
   angseps = 2.*star[bin1].companion.a/star[bin1].coord.d 
+  cosi = -1.0 + 2.0*randomu(seed, n_elements(bin1))
+  phi = !DPI*2.0*randomu(seed, n_elements(bin1))
+  angseps = angseps*(1.0-cosi*sin(phi)^2.0)
   star[bin1].companion.sep = angseps
   bin_star.companion.sep = angseps
   
   star = struct_append(star, bin_star)
   delvar, bin_star
 
-  bin2 = where((randomu(seed, total(nstars)) lt 0.44) and (star.m gt 0.5))
+  bin2 = where((randomu(seed, total(nstars)) lt 0.44) and (star.m gt 0.6))
+  ; Generate mass of companion
+  randomp, q, 0.3, n_elements(bin2), range_x=[0.0, 1.0], seed=seed
+  newm = star[bin2].m*q
+  gdbin = where(newm ge min(m)) ; Enforce brown dwarf desert
+  bin2 = bin2[gdbin] 
   ; Struct to hold the companions
   bin_star = replicate(template_star, n_elements(bin2))
+  bin_star.m = newm[gdbin]
   ; Indices of the binaries
   bin_inds = lindgen(n_elements(bin2))+idx
   print, 'bin2',  n_elements(bin2), min(bin_inds), max(bin_inds)
@@ -210,9 +225,6 @@ pro bin_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=
   ; Cross-reference the indices
   star[bin2].companion.ind = bin_inds
   bin_star.companion.ind = bin2
-  ; Generate mass of companion
-  randomp, q, 0.3, n_elements(bin2), range_x=[0.0, 1.0], seed=seed
-  bin_star.m = star[bin2].m*q
   logpbar = alog10(365.25*45.^(1.5)*(star[bin2].m*(1.0+q))^(-0.5))
   print, median(logpbar)
   logpsig = 2.3
@@ -223,6 +235,7 @@ pro bin_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=
   star[bin2].companion.a = bin_star.companion.a
   ; Now fill in the other stellar parameters (interpolate based on mass)
   bin_star.r = interpol(r, m, bin_star.m)
+  bin_star[where(bin_star.r lt 0.1)].r = 0.1
   bin_star.teff = interpol(teff, m, bin_star.m)
   bin_star.coord = star[bin2].coord
   bin_star.mag.mv = interpol(vmag, m, bin_star.m)
@@ -233,13 +246,16 @@ pro bin_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=
   bin_star.mag.i = bin_star.mag.mi + 5.0*alog10(bin_star.coord.d/10.)
   bin_star.mag.j = bin_star.mag.mj + 5.0*alog10(bin_star.coord.d/10.)
   bin_star.mag.k = bin_star.mag.mk + 5.0*alog10(bin_star.coord.d/10.)
-  angseps = 2.*star[bin2].companion.a/star[bin2].coord.d 
+  angseps = 2.*star[bin2].companion.a/star[bin2].coord.d
+  cosi = -1.0 + 2.0*randomu(seed, n_elements(bin2))
+  phi = !DPI*2.0*randomu(seed, n_elements(bin2))
+  angseps = angseps*(1.0-cosi*sin(phi)^2.0)
   star[bin2].companion.sep = angseps
   bin_star.companion.sep = angseps
   
   star = struct_append(star, bin_star)
   delvar, bin_star
- 
+  endif
   save, filen=outfile, star
 
   print, 'Total number of stars = ', n_elements(star)
