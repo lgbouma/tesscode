@@ -27,13 +27,19 @@ pro calc_noise, $
    field_angle=field_angle, $	    ; Field angle for effective area
    fov_ind=fov_ind, $ 		    ; FOV index for bk model (0-3)
    bk_p=bk_p, $		    	    ; Background polynomial fit
-;
+   frac_off=frac_off, $	 	    ; Fractional offset file (mag vs. pix) 
+   bin_sys=bin_sys, $		    ; Is this a binary?
+   bin_sep=bin_sep, $		    ; Separation to binary
+   bin_imag=bin_imag, $		    ; imag of binary
+   bin_teff=bin_teff, $		    ; teff of binary
+
 ; optional outputs
 ;
    noise_star=noise_star, $         ; noise from star counts alone
    noise_sky=noise_sky, $           ; noise from sky counts only
    noise_ro=noise_ro,$              ; noise from readout only
    noise_sys=noise_sys, $           ; noise from systematic limit only
+   noise_bin=noise_bin, $	    ; noise from binary companion
    e_star_sub=e_star_sub, $ 	    ; subexposure electron count (for saturation check)
    
    dilution=dilution		    ; background dilution factor
@@ -62,7 +68,7 @@ pro calc_noise, $
   endelse
 
   if (keyword_set(frac_aper)) then begin
-     frac_aper=frac_aper
+     frac_aper=frac_aper[fov_ind]
   endif else begin
      ;frac_aper = 0.76
      fwhm = 1.2
@@ -144,7 +150,7 @@ pro calc_noise, $
     p = [18.9733D0, 8.833D0, 4.007D0, 0.805D0]
     imag_bgstars = p[0] + p[1]*dlat + p[2]*dlon^(p[3])
   endelse
-  
+
   e_pix_bgstars = 10.0^(-0.4*imag_bgstars) * 1.7D6 * $
 	geom_area * cos(!DPI * field_angle/180.) * omega_pix * exptime
   if (red) then e_pix_bgstars = e_pix_bgstars*0.828
@@ -156,16 +162,37 @@ pro calc_noise, $
 ; compute noise sources
 
   e_tot_sky = npix_aper*(e_pix_zodi + e_pix_bgstars) 
-  e_tot = e_tot_sky + e_star
+
+  e_bin = dblarr(n_elements(e_tot_sky))
+; e/pix from companion
+  if (total(bin_sys) gt 0) then begin
+    bins = where(bin_sys)
+    pix_sep = bin_sep[bins]/pix_scale  	; from arcsec to pixels
+    r = frac_off[fov_ind[bins],*]	; distance (in pixels)
+    di = frac_off[fov_ind[bins]+4,*]    ; imag attenuation
+    dibin = interpol(di, r, pix_sep)    ; interpolate over spline fit
+    bin_imag_att = bin_imag[bins] + dibin 
+    
+    bin_teffs = bin_teff[bins]
+    megaph_s_cm2_0mag = 1.6685 + 0.2145*(bin_teffs-3500.)/3500. - $
+	0.0945*((bin_teffs-3500.)/3500.)^2.
+    cool = where(bin_teffs lt 3500.)
+    if (cool[0] ne -1) then megaph_s_cm2_0mag[cool] = 1.6685
+    e_bin[bins] = 10.0^(-0.4*bin_imag_att) * 1D6 * megaph_s_cm2_0mag * $
+	geom_area * cos(!DPI * field_angle/180.)* exptime * frac_aper
+  endif
+  
+  e_tot = e_tot_sky + e_star + e_bin
+  
   noise_star = sqrt(e_star) / e_tot
   noise_sky  = sqrt(e_tot_sky) / e_tot
   noise_ro   = sqrt(npix_aper*n_exposures)*e_pix_ro / e_tot
+  noise_bin  = sqrt(e_bin) / e_tot
   noise_sys  = 0.0*noise_star + sys_limit/1d6/sqrt(exptime/3600.)
 
-  dilution = e_tot_sky / e_star
+  dilution = e_tot / e_star
   ;if (al) then noise = sqrt(1.0/(e_star + e_tot_sky) + noise_sys^2.) else $
-  noise = sqrt( noise_star^2. + noise_sky^2. + noise_ro^2. + noise_sys^2. )
-
+  noise = sqrt( noise_star^2. + noise_sky^2. + noise_ro^2. + noise_sys^2. + noise_bin^2. )
   if (v) then begin
      print, 'noise_star [ppm] = ', noise_star*1d6
      print, 'noise_sky  [ppm] = ', noise_sky*1d6
