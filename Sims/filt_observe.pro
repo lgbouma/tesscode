@@ -29,6 +29,7 @@ pro filt_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
   ; big frac file
   if (keyword_set(prf_file)) then prf_file=prf_file else prf_file='../ExpTimeCalc/bigfrac24_105_4700k.fits'
   prf_fits = mrdfits(prf_file)
+  ;prf_fits = mean(mean(mrdfits(prf_file),dimension=1), dimension=1)
   ; background file
   if (keyword_set(bk_file)) then bk_fits = mrdfits(bk_file) else bk_fits=0
   ; spline fits to PSRR
@@ -80,7 +81,8 @@ pro filt_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
  
    obs = where(planet.tra and (planet.ntra_obs gt 0))
    obsid = planet[obs].hostid
-
+   nobs = n_elements(obs)
+   print, 'Observing ', nobs, ' transits'
 ;  obs = indgen(n_elements(star))
 
   fov_ind = intarr(n_elements(obs))
@@ -93,15 +95,24 @@ pro filt_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
  
   print, 'Stacking and sorting PRFs'
   ; ph_star is npix x nstar
-  stack_prf, star[obsid].mag.i, star[obsid].teff, ph_fits, prf_fits, ph_star, fov_ind=fov_ind
+  dx = floor(10*randomu(seed, nobs))
+  dy = floor(10*randomu(seed, nobs))
+  stack_prf, star[obsid].mag.i, star[obsid].teff, ph_fits, prf_fits, ph_star, dx=dx, dy=dy, fov_ind=fov_ind
 
   bin_sys = (star[obsid].pri or star[obsid].sec)
   bin_sep = star[obsid].companion.sep
   bin_imag = star[star[obsid].companion.ind].mag.i
   bin_teff = star[star[obsid].companion.ind].teff
+  bins = where(bin_sys)
 
-  stack_prf, bin_imag, bin_teff, ph_fits, prf_fits, ph_bin
+  stack_prf, bin_imag, bin_teff, ph_fits, prf_fits, ph_bin, dx=dx, dy=dy, fov_ind=fov_ind
  
+  pix_sep = bin_sep[bins]/pix_scale   ; from arcsec to pixels
+  r = sp_fits[fov_ind[bins],*]       ; distance (in pixels)
+  di = sp_fits[fov_ind[bins]+4,*]    ; imag attenuation
+  dibin = interpol(di, r, pix_sep)    ; interpolate over spline fit
+  ph_bin = 10.0^(-0.4*dibin) * ph_bin ; attenuate the count rate
+  
   print, 'Calculating noise'
   noises = dblarr(n_elements(obs), npix_max-npix_min+1)
   dilution = dblarr(n_elements(obs), npix_max-npix_min+1)
@@ -118,7 +129,6 @@ pro filt_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
                  sys_lim = SYS_LIMIT, $
                  pix_scale = PIX_SCALE, $
 		 bk_p = bk_fits, $
- 		 frac_off = sp_fits, $
                  elon=star[obsid].coord.elon, $
                  elat=star[obsid].coord.elat, $
 		 dilution=dil, $
@@ -126,8 +136,7 @@ pro filt_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
 		 noise_star=shot_noise, $
 		 bin_sys= bin_sys, $
  		 bin_ph = ph_bin, $
-  		 bin_sep = bin_sep, $
-		 verbose=1
+  		 bin_sep = bin_sep
     dilution[*,ii] = dil
     if (keyword_set(nodil)) then noises[*,ii] = noise $
 	else noises[*,ii] = dil*noise
@@ -139,7 +148,6 @@ pro filt_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
   star[obsid].npix = ind / n_elements(obs) + npix_min
   star[obsid].snr = 1.0/minnoise
   star[obsid].dil = dilution[ind]
-  
   ; Calculate SNR in phase-folded lightcurve
   et_folded = double(planet[obs].ntra_obs) * $
     planet[obs].dur_eff * 24.0 * 3600
