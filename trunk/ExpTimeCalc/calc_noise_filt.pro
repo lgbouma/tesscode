@@ -27,7 +27,7 @@ pro calc_noise_filt, $
    field_angle = field_angle, $	    ; Field angle for effective area
    bk_p=bk_p, $		    	    ; Background polynomial fit
    ph_p=ph_p, $			    ; Photon flux fit
-   frac_off=frac_off, $	 	    ; Fractional offset file (mag vs. pix) 
+;   frac_off=frac_off, $	 	    ; Fractional offset file (mag vs. pix) 
    bin_sys=bin_sys, $		    ; Is this a binary?
    bin_sep=bin_sep, $		    ; Separation to binary
    bin_ph=bin_ph, $		    ; imag of binary
@@ -64,7 +64,8 @@ pro calc_noise_filt, $
   endif else begin
      npix_aper=3+intarr(n_elements(ph_star))
   endelse
-
+ 
+  if (v) then print, 'npix_aper = ', npix_aper
   ;if (keyword_set(frac_aper)) then begin
   ;   frac_aper=frac_aper[fov_ind]
   ;endif else begin
@@ -78,7 +79,7 @@ pro calc_noise_filt, $
   n_exposures = exptime/subexptime
 
   ; electrons from the star
-  e_star = ph_star[npix_aper-1,*] * geom_area * cos(!DPI * field_angle/180.)* exptime
+  e_star = reform(ph_star[npix_aper-1,*]) * geom_area * cos(!DPI * field_angle/180.)* exptime
   
   ; electrons in cadence
   e_star_sub = e_star*subexptime/exptime
@@ -122,14 +123,15 @@ pro calc_noise_filt, $
   if(keyword_set(bin_sys)) then nbin=total(bin_sys) else nbin=0
 ; e/pix from companion
   if (nbin gt 0) then begin
+    if (v) then print, 'Dealing with ', nbin, ' binaries'
     bins = where(bin_sys)
-    pix_sep = bin_sep[bins]/pix_scale  	; from arcsec to pixels
-    r = frac_off[fov_ind[bins],*]	; distance (in pixels)
-    di = frac_off[fov_ind[bins]+4,*]    ; imag attenuation
-    dibin = interpol(di, r, pix_sep)    ; interpolate over spline fit
-    e_bin[bins] = 10.0^(-0.4*dibin) * bin_ph[bins] * $
+;    pix_sep = bin_sep[bins]/pix_scale  	; from arcsec to pixels
+;    r = frac_off[fov_ind[bins],*]	; distance (in pixels)
+;    di = frac_off[fov_ind[bins]+4,*]    ; imag attenuation
+;    dibin = interpol(di, r, pix_sep)    ; interpolate over spline fit
+    e_bin[bins] = bin_ph[bins] * $
         geom_area * cos(!DPI * field_angle/180.)* exptime * $
-        ph_star[npix_aper-1,*]/ph_star[npix_max-1,*] ; frac
+        reform(ph_star[npix_aper-1,*])/reform(ph_star[npix_max-1,*]) ; frac
     if (v) then print, 'e_pix_bin = ', median(e_bin[bins])
   endif
   
