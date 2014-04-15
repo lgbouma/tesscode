@@ -29,7 +29,6 @@ pro filt_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
   ; big frac file
   if (keyword_set(prf_file)) then prf_file=prf_file else prf_file='../ExpTimeCalc/bigfrac24_105_4700k.fits'
   prf_fits = mrdfits(prf_file)
-  ;prf_fits = mean(mean(mrdfits(prf_file),dimension=1), dimension=1)
   ; background file
   if (keyword_set(bk_file)) then bk_fits = mrdfits(bk_file) else bk_fits=0
   ; spline fits to PSRR

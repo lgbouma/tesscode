@@ -1,15 +1,15 @@
 function dil_ffi, dur_min, ffi_len, ffi_os=ffi_os, ffis=ffis
-    ffi_os = randomu(seed, n_elements(dur_min)) ; how much of the first ffi is spent in transit?
+    ffi_os = randomu(seed, n_elements(dur_min)) ; time delay from start of first ffi to first contact
     ;ffi_os = fltarr(n_elements(dur_min))
     nffi = float(floor((dur_min - ffi_len*ffi_os)/ffi_len)) ; these images are fully transited
     igrss = ffi_os ; this fraction of ingress image is transited
     egrss = (dur_min/ffi_len) - nffi - ffi_os ; this fraction of egress image is transitied
     ; Calculate snrs of 4 cases
-    snr_ffi = nffi/sqrt(nffi)
+    snr_ffi = 1./sqrt(nffi)
     snr_ffi[where(nffi eq 0)] = 0 ; correct the divide by zero
-    snr_igr = (nffi+igrss)/sqrt(nffi+1.)
-    snr_egr = (nffi+egrss)/sqrt(nffi+1.)
-    snr_both = (nffi+igrss+egrss)/sqrt(nffi+2.)
+    snr_igr = (nffi+igrss)*(nffi+1.)^(-1.5)
+    snr_egr = (nffi+egrss)*(nffi+1.)^(-1.5)
+    snr_both = (nffi+igrss+egrss)*(nffi+2.)^(-1.5)
     ; Initial assumption
     dep_dil = 1. + fltarr(n_elements(dur_min))
     ffis = nffi
