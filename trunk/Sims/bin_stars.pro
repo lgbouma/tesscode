@@ -197,10 +197,10 @@ pro bin_stars, outfile=outfile, verbose=verbose, dst=dst, csr=csr, det=det, per=
   bin_star.mag.i = bin_star.mag.mi + 5.0*alog10(bin_star.coord.d/10.)
   bin_star.mag.j = bin_star.mag.mj + 5.0*alog10(bin_star.coord.d/10.)
   bin_star.mag.k = bin_star.mag.mk + 5.0*alog10(bin_star.coord.d/10.)
-  angseps = 2.*star[bin1].companion.a/star[bin1].coord.d 
+  angseps = star[bin1].companion.a/star[bin1].coord.d 
   cosi = -1.0 + 2.0*randomu(seed, n_elements(bin1))
   phi = !DPI*2.0*randomu(seed, n_elements(bin1))
-  angseps = angseps*(1.0-cosi*sin(phi)^2.0)
+  angseps = angseps*sqrt(sin(phi)^2. + cosi^2.*cos(phi)^2.)
   star[bin1].companion.sep = angseps
   bin_star.companion.sep = angseps
   
