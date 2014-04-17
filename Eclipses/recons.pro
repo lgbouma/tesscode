@@ -13,7 +13,7 @@ PRO recons, fstub
     thisfn = repstr(fnames[ii], '.fits', '.sav')
     restore, thisfn
     idx = idx0+indgen(numstar[ii])
-    nustar[idx] = star
+    nustar[idx] = star[where(star.coord.dm lt 0)]
     idx0 = idx0+numstar[ii]
   end
   save, nustar, filen='recons.sav'
