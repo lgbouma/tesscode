@@ -89,7 +89,7 @@ PRO fits2sav, fname, nstar=nstar, dmax=dmax
     bin_star.r = sqrt(bin_star.m)/sqrt(10.^bin_star.logg/27542.3)
     
     bin_inds = lindgen(nsec)+idx0
-    print, min(bin_inds), max(bin_inds)
+    ;print, min(bin_inds), max(bin_inds)
     idx0 = idx0 + nsec
     ; Set the companionship flags
     star[sind].pri = 1
@@ -103,7 +103,7 @@ PRO fits2sav, fname, nstar=nstar, dmax=dmax
 
     ; Convert mean separation into mean period
     logpbar = alog10(365.25*abar[ii]^(1.5)*(star[sind].m*(1.0+q[sind]))^(-0.5))
-    print, median(logpbar)
+    ;print, median(logpbar)
     ; Randomize the period
     logp = randomn(seed, nsec)*psig[ii] + logpbar
     bin_star.companion.p = 10.^logp
@@ -111,7 +111,7 @@ PRO fits2sav, fname, nstar=nstar, dmax=dmax
     star[sind].companion.p = bin_star.companion.p
     bin_star.companion.a = (star[sind].m*(1.0+q[sind]))^(1./3.)*(star[sind].companion.p/365.25)^(2./3.)
     star[sind].companion.a = bin_star.companion.a
-    angseps = star[sind].companion.a/(10.*10.^(-star[sind].coord.dm/5.))
+    angseps = star[sind].companion.a/(10.*10.^(star[sind].coord.dm/5.))
     ; Inclination and phase of binary
     cosi = -1.0 + 2.0*randomu(seed, nsec)
     phi = !DPI*2.0*randomu(seed, nsec)
@@ -124,7 +124,8 @@ PRO fits2sav, fname, nstar=nstar, dmax=dmax
 
   end
   if (keyword_set(dmax)) then begin
-	nstar=n_elements(where(star.coord.dm lt dmax))
+	near = where(star.coord.dm lt dmax)
+        if (near[0] eq -1) then nstar = 0 else nstar = n_elements(near)
   endif else begin 
 	nstar = n_elements(star)
   endelse
