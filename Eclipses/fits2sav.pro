@@ -1,15 +1,16 @@
 PRO fits2sav, fname
 
   dat = mrdfits(fname, 0, h)
-  nstar = fxpar(h, 'NAXIS1')
+  dat = [dat, dat]
 
   ; Abs. mag ranges for binary properties
-  mp_min = [0.0, 0.6, 0.8, 1.0, 1.4]  
-  mp_max = [     0.6, 0.8, 1.0, 1.4, 99.]  
+  mp_min = [0.0, 0.1, 0.6, 0.8, 1.0, 1.4]  
+  mp_max = [     0.1, 0.6, 0.8, 1.0, 1.4, 99.]  
   nmp = n_elements(mp_min)
-  mf = [0.26, 0.34, 0.41, 0.50, 0.75]
-  abar = [5.3, 20., 45., 45., 350]
-  psig = [1.3, 2.0, 2.3, 2.3, 3.0]
+  mf = [0.22, 0.26, 0.34, 0.41, 0.50, 0.75]
+  abar = [4.5, 5.3, 20.,  45.,  45., 350]
+  psig = [0.5, 1.3, 2.0,  2.3,  2.3, 3.0]
+  qgam = [4.2, 0.4, 0.35, 0.3, 0.3, -0.5]
 
 ;  readcol, fname, gc, logA, z, mini, logL, logT, logG, dm, av, $
 ;	comp, bol, t, j, h, ks, kp, g, r, i, z, dd, mnow 
@@ -66,7 +67,7 @@ PRO fits2sav, fname
   idx0 = npri
 
   for ii=0,nmp-1 do begin
-    sind = where((randomu(seed, npri) lt mf[ii]) and (m1 gt mp_min[ii]) and (m1 le mp_max[ii]))
+    sind = where((randomu(seed, npri) lt mf[ii]) and (m1 gt mp_min[ii]) and (m1 le mp_max[ii]))    
     nsec = n_elements(sind)
     bin_star = replicate({starstruct}, nsec)
     bin_star.logage = logA[secs[sind]]
@@ -123,6 +124,6 @@ PRO fits2sav, fname
 
   end
 
-  newfname = repstr(fname, 'dat', 'sav')
+  newfname = repstr(fname, 'fits', 'sav')
   save, star, filen=newfname
 END
