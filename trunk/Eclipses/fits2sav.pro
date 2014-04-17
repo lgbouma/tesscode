@@ -1,4 +1,4 @@
-PRO fits2sav, fname
+PRO fits2sav, fname, nstar=nstar, dmax=dmax
 
   dat = mrdfits(fname, 0, h)
   dat = [dat, dat]
@@ -123,7 +123,11 @@ PRO fits2sav, fname
     delvar, bin_star
 
   end
-
+  if (keyword_set(dmax)) then begin
+	nstar=n_elements(where(star.coord.dm lt dmax))
+  endif else begin 
+	nstar = n_elements(star)
+  endelse
   newfname = repstr(fname, 'fits', 'sav')
   save, star, filen=newfname
 END
