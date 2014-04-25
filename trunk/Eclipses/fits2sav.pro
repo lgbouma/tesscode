@@ -1,6 +1,6 @@
 PRO fits2sav, fname, nstar=nstar, dmax=dmax
 
-  dat = mrdfits(fname, 0, h)
+  dat = mrdfits(fname, 0, h, /SILENT)
   dat = [dat, dat]
 
   ; Abs. mag ranges for binary properties
@@ -10,8 +10,9 @@ PRO fits2sav, fname, nstar=nstar, dmax=dmax
   mf = [0.22, 0.26, 0.34, 0.41, 0.50, 0.75]
   abar = [4.5, 5.3, 20.,  45.,  45., 350]
   psig = [0.5, 1.3, 2.0,  2.3,  2.3, 3.0]
-  qgam = [4.2, 0.4, 0.35, 0.3, 0.3, -0.5]
-
+  qgam = [4.0, 0.4, 0.35, 0.3, 0.3, -0.5]
+  qnorm = 0.9*(qgam+1.0)*mf/(1.0-0.1^(qgam+1.0))
+;  print, qnorm
 ;  readcol, fname, gc, logA, z, mini, logL, logT, logG, dm, av, $
 ;	comp, bol, t, j, h, ks, kp, g, r, i, z, dd, mnow 
   gc   = dat[*,0]
@@ -44,7 +45,7 @@ PRO fits2sav, fname, nstar=nstar, dmax=dmax
   
   m1 = mini[pris]
   m2 = mini[secs]
-  q = mnow[secs]/mnow[pris]
+  q = mini[secs]/mini[pris]
   
   star.logage = logA[pris]
   star.feh = z[pris]
@@ -67,7 +68,7 @@ PRO fits2sav, fname, nstar=nstar, dmax=dmax
   idx0 = npri
 
   for ii=0,nmp-1 do begin
-    sind = where((randomu(seed, npri) lt mf[ii]) and (m1 gt mp_min[ii]) and (m1 le mp_max[ii]))    
+    sind = where((randomu(seed, npri) lt qnorm[ii]*q^qgam[ii]) and (m1 gt mp_min[ii]) and (m1 le mp_max[ii]))    
     nsec = n_elements(sind)
     bin_star = replicate({starstruct}, nsec)
     bin_star.logage = logA[secs[sind]]
@@ -124,7 +125,7 @@ PRO fits2sav, fname, nstar=nstar, dmax=dmax
 
   end
   if (keyword_set(dmax)) then begin
-	near = where(star.coord.dm lt dmax)
+	near = where(star.coord.dm le dmax)
         if (near[0] eq -1) then nstar = 0 else nstar = n_elements(near)
   endif else begin 
 	nstar = n_elements(star)
