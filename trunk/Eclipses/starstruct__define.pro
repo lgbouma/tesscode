@@ -21,6 +21,7 @@ PRO starstruct__define
                   dil: 0.0, $      ; dilution factor (0+)
                   pri: 0, $        ; Primary of binary?
                   sec: 0, $        ; Secondary of binary? 
+                  spl: 0, $        ; Split (for triples and quadruples)
                   ffi: 0 $         ; Full-frame only (default is postage stamp)
                 }
 

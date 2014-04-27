@@ -11,6 +11,7 @@ PRO fits2sav, fname, nstar=nstar, dmax=dmax
   abar = [4.5, 5.3, 20.,  45.,  45., 350]
   psig = [0.5, 1.3, 2.0,  2.3,  2.3, 3.0]
   qgam = [4.0, 0.4, 0.35, 0.3, 0.3, -0.5]
+  homf = [0.0, 3.9, 3.8, 3.7, 3.7, 3.7]
   qnorm = 0.9*(qgam+1.0)*mf/(1.0-0.1^(qgam+1.0))
 ;  print, qnorm
 ;  readcol, fname, gc, logA, z, mini, logL, logT, logG, dm, av, $
@@ -55,8 +56,10 @@ PRO fits2sav, fname, nstar=nstar, dmax=dmax
   star.coord.dm = dm[pris]
   star.mag.av = av[pris]
   star.mag.g = g[pris]
+  star.mag.v = g[pris] - 0.5784*(g[pris]-r[pris] - 0.0038 ;Lupton 2005
   star.mag.r = r[pris]
   star.mag.i = i[pris]
+  star.mag.ic = i[pris] - 0.3780*(i[pris]-z[pris]) - 0.3974 ; Lupton 2005
   star.mag.z = z[pris]
   star.mag.j = j[pris]
   star.mag.h = h[pris]
@@ -79,8 +82,10 @@ PRO fits2sav, fname, nstar=nstar, dmax=dmax
     bin_star.coord.dm = dm[secs[sind]]
     bin_star.mag.av = av[secs[sind]]
     bin_star.mag.g = g[secs[sind]]
+    bin_star.mag.v = g[secs[sind]] - 0.5784*(g[secs[sind]]-r[secs[sind]] - 0.0038 ;Lupton 2005
     bin_star.mag.r = r[secs[sind]]
     bin_star.mag.i = i[secs[sind]]
+    bin_star.mag.ic = i[secs[sind]] - 0.3780*(i[secs[sind]]-z[secs[sind]]) - 0.3974 ; Lupton 2005
     bin_star.mag.z = z[secs[sind]]
     bin_star.mag.j = j[secs[sind]]
     bin_star.mag.h = h[secs[sind]]
@@ -120,6 +125,29 @@ PRO fits2sav, fname, nstar=nstar, dmax=dmax
     star[sind].companion.sep = angseps
     bin_star.companion.sep = angseps
 
+    ; Mark stars for triples and quadruples
+    if (homf[ii] gt 0) then begin
+      tq = homf[ii]^(-2.) + homf[ii]^(-1.)
+      tqind = where((randomu(seed, nsec) lt tq))
+      if (tqind[0] ne -1) then begin
+        ntq = n_elements(tqind)
+        ; For quadruples, BOTH pri and sec get split
+        qind = where((randomu(seed, ntq) lt homf[ii]^(-1)), complement=tind)
+        if (qind[0] ne -1) then begin
+          star[sind[tqind[qind]]].spl = 1
+          bin_star[tqind[qind]].spl = 1
+        endif
+        ; For triples, pri OR sec gets split
+        if (tind[0] ne -1) then begin
+          nt = n_elements(tind)
+          tpind = where((randomu(seed, nt) lt 0.5), complement=tsind)
+          if (tpind[0] ne -1) then star[sind[tqind[tind[tpind]]]].spl = 1
+          if (tsind[0] ne -1) then bin_star[tqind[tind[tsind]]].spl = 1
+        endif
+      endif
+    endif 
+
+
     star = struct_append(star, bin_star)
     delvar, bin_star
 
@@ -127,9 +155,10 @@ PRO fits2sav, fname, nstar=nstar, dmax=dmax
   if (keyword_set(dmax)) then begin
 	near = where(star.coord.dm le dmax)
         if (near[0] eq -1) then nstar = 0 else nstar = n_elements(near)
-  endif else begin 
-	nstar = n_elements(star)
-  endelse
+  end else if (keyword_set(imax)) then begin
+	near = where(star.mag.ic le imax)
+        if (near[0] eq -1) then nstar = 0 else nstar = n_elements(near)
+  end else nstar = n_elements(star)
   newfname = repstr(fname, 'fits', 'sav')
   save, star, filen=newfname
 END
