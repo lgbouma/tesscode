@@ -1,4 +1,4 @@
-PRO fits2sav, fname, nstar=nstar, dmax=dmax
+PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax
 
   dat = mrdfits(fname, 0, h, /SILENT)
   dat = [dat, dat]
@@ -46,7 +46,7 @@ PRO fits2sav, fname, nstar=nstar, dmax=dmax
   
   m1 = mini[pris]
   m2 = mini[secs]
-  q = mini[secs]/mini[pris]
+  q = m2/m1
   
   star.logage = logA[pris]
   star.feh = z[pris]
@@ -68,89 +68,90 @@ PRO fits2sav, fname, nstar=nstar, dmax=dmax
   star.m = mnow[pris]
   star.r = sqrt(star.m)/sqrt(10.^star.logg/27542.3)
 
-  idx0 = npri
+  idx0 = long(npri)
 
   for ii=0,nmp-1 do begin
-    sind = where((randomu(seed, npri) lt qnorm[ii]*q^qgam[ii]) and (m1 gt mp_min[ii]) and (m1 le mp_max[ii]))    
-    nsec = n_elements(sind)
-    bin_star = replicate({starstruct}, nsec)
-    bin_star.logage = logA[secs[sind]]
-    bin_star.feh = z[secs[sind]]
-    bin_star.mini = mini[secs[sind]]
-    bin_star.teff = 10.^(logT[secs[sind]])
-    bin_star.logg = logG[secs[sind]]
-    bin_star.coord.dm = dm[secs[sind]]
-    bin_star.mag.av = av[secs[sind]]
-    bin_star.mag.g = g[secs[sind]]
-    bin_star.mag.v = g[secs[sind]] - 0.5784*(g[secs[sind]]-r[secs[sind]] - 0.0038 ;Lupton 2005
-    bin_star.mag.r = r[secs[sind]]
-    bin_star.mag.i = i[secs[sind]]
-    bin_star.mag.ic = i[secs[sind]] - 0.3780*(i[secs[sind]]-z[secs[sind]]) - 0.3974 ; Lupton 2005
-    bin_star.mag.z = z[secs[sind]]
-    bin_star.mag.j = j[secs[sind]]
-    bin_star.mag.h = h[secs[sind]]
-    bin_star.mag.k = ks[secs[sind]]
-    bin_star.mag.t = t[secs[sind]]
-    bin_star.m = mnow[secs[sind]]
-    bin_star.r = sqrt(bin_star.m)/sqrt(10.^bin_star.logg/27542.3)
+    sind = where((randomu(seed, npri) lt qnorm[ii]*q^qgam[ii]) and (m1 gt mp_min[ii]) and (m1 le mp_max[ii]))   
+    if (sind[0] ne 0) then begin 
+      nsec = n_elements(sind)
+      bin_star = replicate({starstruct}, nsec)
+      bin_star.logage = logA[secs[sind]]
+      bin_star.feh = z[secs[sind]]
+      bin_star.mini = mini[secs[sind]]
+      bin_star.teff = 10.^(logT[secs[sind]])
+      bin_star.logg = logG[secs[sind]]
+      bin_star.coord.dm = dm[secs[sind]]
+      bin_star.mag.av = av[secs[sind]]
+      bin_star.mag.g = g[secs[sind]]
+      bin_star.mag.v = g[secs[sind]] - 0.5784*(g[secs[sind]]-r[secs[sind]] - 0.0038 ;Lupton 2005
+      bin_star.mag.r = r[secs[sind]]
+      bin_star.mag.i = i[secs[sind]]
+      bin_star.mag.ic = i[secs[sind]] - 0.3780*(i[secs[sind]]-z[secs[sind]]) - 0.3974 ; Lupton 2005
+      bin_star.mag.z = z[secs[sind]]
+      bin_star.mag.j = j[secs[sind]]
+      bin_star.mag.h = h[secs[sind]]
+      bin_star.mag.k = ks[secs[sind]]
+      bin_star.mag.t = t[secs[sind]]
+      bin_star.m = mnow[secs[sind]]
+      bin_star.r = sqrt(bin_star.m)/sqrt(10.^bin_star.logg/27542.3)
     
-    bin_inds = lindgen(nsec)+idx0
-    ;print, min(bin_inds), max(bin_inds)
-    idx0 = idx0 + nsec
-    ; Set the companionship flags
-    star[sind].pri = 1
-    bin_star.sec = 1
-    ; Cross-reference the indices
-    star[sind].companion.ind = bin_inds 
-    bin_star.companion.ind = sind
-    ; Cross-reference the indices
-    star[sind].companion.m = bin_star.m 
-    bin_star.companion.m = star[sind].m
+      bin_inds = lindgen(nsec)+idx0
+      ;print, min(bin_inds), max(bin_inds)
+      idx0 = idx0 + nsec
+      ; Set the companionship flags
+      star[sind].pri = 1
+      bin_star.sec = 1
+      ; Cross-reference the indices
+      star[sind].companion.ind = bin_inds 
+      bin_star.companion.ind = sind
+      ; Cross-reference the indices
+      star[sind].companion.m = bin_star.m 
+      bin_star.companion.m = star[sind].m
 
-    ; Convert mean separation into mean period
-    logpbar = alog10(365.25*abar[ii]^(1.5)*(star[sind].m*(1.0+q[sind]))^(-0.5))
-    ;print, median(logpbar)
-    ; Randomize the period
-    logp = randomn(seed, nsec)*psig[ii] + logpbar
-    bin_star.companion.p = 10.^logp
-    ; Cross-reference p and a
-    star[sind].companion.p = bin_star.companion.p
-    bin_star.companion.a = (star[sind].m*(1.0+q[sind]))^(1./3.)*(star[sind].companion.p/365.25)^(2./3.)
-    star[sind].companion.a = bin_star.companion.a
-    angseps = star[sind].companion.a/(10.*10.^(star[sind].coord.dm/5.))
-    ; Inclination and phase of binary
-    cosi = -1.0 + 2.0*randomu(seed, nsec)
-    phi = !DPI*2.0*randomu(seed, nsec)
-    angseps = angseps*sqrt(sin(phi)^2. + cosi^2.*cos(phi)^2.)
-    star[sind].companion.sep = angseps
-    bin_star.companion.sep = angseps
+      ; Convert mean separation into mean period
+      logpbar = alog10(365.25*abar[ii]^(1.5)*(star[sind].m*(1.0+q[sind]))^(-0.5))
+      ;print, median(logpbar)
+      ; Randomize the period
+      logp = randomn(seed, nsec)*psig[ii] + logpbar
+      bin_star.companion.p = 10.^logp
+      ; Cross-reference p and a
+      star[sind].companion.p = bin_star.companion.p
+      bin_star.companion.a = (star[sind].m*(1.0+q[sind]))^(1./3.)*(star[sind].companion.p/365.25)^(2./3.)
+      star[sind].companion.a = bin_star.companion.a
+      angseps = star[sind].companion.a/(10.*10.^(star[sind].coord.dm/5.))
+      ;  Inclination and phase of binary
+      cosi = -1.0 + 2.0*randomu(seed, nsec)
+      phi = !DPI*2.0*randomu(seed, nsec)
+      angseps = angseps*sqrt(sin(phi)^2. + cosi^2.*cos(phi)^2.)
+      star[sind].companion.sep = angseps
+      bin_star.companion.sep = angseps
 
-    ; Mark stars for triples and quadruples
-    if (homf[ii] gt 0) then begin
-      tq = homf[ii]^(-2.) + homf[ii]^(-1.)
-      tqind = where((randomu(seed, nsec) lt tq))
-      if (tqind[0] ne -1) then begin
-        ntq = n_elements(tqind)
-        ; For quadruples, BOTH pri and sec get split
-        qind = where((randomu(seed, ntq) lt homf[ii]^(-1)), complement=tind)
-        if (qind[0] ne -1) then begin
-          star[sind[tqind[qind]]].spl = 1
-          bin_star[tqind[qind]].spl = 1
+      ; Mark stars for triples and quadruples
+      if (homf[ii] gt 0) then begin
+        tq = homf[ii]^(-2.) + homf[ii]^(-1.)
+        tqind = where((randomu(seed, nsec) lt tq))
+        if (tqind[0] ne -1) then begin
+          ntq = n_elements(tqind)
+          ; For quadruples, BOTH pri and sec get split
+          qind = where((randomu(seed, ntq) lt homf[ii]^(-1)), complement=tind)
+          if (qind[0] ne -1) then begin
+            star[sind[tqind[qind]]].spl = 1
+            bin_star[tqind[qind]].spl = 1
+          endif
+          ; For triples, pri OR sec gets split
+          if (tind[0] ne -1) then begin
+            nt = n_elements(tind)
+            tpind = where((randomu(seed, nt) lt 0.5), complement=tsind)
+            if (tpind[0] ne -1) then star[sind[tqind[tind[tpind]]]].spl = 1
+            if (tsind[0] ne -1) then bin_star[tqind[tind[tsind]]].spl = 1
+          endif
         endif
-        ; For triples, pri OR sec gets split
-        if (tind[0] ne -1) then begin
-          nt = n_elements(tind)
-          tpind = where((randomu(seed, nt) lt 0.5), complement=tsind)
-          if (tpind[0] ne -1) then star[sind[tqind[tind[tpind]]]].spl = 1
-          if (tsind[0] ne -1) then bin_star[tqind[tind[tsind]]].spl = 1
-        endif
-      endif
-    endif 
+      endif 
 
 
-    star = struct_append(star, bin_star)
-    delvar, bin_star
-
+      star = struct_append(star, bin_star)
+      delvar, bin_star
+    endif
   end
   if (keyword_set(dmax)) then begin
 	near = where(star.coord.dm le dmax)
