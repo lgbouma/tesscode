@@ -5,6 +5,8 @@ pro summary, ps=ps
   syms=1
 
   if (keyword_set(ps)) then begin
+  mwrfits, newtbl, newname
+
 
      set_plot,'ps'
      device,filen='summary.eps',/encapsulated,xsize=6.5,ysize=6.5,/inches,$
@@ -80,7 +82,7 @@ pro summary, ps=ps
         xtit='radius [R!Dsun!N]', xra=rra, xsty=1, $
         ytit='dn/dR, stars (0.1 R!Dsun!N)!E-1!N within 10 pc'; , yra=[0,90], ysty=1
 
-  save, filen='star_properties.sav', r, m, teff, jmag, imag, vmag, dndr
+  save, filen='star_properties_pws.sav', r, m, teff, jmag, imag, vmag, dndr
 
   if (keyword_set(ps)) then begin
      

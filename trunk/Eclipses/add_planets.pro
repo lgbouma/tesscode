@@ -171,5 +171,5 @@ pro add_planets, sstruct=sstruct, pstruct=pstruct, infile=infile, outfile=outfil
 
   if (keyword_set(outfile)) then save,filen=outfile, planet
 
-  pstruct=planet
+  pstruct=planet_eclip
 end
