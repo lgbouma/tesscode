@@ -55,7 +55,6 @@ pro compare_vband,ps=ps
 ;     print, mv1, mv2, mi1, mi2, mj1, mj2, n_mod[i]
 
   endfor
-
   oplot, mv_mod, n_mod, color=fsc_color('Red')
 
   x0 = 1
