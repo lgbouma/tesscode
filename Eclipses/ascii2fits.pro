@@ -9,6 +9,7 @@ PRO ascii2fits, fpre, fnums
     newtbl = [[gc], [logA], [z], [mini], [logL], [logT], [logG], [dm], [av], $
 	[comp], [bol], [t], [j], [h], [ks], [kp], [g], [r], [i], [z], [dd], [mnow]]
     newname = repstr(fname, 'dat', 'fits')
-    mwrfits, newtbl, newname
+    knewname = repstr(newname, 'dp', 'bk')
+    mwrfits, newtbl, knewname
   end
 END
