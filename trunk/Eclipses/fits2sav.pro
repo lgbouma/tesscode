@@ -56,7 +56,7 @@ PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax
   star.coord.dm = dm[pris]
   star.mag.av = av[pris]
   star.mag.g = g[pris]
-  star.mag.v = g[pris] - 0.5784*(g[pris]-r[pris] - 0.0038 ;Lupton 2005
+  star.mag.v = g[pris] - 0.5784*(g[pris]-r[pris]) - 0.0038 ;Lupton 2005
   star.mag.r = r[pris]
   star.mag.i = i[pris]
   star.mag.ic = i[pris] - 0.3780*(i[pris]-z[pris]) - 0.3974 ; Lupton 2005
@@ -83,7 +83,7 @@ PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax
       bin_star.coord.dm = dm[secs[sind]]
       bin_star.mag.av = av[secs[sind]]
       bin_star.mag.g = g[secs[sind]]
-      bin_star.mag.v = g[secs[sind]] - 0.5784*(g[secs[sind]]-r[secs[sind]] - 0.0038 ;Lupton 2005
+      bin_star.mag.v = g[secs[sind]] - 0.5784*(g[secs[sind]]-r[secs[sind]]) - 0.0038 ;Lupton 2005
       bin_star.mag.r = r[secs[sind]]
       bin_star.mag.i = i[secs[sind]]
       bin_star.mag.ic = i[secs[sind]] - 0.3780*(i[secs[sind]]-z[secs[sind]]) - 0.3974 ; Lupton 2005
@@ -107,7 +107,13 @@ PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax
       ; Cross-reference the indices
       star[sind].companion.m = bin_star.m 
       bin_star.companion.m = star[sind].m
-
+     
+      ; Add up the fluxes
+      star[sind].companion.ic_sys = -alog10(10.^(-1.*bin_star.mag.ic) + 10.^(-1.*star[sind].mag.ic))
+      bin_star.companion.ic_sys = star[sind].companion.ic_sys
+      star[sind].companion.j_sys = -alog10(10.^(-1.*bin_star.mag.j) + 10.^(-1.*star[sind].mag.j))
+      bin_star.companion.j_sys = star[sind].companion.j_sys
+      
       ; Convert mean separation into mean period
       logpbar = alog10(365.25*abar[ii]^(1.5)*(star[sind].m*(1.0+q[sind]))^(-0.5))
       ;print, median(logpbar)
