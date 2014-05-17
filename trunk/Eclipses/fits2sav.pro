@@ -53,7 +53,7 @@ PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax
   star.mini = mini[pris]
   star.teff = 10.^(logT[pris])
   star.logg = logG[pris]
-  star.coord.dm = dm[pris]
+  star.mag.dm = dm[pris]
   star.mag.av = av[pris]
   star.mag.g = g[pris]
   star.mag.v = g[pris] - 0.5784*(g[pris]-r[pris]) - 0.0038 ;Lupton 2005
@@ -65,6 +65,9 @@ PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax
   star.mag.h = h[pris]
   star.mag.k = ks[pris]
   star.mag.t = t[pris]
+  star.mag.icsys = star.mag.ic
+  star.mag.jsys = star.mag.j
+  star.mag.tsys = star.mag.t
   star.m = mnow[pris]
   star.r = sqrt(star.m)/sqrt(10.^star.logg/27542.3)
 
@@ -80,7 +83,7 @@ PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax
       bin_star.mini = mini[secs[sind]]
       bin_star.teff = 10.^(logT[secs[sind]])
       bin_star.logg = logG[secs[sind]]
-      bin_star.coord.dm = dm[secs[sind]]
+      bin_star.mag.dm = dm[secs[sind]]
       bin_star.mag.av = av[secs[sind]]
       bin_star.mag.g = g[secs[sind]]
       bin_star.mag.v = g[secs[sind]] - 0.5784*(g[secs[sind]]-r[secs[sind]]) - 0.0038 ;Lupton 2005
@@ -109,10 +112,12 @@ PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax
       bin_star.companion.m = star[sind].m
      
       ; Add up the fluxes
-      star[sind].companion.ic_sys = -alog10(10.^(-1.*bin_star.mag.ic) + 10.^(-1.*star[sind].mag.ic))
-      bin_star.companion.ic_sys = star[sind].companion.ic_sys
-      star[sind].companion.j_sys = -alog10(10.^(-1.*bin_star.mag.j) + 10.^(-1.*star[sind].mag.j))
-      bin_star.companion.j_sys = star[sind].companion.j_sys
+      star[sind].mag.icsys = -alog10(10.^(-1.*bin_star.mag.ic) + 10.^(-1.*star[sind].mag.ic))
+      bin_star.mag.icsys = star[sind].mag.icsys
+      star[sind].mag.jsys = -alog10(10.^(-1.*bin_star.mag.j) + 10.^(-1.*star[sind].mag.j))
+      bin_star.mag.jsys = star[sind].mag.jsys
+      star[sind].mag.tsys = -alog10(10.^(-1.*bin_star.mag.t) + 10.^(-1.*star[sind].mag.t))
+      bin_star.mag.tsys = star[sind].mag.tsys
       
       ; Convert mean separation into mean period
       logpbar = alog10(365.25*abar[ii]^(1.5)*(star[sind].m*(1.0+q[sind]))^(-0.5))
@@ -124,7 +129,7 @@ PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax
       star[sind].companion.p = bin_star.companion.p
       bin_star.companion.a = (star[sind].m*(1.0+q[sind]))^(1./3.)*(star[sind].companion.p/365.25)^(2./3.)
       star[sind].companion.a = bin_star.companion.a
-      angseps = star[sind].companion.a/(10.*10.^(star[sind].coord.dm/5.))
+      angseps = star[sind].companion.a/(10.*10.^(star[sind].mag.dm/5.))
       ;  Inclination and phase of binary
       cosi = -1.0 + 2.0*randomu(seed, nsec)
       phi = !DPI*2.0*randomu(seed, nsec)
@@ -160,7 +165,7 @@ PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax
     endif
   end
   if (keyword_set(dmax)) then begin
-	near = where(star.coord.dm le dmax)
+	near = where(star.mag.dm le dmax)
         if (near[0] eq -1) then nstar = 0 else nstar = n_elements(near)
   end else if (keyword_set(imax)) then begin
 	near = where(star.mag.ic le imax)

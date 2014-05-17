@@ -1,8 +1,11 @@
 PRO eclipstruct__define
 
   eclip = {eclipstruct,  $
+                    coord: {coordstruct}, $
                     class: 0, $ ;1 planet around field star, 2=planet around binary, 3=heb, 4=beb/eb
-                    r1: 0.0, $ ; radius of primary
+                    trial: 0, $
+                    npointings: 0, $
+		    r1: 0.0, $ ; radius of primary
                     r2: 0.0, $ ; radius of secondary
                     m1: 0.0, $ ; mass of primary
                     m2: 0.0, $ ; mass of secondary
@@ -36,6 +39,9 @@ PRO eclipstruct__define
                     det: 0, $  ; Detected?
                     det1: 0, $  ; Detected primary?
                     det2: 0, $  ; Detected secondary?
+                    npix: 0, $       ; Optimal number of pix in aperture
+                    dil: 0.0, $      ; dilution factor (0+)
+                    sat: 0, $        ; saturation flag
                     hostid: 0L $
                     }
 
