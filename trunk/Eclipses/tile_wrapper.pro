@@ -1,4 +1,4 @@
-PRO tile_wrapper, fnums, eclip=eclip
+PRO tile_wrapper, fpath, fnums, eclip=eclip
   filen = '../Sims/bs3_13x24.sav'
   frac_file = '../ExpTimeCalc/bigfrac24_105_f3p33.fits' ;'+psfstr+'.fits' 
   rad_file = '../ExpTimeCalc/bigrad24_105_f3p33.fits' ;'+psfstr+'.fits' 
@@ -37,15 +37,15 @@ PRO tile_wrapper, fnums, eclip=eclip
   ;cgHistoPlot, ipring
   for ii=0, numfil-1 do begin
     print, 'Restoring files for tile ', fnums[ii]
-    fname = 'hp'+string(fnums[ii], format='(I04)')+'.sav'
+    fname = fpath+'hp'+string(fnums[ii], format='(I04)')+'.sav'
     restore, fname
     targets = star
     numtargets[ii] = n_elements(targets)
-    fname = 'bk'+string(fnums[ii], format='(I04)')+'.sav'
+    fname = fpath+'bk'+string(fnums[ii], format='(I04)')+'.sav'
     restore, fname
     bkgnds = star[where(star.mag.k gt 15)]
     numbkgnd[ii] = n_elements(bkgnds)
-    fname = 'dp'+string(fnums[ii], format='(I04)')+'.sav'
+    fname = fpath+'dp'+string(fnums[ii], format='(I04)')+'.sav'
     restore, fname
     deeps = star[where(star.mag.t gt 21)]
     numdeeps[ii] = n_elements(deeps)
