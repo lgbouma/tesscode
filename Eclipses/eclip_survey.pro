@@ -33,8 +33,8 @@ PRO eclip_survey, n_segs, fov, star, offset=offset
          star[onchip].coord.fov_r = r/float(new_npointings) + $
 		float(prev_npointings)*star[onchip].coord.fov_r/float(new_npointings)
          ;print, 'Hemi=',hemi,' Seg=',seg,' Cam=',cam, $
-                ' ELon=',elon_segs[seg],' ELat=',float(hemi)*elat_cams[cam], $
-                ' Nstars=',n_elements(onchip)
+                ;' ELon=',elon_segs[seg],' ELat=',float(hemi)*elat_cams[cam], $
+                ;' Nstars=',n_elements(onchip)
       endfor
     endfor
   endfor

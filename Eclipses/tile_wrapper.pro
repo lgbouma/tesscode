@@ -11,7 +11,7 @@ PRO tile_wrapper, fpath, fnums, eclip=eclip
   thresh = 7.0
   tranmin = 2.0
   sys_limit=60.
-  n_trial = 5
+  n_trial = 1
   ffi_len=2. ; in minutes
   duty_cycle=100.
   nps = 100000
@@ -100,7 +100,7 @@ PRO tile_wrapper, fpath, fnums, eclip=eclip
     dilute_eclipse, eclip, deeps, frac_fits, rad_fits, ph_fits, aspix=aspix, sq_deg=0.0134
     stop
     ; Observe
-    eclp_observe, sstruct=star, pstruct=eclip, $
+    eclip_observe, sstruct=star, pstruct=eclip, $
        geomarea=geomarea, fov=fov, sys_limit=sys_limit, $ ;infil=sp_name,outfile=spo_name
         readnoise=readnoise, thresh=thresh, tranmin=tranmin, $
         prf_file=prf_file, bk_file=bk_file, sp_file=sp_file, ph_file=ph_file, $
