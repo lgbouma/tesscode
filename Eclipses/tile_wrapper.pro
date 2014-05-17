@@ -1,8 +1,7 @@
 PRO tile_wrapper, fpath, fnums, eclip=eclip
-  filen = '../Sims/bs3_13x24.sav'
-  frac_file = '../ExpTimeCalc/bigfrac24_105_f3p33.fits' ;'+psfstr+'.fits' 
-  rad_file = '../ExpTimeCalc/bigrad24_105_f3p33.fits' ;'+psfstr+'.fits' 
-  ph_file = '../ExpTimeCalc/ph_filt_t.fits' ;'+psfstr+'.fits' 
+  frac_file = 'bigfrac24_105_f3p33.fits' ;'+psfstr+'.fits' 
+  rad_file = 'bigrad24_105_f3p33.fits' ;'+psfstr+'.fits' 
+  ph_file = 'ph_filt_t.fits' ;'+psfstr+'.fits' 
   fov = 24.
   seg = 13
   skirt=6.
