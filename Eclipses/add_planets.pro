@@ -1,5 +1,7 @@
-pro add_planets, sstruct=sstruct, pstruct=pstruct, infile=infile, outfile=outfile, verbose=verbose, fov=fov, $
-  plotname=plotname
+pro add_planets, star, pstruct, frac, rad, ph_p, aspix=aspix, fov=fov
+
+  sz_ph_p = size(ph_p)
+  nfilt = sz_ph_p[1]
 
   AU_IN_RSUN = 215.093990942D0          ; in solar radii
   REARTH_IN_RSUN = 0.0091705248         ; in solar radii
@@ -10,10 +12,7 @@ pro add_planets, sstruct=sstruct, pstruct=pstruct, infile=infile, outfile=outfil
  
   if (keyword_set(fov)) then fov=fov else fov=24.0 
   ccd_pix = 4096.0
-  PIX_SCALE = fov*3600./ccd_pix
-
-
-  if (keyword_set(sstruct)) then star = sstruct else restore, infile
+  if (keyword_set(aspix)) then aspix=aspix else aspix=21.1
 
   nstars = n_elements(star)
 
@@ -107,8 +106,8 @@ pro add_planets, sstruct=sstruct, pstruct=pstruct, infile=infile, outfile=outfil
 
 ; Star properties to be randomized
 ;  pris = where(star.sec ne 1)
-  star.dx = floor(10.*randomu(seed, nstars))
-  star.dy = floor(10.*randomu(seed, nstars))
+;  star.dx = floor(10.*randomu(seed, nstars))
+;  star.dy = floor(10.*randomu(seed, nstars))
 ;  close = where(star.sec and (star.companion.sep/pixsc le 0.1))
 ; Random orbital orientation
   if (keyword_set(req)) then begin
@@ -131,12 +130,12 @@ pro add_planets, sstruct=sstruct, pstruct=pstruct, infile=infile, outfile=outfil
 ;     (1.0 + (1.0 - 3./5.*0.541)*(2./3.*!dpi*(planet.r/3.9)^2.)^0.541)
   ; Weiss & Marcy 2014:
   planet_m = dblarr(nplanets)
-  lomass = where(planet_r lt 1.5)
-  planet_m[lomass] = 0.440*(planet_r[lomass])^3. + 0.614*(planet_r[lomass])^4.
-  himass = where(planet_r ge 1.5)
-  planet_m[himass] = 2.69*(planet_r[himass])^0.93
+  lomass = where(planet_rad lt 1.5)
+  planet_m[lomass] = 0.440*(planet_rad[lomass])^3. + 0.614*(planet_rad[lomass])^4.
+  himass = where(planet_rad ge 1.5)
+  planet_m[himass] = 2.69*(planet_rad[himass])^0.93
 ; RV amplitude
-  planet_k = RV_AMP*planet_p^(-1./3.) * planet_m * $ 
+  planet_k = RV_AMP*planet_per^(-1./3.) * planet_m * $ 
 	sqrt(1.0-star[allid].cosi^2.) * (star[allid].m)^(-2./3.) 
 
 	;2.0*!dpi*sqrt(1.0-star[pla].cosi^2.)*star[pla].planet.a * AU_DAY_IN_CM_S * planet_mass /  $
@@ -145,7 +144,7 @@ pro add_planets, sstruct=sstruct, pstruct=pstruct, infile=infile, outfile=outfil
   tra = where(abs(planet_b) lt 1.0)
   traid = planet_hid[tra]
   ntra = n_elements(tra)
-  planet_eclip = replicate({structeclip}, ntra)
+  planet_eclip = replicate({eclipstruct}, ntra)
   planet_eclip.class=1
   planet_eclip.m1 = star[traid].m
   planet_eclip.m2 = planet_m[tra]
@@ -162,14 +161,12 @@ pro add_planets, sstruct=sstruct, pstruct=pstruct, infile=infile, outfile=outfil
   planet_eclip.dep1 = (planet_eclip.r2 / planet_eclip.r1 )^2.0
   planet_eclip.dep2 = (planet_eclip.teff2/planet_eclip.teff1)*(planet_eclip.r2/planet_eclip.r1 )^2.0
   planet_eclip.dur1 = planet_eclip.r1 * planet_eclip.p * sqrt(1.-(planet_eclip.b)^2.) / (!PI*planet_eclip.a*AU_IN_RSUN)
- ; planet_eclip.durpar = planet[tra].r * $
-	REARTH_IN_RSUN * planet[tra].p / $
-        sqrt(1.-(planet[tra].b)^2.) / $
-        (!PI*planet[tra].a*AU_IN_RSUN)
+;  planet_eclip.durpar = planet[tra].r * $
+;	REARTH_IN_RSUN * planet_eclip[tra].p / $
+;        sqrt(1.-(planet_eclip[tra].b)^2.) / $
+;        (!PI*planet_eclip[tra].a*AU_IN_RSUN)
   
   print, 'Created ', n_elements(tra), ' transiting planets out of ', nplanets, ' total.'
-
-  if (keyword_set(outfile)) then save,filen=outfile, planet
 
   pstruct=planet_eclip
 end

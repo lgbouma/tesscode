@@ -2,7 +2,7 @@ pro eclp_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
 	fov=fov, geomarea=geomarea, readnoise=readnoise, tranmin=tranmin, thresh=thresh, $
 	nodil=nodil, ffi_len=ffi_len, $
 	sys_limit=sys_limit, keep_ntra1=keep_ntra1, duty_cycle=duty_cycle, $
-        bk_file=bk_file, sp_file=sp_file, ph_file=ph_file, prf_file=prf_file
+        bk_file=bk_file, sp_file=sp_file, ph_fits=ph_fits, prf_fits=prf_fits
 	
 
  REARTH_IN_RSUN = 0.0091705248
@@ -104,15 +104,15 @@ pro eclp_observe, sstruct=sstruct, pstruct=pstruct, sfile=sfile, pfile=pfile, ou
   ; ph_star is npix x nstar
   dx = floor(10*randomu(seed, nobs))
   dy = floor(10*randomu(seed, nobs))
-  stack_prf, star[obsid].mag.i, star[obsid].teff, ph_fits, prf_fits, ph_star, dx=dx, dy=dy, fov_ind=fov_ind
+  stack_prf, star[obsid].mag.t, star[obsid].teff, ph_fits, prf_fits, ph_star, dx=dx, dy=dy, fov_ind=fov_ind
 
   bin_sys = (star[obsid].pri or star[obsid].sec)
   bin_sep = star[obsid].companion.sep
-  bin_imag = star[star[obsid].companion.ind].mag.i
+  bin_tmag = star[star[obsid].companion.ind].mag.t
   bin_teff = star[star[obsid].companion.ind].teff
   bins = where(bin_sys)
 
-  stack_prf, bin_imag, bin_teff, ph_fits, prf_fits, ph_bin, dx=dx, dy=dy, fov_ind=fov_ind
+  stack_prf, bin_tmag, bin_teff, ph_fits, prf_fits, ph_bin, dx=dx, dy=dy, fov_ind=fov_ind
  
   pix_sep = bin_sep[bins]/pix_scale   ; from arcsec to pixels
   r = sp_fits[fov_ind[bins],*]       ; distance (in pixels)

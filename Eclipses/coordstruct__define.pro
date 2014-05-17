@@ -7,8 +7,9 @@ PRO coordstruct__define
                    elat: 0.0, $ ; Ecliptic Lat. (deg)
                    glon: 0.0, $ ; Galactic Long. (deg)
                    glat: 0.0, $ ; Galactic Lat. (deg)
-                   dm: 0.0, $    ; Distance modulus
                    fov_r: 0.0, $ ; Field angle (pixels from axis)
+                   field_angle: 0.0, $ ; Field angle (pixels from axis)
+                   fov_ind: 0, $ ; Field angle index (0=center, 3=corner)
                    healpix_n: 0 $
               }
 
