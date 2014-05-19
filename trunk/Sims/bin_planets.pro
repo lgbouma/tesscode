@@ -199,7 +199,7 @@ pro bin_planets, sstruct=sstruct, pstruct=pstruct, infile=infile, outfile=outfil
   planet.a = (star[allid].m)^(1./3.) * (planet.p/365.25)^(2./3.); in AU
   planet.s = (star[allid].r)^2.0 * (star[allid].teff/5777.0)^4. / (planet.a)^2. ; indicent flux wrt sun-earth value
 ; Equilibrium Temp.
-  planet.teq = (star[allid].teff/5777.0)*sqrt(star[allid].r/(planet.a*AU_IN_RSUN))
+  planet.teq = (star[allid].teff)*sqrt(star[allid].r/(2.*planet.a*AU_IN_RSUN))
 
   planet.b = (planet.a*AU_IN_RSUN / star[allid].r) * star[allid].cosi; assumes circular orbit
  

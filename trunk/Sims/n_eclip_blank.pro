@@ -12,8 +12,9 @@ function n_eclip_blank, $
   if (keyword_set(periblank)) then periblank=periblank else periblank=0.0
 
   n = 0.0*period
-  if (keyword_set(ein)) then e=period*ein else $
-  e = period*randomu(seed,n_elements(period))
+  if (keyword_set(ein)) then ein=ein else $
+  ein = randomu(seed,n_elements(period))
+  e = period*ein
 
   observed = where(e lt duration, complement=missed)
 
