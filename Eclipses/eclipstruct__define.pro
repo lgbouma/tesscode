@@ -27,9 +27,9 @@ PRO eclipstruct__define
                     dur2_eff: 0.0, $ ; Effective duration
                     neclip_obs1: 0, $ ; Number of primary eclipses observed
                     neclip_obs2: 0, $ ; Number of secondary eclipses observed
-                    snr: 0.0, $ ; SNR of primary eclipses in phase-folded lightcurve
+                    snr: 0.0, $ ; SNR of primary+secondary eclipses in phase-folded lightcurve
                     snr1: 0.0, $ ; SNR of primary eclipses in phase-folded lightcurve
-                    snr2: 0.0, $ ; SNR of primary eclipses in phase-folded lightcurve
+                    snr2: 0.0, $ ; SNR of secondary eclipses in phase-folded lightcurve
                     snreclp1: 0.0, $ ; SNR per primary eclipse
                     snreclp2: 0.0, $ ; SNR per secondary eclipse
                     gress1: 0.0, $    ; duration of in+engress (days)
@@ -40,9 +40,11 @@ PRO eclipstruct__define
                     det1: 0, $  ; Detected primary?
                     det2: 0, $  ; Detected secondary?
                     npix: 0, $       ; Optimal number of pix in aperture
-                    dil: 0.0, $      ; dilution factor (0+)
+                    star_ph: 0.0, $      ; photons/s/cm^2 from star
+                    bk_ph: 0.0, $      ; photons/s/cm^2/pix from other stars
+                    zodi_ph: 0.0, $      ; photons/s/cm^2/pix
                     sat: 0, $        ; saturation flag
+                    dil: 0.0, $        ; dilution ratio
                     hostid: 0L $
                     }
-
 end

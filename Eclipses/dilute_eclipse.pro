@@ -43,7 +43,7 @@ PRO dilute_eclipse, eclip, bkgnds, frac, rad, ph_p, aspix=aspix, sq_deg=sq_deg
         minrad = min(abs(thisrad-r[gd[kk]]), rind)
         bk_frac[*,kk] = thisprf(rind+lindgen(nfilt)*npts)	
       end
-      eclip[ii].dil = eclip[ii].dil + $
+      eclip[ii].bk_ph = eclip[ii].bk_ph + $
 	total(10.^(-0.4*(bkmagt-10.))*total(bk_frac*ph_filt, 1))
     end
   end

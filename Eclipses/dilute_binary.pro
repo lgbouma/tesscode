@@ -37,7 +37,7 @@ PRO dilute_binary, eclip, star, frac, rad, ph_p, aspix=aspix
       minrad = min(abs(thisrad-binsep[kk]), rind)
       bin_frac[*,kk] = thisprf(rind+lindgen(nfilt)*npts)	
     end
-    eclip[binsys].dil = eclip[binsys].dil + $
+    eclip[binsys].bk_ph = eclip[binsys].bk_ph + $
      10.^(-0.4*(bintmag-10.))*total(bin_frac*ph_filt, 1)
   end
 END

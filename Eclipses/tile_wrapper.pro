@@ -15,6 +15,7 @@ PRO tile_wrapper, fpath, fnums, eclip=eclip
   ffi_len=2. ; in minutes
   duty_cycle=100.
   nps = 100000
+  saturation=150000.
   REARTH_IN_RSUN = 0.0091705248
   CCD_PIX = 4096.
 
@@ -49,6 +50,10 @@ PRO tile_wrapper, fpath, fnums, eclip=eclip
     deeps = star[where(star.mag.t gt 21)]
     numdeeps[ii] = n_elements(deeps)
     delvar, star
+   
+    ; Choose which stars are postage stamps vs ffis
+    targets.ffi=0
+
     for jj=0,n_trial-1 do begin
       ; Add eclipses
       make_eclipse, targets, eclip_trial, frac_fits, rad_fits, ph_fits
@@ -98,30 +103,30 @@ PRO tile_wrapper, fpath, fnums, eclip=eclip
     dilute_eclipse, eclip, bkgnds, frac_fits, rad_fits, ph_fits, aspix=aspix, sq_deg=0.134
     print, "Diluting with deep stars"
     dilute_eclipse, eclip, deeps, frac_fits, rad_fits, ph_fits, aspix=aspix, sq_deg=0.0134
-    stop
     ; Observe
-    eclip_observe, sstruct=star, pstruct=eclip, $
-       geomarea=geomarea, fov=fov, sys_limit=sys_limit, $ ;infil=sp_name,outfile=spo_name
-        readnoise=readnoise, thresh=thresh, tranmin=tranmin, $
-        prf_file=prf_file, bk_file=bk_file, sp_file=sp_file, ph_file=ph_file, $
-        duty_cycle=duty_cycle, ffi_len=ffi_len
+    eclip_observe, eclip, targets, $
+       frac_fits, rad_fits, ph_fits, $
+       aspix=aspix, geomarea=geomarea, sys_limit=sys_limit, $ ;infil=sp_name,outfile=spo_name
+       readnoise=readnoise, thresh=thresh, tranmin=tranmin, $
+       duty_cycle=duty_cycle, ffi_len=ffi_len, saturation=saturation
     det = where(eclip.det1 or eclip.det2 or eclip.det)
     detid = eclip[det].hostid
     ndet = n_elements(det)
+    stop
     tmp_star = [[eclip.trial], [star[detid].mag.v], [star[detid].mag.ic], $
                 [star[detid].mag.t], $
                 [star[detid].mag.j], [star[detid].mag.k], $
-                [star[detid].coord.elon], [star[detid].coord.elat], $
-                [star[detid].coord.glon], [star[detid].coord.glat], $
+                [eclip[det].coord.elon], [eclip[det].coord.elat], $
+                [eclip[det].coord.glon], [eclip[det].coord.glat], $
                 [star[detid].r], [star[detid].m], [star[detid].teff], $
-                [planet[det].r], [planet[det].p], [planet[det].a], [planet[det].s], [planet[det].b], $
-                [planet[det].dep], [planet[det].dur], [planet[det].ntra_obs], [star[detid].npointings], $
-                [planet[det].snrtran], [planet[det].snrgress], $
-                [planet[det].m], [planet[det].k], $
-                [star[detid].npix], [star[detid].dil], $
-                [star[detid].sat], [star[detid].coord.fov_r], [bins], $
+                [eclip[det].r], [eclip[det].p], [eclip[det].a], [eclip[det].s], [eclip[det].b], $
+                [eclip[det].dep], [eclip[det].dur], [eclip[det].ntra_obs], [eclip[det].npointings], $
+                [eclip[det].snrtran], [eclip[det].snrgress], $
+                [eclip[det].m], [eclip[det].k], $
+                [eclip[det].npix], [eclip[det].dil], $
+                [eclip[det].sat], [eclip[det].coord.fov_r], [bins], $
                 [star[detid].companion.sep], [star[star[detid].companion.ind].mag.ic], $
-                [star[detid].ffi]]
+                [eclip[det].ffi]]
     idx = lindgen(ndet) + totdet
     star_out[idx,*] = tmp_star
     totdet = totdet+ndet

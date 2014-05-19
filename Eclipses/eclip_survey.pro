@@ -26,15 +26,17 @@ PRO eclip_survey, n_segs, fov, star, offset=offset
                         (x lt ccd_pix-1) and $
                         (y gt 0.0) and $
                         (y lt ccd_pix-1))
-         r = sqrt((x[onchip]-ccd_ctr[0])^2 + (y[onchip]-ccd_ctr[1])^2) 
-         prev_npointings = star[onchip].npointings
-         new_npointings = prev_npointings+1
-         star[onchip].npointings = new_npointings
-         star[onchip].coord.fov_r = r/float(new_npointings) + $
+         if (onchip[0] ne -1) then begin
+           r = sqrt((x[onchip]-ccd_ctr[0])^2 + (y[onchip]-ccd_ctr[1])^2) 
+           prev_npointings = star[onchip].npointings
+           new_npointings = prev_npointings+1
+           star[onchip].npointings = new_npointings
+           star[onchip].coord.fov_r = r/float(new_npointings) + $
 		float(prev_npointings)*star[onchip].coord.fov_r/float(new_npointings)
          ;print, 'Hemi=',hemi,' Seg=',seg,' Cam=',cam, $
                 ;' ELon=',elon_segs[seg],' ELat=',float(hemi)*elat_cams[cam], $
                 ;' Nstars=',n_elements(onchip)
+        end
       endfor
     endfor
   endfor

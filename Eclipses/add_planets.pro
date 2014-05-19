@@ -121,7 +121,7 @@ pro add_planets, star, pstruct, frac, rad, ph_p, aspix=aspix, fov=fov
   planet_a = (star[allid].m)^(1./3.) * (planet_per/365.25)^(2./3.); in AU
   planet_s = (star[allid].r)^2.0 * (star[allid].teff/5777.0)^4. / (planet_a)^2. ; indicent flux wrt sun-earth value
 ; Equilibrium Temp.
-  planet_teq = (star[allid].teff/5777.0)*sqrt(star[allid].r/(planet_a*AU_IN_RSUN))
+  planet_teq = (star[allid].teff)*sqrt(star[allid].r/(2.*planet_a*AU_IN_RSUN))
 ; Impact parameter
   planet_b = (planet_a*AU_IN_RSUN / star[allid].r) * star[allid].cosi; assumes circular orbit
  
@@ -161,6 +161,7 @@ pro add_planets, star, pstruct, frac, rad, ph_p, aspix=aspix, fov=fov
   planet_eclip.dep1 = (planet_eclip.r2 / planet_eclip.r1 )^2.0
   planet_eclip.dep2 = (planet_eclip.teff2/planet_eclip.teff1)*(planet_eclip.r2/planet_eclip.r1 )^2.0
   planet_eclip.dur1 = planet_eclip.r1 * planet_eclip.p * sqrt(1.-(planet_eclip.b)^2.) / (!PI*planet_eclip.a*AU_IN_RSUN)
+  planet_eclip.dur2 = planet_eclip.r1 * planet_eclip.p * sqrt(1.-(planet_eclip.b)^2.) / (!PI*planet_eclip.a*AU_IN_RSUN)
 ;  planet_eclip.durpar = planet[tra].r * $
 ;	REARTH_IN_RSUN * planet_eclip[tra].p / $
 ;        sqrt(1.-(planet_eclip[tra].b)^2.) / $
