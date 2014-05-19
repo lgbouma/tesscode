@@ -1,9 +1,8 @@
 pro eclip_observe, eclipse, star, frac, rad, ph_p, $
 	aspix=aspix, geomarea=geomarea, readnoise=readnoise, $
         tranmin=tranmin, thresh=thresh, $
-	nodil=nodil, ffi_len=ffi_len, $
-	sys_limit=sys_limit, duty_cycle=duty_cycle, $
-
+	nodil=nodil, ffi_len=ffi_len, saturation=saturation, $
+	sys_limit=sys_limit, duty_cycle=duty_cycle
  REARTH_IN_RSUN = 0.0091705248
 ;;;;;; basic parameters here
 
@@ -15,10 +14,10 @@ pro eclip_observe, eclipse, star, frac, rad, ph_p, $
   if (keyword_set(sys_limit)) then sys_limit=sys_limit else sys_limit=60.0
   if (keyword_set(duty_cycle)) then duty_cycle=duty_cycle else duty_cycle=100.0
   if (keyword_set(ffi_len)) then ffi_len=ffi_len else ffi_len=30.
+  if (keyword_set(saturation)) then saturation=saturation else saturation=150000.
   apo_blank = (DWELL_TIME-DOWNLINK_TIME)*(1.0-duty_cycle/100.0)
  ;SYS_LIMIT = 60.0; ppm in 1 hour
   SUB_EXP_TIME = 2.0
-  SATURATION = 150000.
   npix_max = 49
   npix_min = 3
 
@@ -28,14 +27,14 @@ pro eclip_observe, eclipse, star, frac, rad, ph_p, $
   
   ecid = eclipse.hostid
   print, 'Calculating number of eclipses'
-  eclipse.neclp_obs1 = $
+  eclipse.neclip_obs1 = $
       n_eclip_blank(eclipse.p, DWELL_TIME, $
-      2.0*double(star[ecid].npointings), periblank=DOWNLINK_TIME, apoblank=apo_blank, ein=e1)
+      2.0*double(eclipse.npointings), periblank=DOWNLINK_TIME, apoblank=apo_blank, ein=e1)
   ; Flip the phase
   e2 = 1.0-e1
-  eclipse.neclp_obs2 = $
+  eclipse.neclip_obs2 = $
       n_eclip_blank(eclipse.p, DWELL_TIME, $
-      2.0*double(star[ecid].npointings), periblank=DOWNLINK_TIME, apoblank=apo_blank, ein=e1)
+      2.0*double(eclipse.npointings), periblank=DOWNLINK_TIME, apoblank=apo_blank, ein=e2)
 
   print, 'Diluting FFIs'
   tra_ps = where(star[eclipse.hostid].ffi lt 1)
@@ -59,7 +58,8 @@ pro eclip_observe, eclipse, star, frac, rad, ph_p, $
   endif
 ; for each observed transiting eclipse, calculate snr
  
-   obs = where((eclipse.neclp_obs1 gt 0) or (eclipse.neclp_obs2 gt 0))
+   obs = where((eclipse.neclip_obs1 gt 0) or (eclipse.neclip_obs2 gt 0))
+   if (obs[0] ne -1) then begin
    obsid = eclipse[obs].hostid
    nobs = n_elements(obs)
    print, 'Observing ', nobs, ' transits'
@@ -69,43 +69,47 @@ pro eclip_observe, eclipse, star, frac, rad, ph_p, $
   ; ph_star is npix x nstar
   dx = floor(10*randomu(seed, nobs))
   dy = floor(10*randomu(seed, nobs))
-  stack_prf, star[obsid].mag.t, star[obsid].teff, ph_fits, prf_fits, ph_star, dx=dx, dy=dy, fov_ind=fov_ind
-  ph_dil = eclipse[obs].dil
+  stack_prf_eclip, star[obsid].mag.t, star[obsid].teff, ph_p, frac, star_ph, $
+	dx=dx, dy=dy, fov_ind=eclipse[obs].coord.fov_ind
+  bk_ph = eclipse[obs].bk_ph
+
+  zodi_flux, eclipse[obs].coord.elat, aspix, zodi_ph
+  eclipse[obs].zodi_ph = zodi_ph
 
   print, 'Calculating noise'
-  noises = dblarr(n_elements(obs), npix_max-npix_min+1)
-  dilution = dblarr(n_elements(obs), npix_max-npix_min+1)
-  shot_noises = dblarr(n_elements(obs), npix_max-npix_min+1)
+  noises = dblarr(n_elements(obs), npix_max)
+  dilution = dblarr(n_elements(obs), npix_max)
+  ;shot_noises = dblarr(n_elements(obs), npix_max-npix_min+1)
   exptime = dblarr(n_elements(obs)) + 3600.
-  for ii=0,(npix_max-npix_min) do begin
-     calc_noise_eclip, ph_star, ph_dil, exptime, $
+  for ii=0,(npix_max-1) do begin
+     calc_noise_eclip, star_ph, bk_ph, exptime, $
 		 readnoise, sys_limit, noise, $
-		 npix_aper=(ii+npix_min), $
+		 npix_aper=(ii+1), $
                  field_angle=eclipse[obs].coord.fov_r, $
 		 subexptime=SUB_EXP_TIME, $
                  geom_area = GEOM_AREA, $
                  aspix=aspix, $
-		 bk_p = bk_fits, $
-                 elon=eclipse[obs].coord.elon, $
-                 elat=eclipse[obs].coord.elat, $
+                 zodi_ph=zodi_ph, $
 		 dilution=dil, $
-		 e_star_sub=estar, $
+		 e_tot_sub=estar, $
 		 noise_star=shot_noise
     dilution[*,ii] = dil
     if (keyword_set(nodil)) then noises[*,ii] = noise $
 	else noises[*,ii] = dil*noise
-    shot_noises[*,ii] = shot_noise*1d6
+    ;shot_noises[*,ii] = shot_noise*1d6
     ;print, median(shot_noise*1d6)
-    ;if (ii eq 0) then star[obsid].sat = (estar gt SATURATION)
+    if (ii eq 0) then eclipse[obs].sat = (estar gt SATURATION)
   end
+  noises = noises[*,(npix_min-1):(npix_max-1)]
+  dilution = dilution[*,(npix_min-1):(npix_max-1)]
   minnoise = min(noises, ind, dimension=2)
-  star[obsid].npix = ind / n_elements(obs) + npix_min
-  star[obsid].snr = 1.0/minnoise
-  star[obsid].dil = dilution[ind]
+  eclipse[obs].npix = ind / n_elements(obs) + npix_min
+  eclipse[obs].dil = dilution[ind]
+  ;eclipse[obs].star_ph = reform(star_ph[eclipse[obs].npix-1, *])
   ; Calculate SNR in phase-folded lightcurve
-  et1_folded = double(eclipse[obs].neclp_obs1) * $
+  et1_folded = double(eclipse[obs].neclip_obs1) * $
     eclipse[obs].dur1_eff * 24.0 * 3600
-  et2_folded = double(eclipse[obs].neclp_obs2) * $
+  et2_folded = double(eclipse[obs].neclip_obs2) * $
     eclipse[obs].dur2_eff * 24.0 * 3600
   et1_eclp = eclipse[obs].dur1_eff * 24.0 * 3600
   et2_eclp = eclipse[obs].dur2_eff * 24.0 * 3600
@@ -119,20 +123,17 @@ pro eclip_observe, eclipse, star, frac, rad, ph_p, $
 ;		     REARTH_IN_RSUN * eclipse[obs].r / $
 ;		    (6.0*star[obsid].r*(1.0+eclipse[obs].b^2.)))
 ;   decide if it is 'detected'.
-  det1 = where((eclipse.neclp_obs1 ge NTRA_OBS_MIN) and $
+  det1 = where((eclipse.neclip_obs1 ge NTRA_OBS_MIN) and $
 	      (eclipse.snr1 ge SNR_MIN))
-  det2 = where((eclipse.neclp_obs2 ge NTRA_OBS_MIN) and $
+  det2 = where((eclipse.neclip_obs2 ge NTRA_OBS_MIN) and $
 	      (eclipse.snr2 ge SNR_MIN))
-  det = where(((eclipse.neclp_obs1 + eclipse.neclp_obs2) ge NTRA_OBS_MIN) and $
+  det = where(((eclipse.neclip_obs1 + eclipse.neclip_obs2) ge NTRA_OBS_MIN) and $
 	      (eclipse.snr ge SNR_MIN))
   print, 'Detected ', n_elements(det), ' eclipses.'
-  eclipse[det1].det1 = 1
-  eclipse[det2].det2 = 1
-  eclipse[det].det = 1
+  if (det1[0] ne -1) then eclipse[det1].det1 = 1
+  if (det2[0] ne -1) then eclipse[det2].det2 = 1
+  if (det[0] ne -1)  then eclipse[det].det = 1
 ;  detected = where(star.eclipse_hz.tra gt 0 and star.eclipse_hz.neclp1_obs ge NTRA_OBS_MIN and star.eclipse_hz.snr ge SNR_MIN)
 ;  star[detected].eclipse_hz.det = 1
-  if keyword_set(sstruct) then sstruct=star 
-  if keyword_set(pstruct) then pstruct=eclipse 
-  if keyword_set(outfile) then save, filen=outfile, eclipse
-
+  end
 end

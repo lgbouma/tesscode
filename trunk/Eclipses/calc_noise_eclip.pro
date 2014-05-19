@@ -14,12 +14,12 @@ pro calc_noise_eclip, $
 ;
 ; optional inputs
 ;
-   elon=elon, elat=elat, $          ; ecliptic coordinates in degrees
    subexptime=subexptime, $         ; subexposure time (n_exp = exptime/subexptime)
    npix_aper = npix_aper, $         ; number of pixels in photometric aperture
    ;frac_aper = frac_aper, $         ; fraction of flux enclosed in photometric aperture
    geom_area = geom_area, $         ; geometric collecting area
-   aspix = aspix, $         ; arcsec per pixel
+   aspix = aspix, $                 ; arcsec per pixel
+   zodi_ph = zodi_ph, $
    verbose=verbose, $               ; request verbose output
    field_angle = field_angle, $	    ; Field angle for effective area
    bin_sys=bin_sys, $		    ; Is this a binary?
@@ -32,15 +32,12 @@ pro calc_noise_eclip, $
    noise_sky=noise_sky, $           ; noise from sky counts only
    noise_ro=noise_ro,$              ; noise from readout only
    noise_sys=noise_sys, $           ; noise from systematic limit only
-   noise_bin=noise_bin, $	    ; noise from binary companion
-   e_star_sub=e_star_sub, $ 	    ; subexposure electron count (for saturation check)
+   e_tot_sub=e_tot_sub, $ 	    ; subexposure electron count (for saturation check)
    
    dilution=dilution		    ; background dilution factor
 ;
 ;
-  if (keyword_set(teff)) then teff=teff else teff=5000.
-  if (keyword_set(elon)) then elon=elon else elon=0.0
-  if (keyword_set(elat)) then elat=elat else elat=30.0
+  if (keyword_set(zodi_ph)) then zodi_ph=zodi_ph else zodi_ph = 0.
   if (keyword_set(subexptime)) then subexptime=subexptime else subexptime=2.0
   if (keyword_set(geom_area)) then geom_area=geom_area else geom_area=69.1
   if (keyword_set(pix_scale)) then pix_scale=pix_scale else pix_scale=21.1
@@ -67,16 +64,11 @@ pro calc_noise_eclip, $
   
   e_pix_dil = ph_dil * geom_area * cos(!DPI * field_angle/180.)* exptime
   
-  ; electrons in cadence
-  e_star_sub = e_star*subexptime/exptime
 
   if (v) then print, 'e_star = ', median(e_star)
 
   ; e/pix from zodi
-  dlat = (abs(elat)-90.)/90.
-  vmag_zodi = 23.345 - 1.148*dlat^2.
-  e_pix_zodi = 10.0^(-0.4*(vmag_zodi-22.8)) * 2.56D-3 * $
-	geom_area * cos(!DPI * field_angle/180.) * omega_pix * exptime
+  e_pix_zodi = zodi_ph * geom_area * cos(!DPI * field_angle/180.) *  exptime
 
   if (v) then print, 'vmag_zodi = ', median(vmag_zodi)
   if (v) then print, 'e_pix_zodi = ', median(e_pix_zodi)
@@ -118,14 +110,16 @@ pro calc_noise_eclip, $
 ;    if (v) then print, 'e_pix_bin = ', median(e_bin[bins])
 ;  endif
   
-  e_tot = e_tot_sky + e_star + e_bin
+  e_tot = e_tot_sky + e_star
+  ; electrons in cadence
+  e_tot_sub = e_tot*subexptime/exptime
+  
   noise_star = sqrt(e_star) / e_tot
   noise_sky  = sqrt(e_tot_sky) / e_tot
   noise_ro   = sqrt(npix_aper*n_exposures)*e_pix_ro / e_tot
-  noise_bin  = sqrt(e_bin) / e_tot
   noise_sys  = 0.0*noise_star + sys_limit/1d6/sqrt(exptime/3600.)
 
   dilution = e_tot / e_star
-  noise = sqrt( noise_star^2. + noise_sky^2. + noise_ro^2. + noise_sys^2. + noise_bin^2. )
+  noise = sqrt( noise_star^2. + noise_sky^2. + noise_ro^2. + noise_sys^2.)
 
 end

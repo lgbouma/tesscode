@@ -11,10 +11,8 @@ PRO starstruct__define
 		  mini: 0.0, $
 		  feh: 0.0, $
  	          logg: 0.0, $
-                  npointings: 0, $ ; Number of TESS pointings this star gets
                   mag: {magstruct}, $
                   companion: {compstruct}, $
-                  snr: 0.0, $      ; SNR per hour
                   pri: 0, $        ; Primary of binary?
                   sec: 0, $        ; Secondary of binary? 
                   spl: 0, $        ; Split (for triples and quadruples)
