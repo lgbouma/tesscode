@@ -27,7 +27,7 @@ PRO eclip_survey, n_segs, fov, star, offset=offset
                         (y gt 0.0) and $
                         (y lt ccd_pix-1))
          if (onchip[0] ne -1) then begin
-           r = sqrt((x[onchip]-ccd_ctr[0])^2 + (y[onchip]-ccd_ctr[1])^2) 
+           r = sqrt((x[onchip]-ccd_ctr[0])^2. + (y[onchip]-ccd_ctr[1])^2.) 
            prev_npointings = star[onchip].npointings
            new_npointings = prev_npointings+1
            star[onchip].npointings = new_npointings

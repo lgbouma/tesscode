@@ -1,4 +1,4 @@
-pro add_planets, star, pstruct, frac, rad, ph_p, aspix=aspix, fov=fov
+pro add_planets, star, pstruct, frac, rad, ph_p, aspix=aspix, fov=fov, dressing=dressing
 
   sz_ph_p = size(ph_p)
   nfilt = sz_ph_p[1]
@@ -109,13 +109,6 @@ pro add_planets, star, pstruct, frac, rad, ph_p, aspix=aspix, fov=fov
 ;  star.dx = floor(10.*randomu(seed, nstars))
 ;  star.dy = floor(10.*randomu(seed, nstars))
 ;  close = where(star.sec and (star.companion.sep/pixsc le 0.1))
-; Random orbital orientation
-  if (keyword_set(req)) then begin
-    star.cosi = 0.0 ;star[pla].r/(AU_IN_RSUN * star[pla].planet.a) * (-1.0 + 2.0*randomu(seed, nplanets));
-  endif else begin
-    star.cosi = -1.0 + 2.0*randomu(seed, nstars)
-  endelse
-
 ; Work out orbital distance and impact parameter
   allid = planet_hid
   planet_a = (star[allid].m)^(1./3.) * (planet_per/365.25)^(2./3.); in AU
@@ -131,9 +124,9 @@ pro add_planets, star, pstruct, frac, rad, ph_p, aspix=aspix, fov=fov
   ; Weiss & Marcy 2014:
   planet_m = dblarr(nplanets)
   lomass = where(planet_rad lt 1.5)
-  planet_m[lomass] = 0.440*(planet_rad[lomass])^3. + 0.614*(planet_rad[lomass])^4.
+  if (lomass[0] ne -1) then planet_m[lomass] = 0.440*(planet_rad[lomass])^3. + 0.614*(planet_rad[lomass])^4.
   himass = where(planet_rad ge 1.5)
-  planet_m[himass] = 2.69*(planet_rad[himass])^0.93
+  if (himass[0] ne -1) then planet_m[himass] = 2.69*(planet_rad[himass])^0.93
 ; RV amplitude
   planet_k = RV_AMP*planet_per^(-1./3.) * planet_m * $ 
 	sqrt(1.0-star[allid].cosi^2.) * (star[allid].m)^(-2./3.) 
@@ -142,32 +135,35 @@ pro add_planets, star, pstruct, frac, rad, ph_p, aspix=aspix, fov=fov
 	;	(star[pla].planet.p * star[pla].m * MSUN_IN_MEARTH)
 ; Work out transit properties
   tra = where(abs(planet_b) lt 1.0)
-  traid = planet_hid[tra]
-  ntra = n_elements(tra)
-  planet_eclip = replicate({eclipstruct}, ntra)
-  planet_eclip.class=1
-  planet_eclip.m1 = star[traid].m
-  planet_eclip.m2 = planet_m[tra]
-  planet_eclip.k = planet_k[tra]
-  planet_eclip.r1 = star[traid].r
-  planet_eclip.r2 = planet_rad[tra]*REARTH_IN_RSUN
-  planet_eclip.teff1 = star[traid].teff
-  planet_eclip.teff2 = planet_teq[tra]
-  planet_eclip.a = planet_a[tra]
-  planet_eclip.s = planet_s[tra]
-  planet_eclip.p = planet_per[tra]
-  planet_eclip.b = planet_b[tra]
-  planet_eclip.hostid = planet_hid[tra]
-  planet_eclip.dep1 = (planet_eclip.r2 / planet_eclip.r1 )^2.0
-  planet_eclip.dep2 = (planet_eclip.teff2/planet_eclip.teff1)*(planet_eclip.r2/planet_eclip.r1 )^2.0
-  planet_eclip.dur1 = planet_eclip.r1 * planet_eclip.p * sqrt(1.-(planet_eclip.b)^2.) / (!PI*planet_eclip.a*AU_IN_RSUN)
-  planet_eclip.dur2 = planet_eclip.r1 * planet_eclip.p * sqrt(1.-(planet_eclip.b)^2.) / (!PI*planet_eclip.a*AU_IN_RSUN)
+  if (tra[0] ne -1) then begin
+    traid = planet_hid[tra]
+    ntra = n_elements(tra)
+    planet_eclip = replicate({eclipstruct}, ntra)
+    planet_eclip.class=1
+    planet_eclip.m1 = star[traid].m
+    planet_eclip.m2 = planet_m[tra]
+    planet_eclip.k = planet_k[tra]
+    planet_eclip.r1 = star[traid].r
+    planet_eclip.r2 = planet_rad[tra]*REARTH_IN_RSUN
+    planet_eclip.teff1 = star[traid].teff
+    planet_eclip.teff2 = planet_teq[tra]
+    planet_eclip.a = planet_a[tra]
+    planet_eclip.s = planet_s[tra]
+    planet_eclip.p = planet_per[tra]
+    planet_eclip.b = planet_b[tra]
+    planet_eclip.hostid = planet_hid[tra]
+    planet_eclip.dep1 = (planet_eclip.r2 / planet_eclip.r1 )^2.0
+    toodeep = where(planet_eclip.dep1 gt 1.0)
+    if (toodeep[0] ne -1) then planet_eclip[toodeep].dep1 = 1.0
+    planet_eclip.dep2 = (planet_eclip.teff2/planet_eclip.teff1)*(planet_eclip.r2/planet_eclip.r1 )^2.0
+    planet_eclip.dur1 = planet_eclip.r1 * planet_eclip.p * sqrt(1.-(planet_eclip.b)^2.) / (!PI*planet_eclip.a*AU_IN_RSUN)
+    planet_eclip.dur2 = planet_eclip.r1 * planet_eclip.p * sqrt(1.-(planet_eclip.b)^2.) / (!PI*planet_eclip.a*AU_IN_RSUN)
 ;  planet_eclip.durpar = planet[tra].r * $
 ;	REARTH_IN_RSUN * planet_eclip[tra].p / $
 ;        sqrt(1.-(planet_eclip[tra].b)^2.) / $
 ;        (!PI*planet_eclip[tra].a*AU_IN_RSUN)
   
-  print, 'Created ', n_elements(tra), ' transiting planets out of ', nplanets, ' total.'
-
+    print, 'Created ', n_elements(tra), ' transiting planets out of ', nplanets, ' total.'
+  end
   pstruct=planet_eclip
 end

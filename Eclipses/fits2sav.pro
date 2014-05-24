@@ -1,7 +1,7 @@
-PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax
+PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax, dbl=dbl
 
   dat = mrdfits(fname, 0, h, /SILENT)
-  dat = [dat, dat]
+  if keyword_set(dbl) then dat = [dat, dat]
 
   ; Abs. mag ranges for binary properties
   mp_min = [0.0, 0.1, 0.6, 0.8, 1.0, 1.4]  
