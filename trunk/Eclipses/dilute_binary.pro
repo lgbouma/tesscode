@@ -1,13 +1,13 @@
-PRO dilute_binary, eclip, star, frac, rad, ph_p, aspix=aspix
+PRO dilute_binary, eclip, star, frac, rad, ph_p, aspix=aspix, radmax=radmax
   ; How many filters in the prf?
   sz_ph_p = size(ph_p)
   nfilt = sz_ph_p[1]
   sz_frac = size(frac)
   npts = sz_frac[1]*sz_frac[2]*sz_frac[4]
   if (keyword_set(aspix)) then aspix=aspix else aspix=21.1
+  if (keyword_set(radmax)) then radmax=radmax else radmax=6.
   ; Background catalog contains 0.134 sq degrees of stars
   ; Radius of 0.134 sq degree circle in pixels
-  radmax = 8. ; only count flux up to 8 pixels away
 
   hostid = eclip.hostid
   binsys = where((star[hostid].pri or star[hostid].sec) and (star[hostid].companion.sep/aspix lt radmax))

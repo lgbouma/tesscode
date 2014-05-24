@@ -28,6 +28,7 @@ PRO eclipstruct__define
                     neclip_obs1: 0, $ ; Number of primary eclipses observed
                     neclip_obs2: 0, $ ; Number of secondary eclipses observed
                     snr: 0.0, $ ; SNR of primary+secondary eclipses in phase-folded lightcurve
+                    snrhr: 0.0, $ ; SNR of target per hour
                     snr1: 0.0, $ ; SNR of primary eclipses in phase-folded lightcurve
                     snr2: 0.0, $ ; SNR of secondary eclipses in phase-folded lightcurve
                     snreclp1: 0.0, $ ; SNR per primary eclipse
@@ -41,6 +42,7 @@ PRO eclipstruct__define
                     det2: 0, $  ; Detected secondary?
                     npix: 0, $       ; Optimal number of pix in aperture
                     star_ph: 0.0, $      ; photons/s/cm^2 from star
+                    bin_ph: 0.0, $      ; photons/s/cm^2 from within 0.5 pix
                     bk_ph: 0.0, $      ; photons/s/cm^2/pix from other stars
                     zodi_ph: 0.0, $      ; photons/s/cm^2/pix
                     sat: 0, $        ; saturation flag
