@@ -23,7 +23,8 @@ function n_eclip, $
   if (observed[0] ne -1) then begin
      n[observed] = 1.0 + floor( (duration[observed] - e[observed])/period[observed] )
      n0 = n
-     ;print, e, n
+     ;print, e, ni
+     ;print, "staring for loop", min(period), max(period)
      for m=0,max(n)-1 do begin
 	trantime = (e+m*period) mod obstime
         ;print, 'trantime = ', trantime
