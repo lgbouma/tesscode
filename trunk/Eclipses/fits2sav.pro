@@ -136,6 +136,8 @@ PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax, dbl=dbl
       angseps = angseps*sqrt(sin(phi)^2. + cosi^2.*cos(phi)^2.)
       star[sind].companion.sep = angseps
       bin_star.companion.sep = angseps
+      star[sind].companion.cosi = cosi
+      bin_star.companion.cosi = cosi
 
       ; Mark stars for triples and quadruples
       if (homf[ii] gt 0) then begin

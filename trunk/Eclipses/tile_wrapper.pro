@@ -68,10 +68,19 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip
    
     ; Choose which stars are postage stamps vs ffis
     targets.ffi = 1
-    sel = ps_sel(targets.mag.t, targets.teff, targets.m, targets.r, ph_fits)
-    if (sel[0] ne -1) then begin 
-      targets[sel].ffi=0
-      numps[ii] = n_elements(sel)
+    pri = where(targets.pri eq 1)
+    selpri = ps_sel(targets[pri].mag.t, targets[pri].teff, targets[pri].m, targets[pri].r, ph_fits)
+    if (selpri[0] ne -1) then begin 
+      targets[pri[selpri]].ffi=0
+      secffi = targets[pri[selpri]].companion.ind
+      targets[secffi].ffi=0
+      numps[ii] = numps[ii]+n_elements(selpri)
+    end
+    sing = where((targets.pri eq 0) and (targets.sec eq 0))
+    selsing = ps_sel(targets[sing].mag.t, targets[sing].teff, targets[sing].m, targets[sing].r, ph_fits)
+    if (selsing[0] ne -1) then begin 
+      targets[sing[selsing]].ffi=0
+      numps[ii] = numps[ii]+n_elements(selsing)
     end
 
     for jj=0,n_trial-1 do begin

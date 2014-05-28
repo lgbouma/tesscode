@@ -15,6 +15,9 @@ PRO teff2phot, teff1, teff2, ph_p, phr1, phr2
     ph_2_filt[j,*] = ph_p[j,0] + ph_p[j,1]*recipteff2 + $
          ph_p[j,2]*recipteff2^2. + ph_p[j,3]*recipteff2^3.
   endfor
+  
+  ph_1_filt[where(ph_1_filt lt 0)] = 0.0
+  ph_2_filt[where(ph_2_filt lt 0)] = 0.0
 
   ph_1 = total(ph_1_filt, 1)
   ph_2 = total(ph_2_filt, 1)
