@@ -129,14 +129,15 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, $
 ; Dilute
     det = where(((eclipse.neclip_obs1 + eclipse.neclip_obs2) ge NTRA_OBS_MIN) and $
 	      (eclipse.snr ge SNR_MIN))
-    detp = where(((eclipse.neclip_obs1 + eclipse.neclip_obs2) ge NTRA_OBS_MIN) and $
-	      (eclipse.snr ge SNR_MIN) and (eclipse.class eq 1))
     if (det[0] ne -1) then begin
       print, "Diluting with binary companions"
-      if (detp[0] ne -1) then $
-	dilute_binary, eclipse[detp], star, frac, rad, ph_p, aspix=aspix, radmax=4.0
+      bindil = where(eclip[det].class eq 1)
+      if (bindil[0] ne -1) then $
+	dilute_binary, eclipse[det[bindil]], star, frac, rad, ph_p, aspix=aspix, radmax=4.0
       print, "Diluting with other target stars"
-      dilute_eclipse, eclipse[det], star, frac, rad, ph_p, aspix=aspix, sq_deg=13.4, radmax=4.0
+      targdil = where(eclip[det].class eq 1 or eclip[det].class eq 2)
+      if (targdil[0] ne -1) then $
+        dilute_eclipse, eclipse[det[targdil]], star, frac, rad, ph_p, aspix=aspix, sq_deg=13.4, radmax=4.0
       print, "Diluting with background stars"
       dilute_eclipse, eclipse[det], bk, frac, rad, ph_p, aspix=aspix, sq_deg=0.134, radmax=4.0
       print, "Diluting with deep stars"
