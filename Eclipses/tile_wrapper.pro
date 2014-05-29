@@ -87,7 +87,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip
       ; re-radomize the inclination
       targets.cosi = -1 + 2.0*randomu(seed, n_elements(targets))
       ; Add eclipses
-      make_eclipse, targets, eclip_trial, frac_fits, rad_fits, ph_fits, min_depth=min_depth
+      make_eclipse, targets, bkgnds, eclip_trial, frac_fits, rad_fits, ph_fits, min_depth=min_depth
       eclip_trial.trial = jj + 1
       ; Add coordinates to the eclipses
       neclip = n_elements(eclip_trial)
@@ -127,9 +127,13 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip
 
     ; Dilute
     ;print, "Diluting with binary companions"
-    ;dilute_binary, eclip[where(eclip.class eq 1)], targets, frac_fits, rad_fits, ph_fits, aspix=aspix, radmax=4.0
+    ;bindil = where(eclip.class eq 1)
+    ;if (bindil[0] ne -1) then $
+    ;  dilute_binary, eclip[bindil], targets, frac_fits, rad_fits, ph_fits, aspix=aspix, radmax=4.0
     ;print, "Diluting with other target stars"
-    ;dilute_eclipse, eclip, targets, frac_fits, rad_fits, ph_fits, aspix=aspix, sq_deg=13.4, radmax=4.0
+    ;targdil = where(eclip.class eq 1 or eclip.class eq 2)
+    ;if (targdil[0] ne -1) then $
+    ;  dilute_eclipse, eclip, targets, frac_fits, rad_fits, ph_fits, aspix=aspix, sq_deg=13.4, radmax=4.0
     ;print, "Diluting with background stars"
     ;dilute_eclipse, eclip, bkgnds, frac_fits, rad_fits, ph_fits, aspix=aspix, sq_deg=0.134, radmax=4.0
     ;print, "Diluting with deep stars"
