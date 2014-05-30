@@ -11,7 +11,7 @@ PRO dilute_eclipse_img, eclip, bkgnds, frac, ph_p, dx, dy, dilvec, aspix=aspix, 
   imgsize = sqrt(sz_frac[4])
   if (keyword_set(aspix)) then aspix=aspix else aspix=21.1
   if (keyword_set(sq_deg)) then sq_deg=sq_deg else sq_deg=1.0
-  if (keyword_set(radmax)) then radmax=radmax else radmax=7.0
+  if (keyword_set(radmax)) then radmax=radmax else radmax=8
   ; Background catalog contains 0.134 sq degrees of stars
   ; Radius of 0.134 sq degree circle in pixels
   radas = sqrt(sq_deg/!dpi)*3600.
@@ -21,7 +21,7 @@ PRO dilute_eclipse_img, eclip, bkgnds, frac, ph_p, dx, dy, dilvec, aspix=aspix, 
   
   neclip = n_elements(eclip)
   fov = eclip.coord.fov_ind
-  dilvec = dblarr(neclip, radmax*radmax)
+  dilvec = dblarr(neclip, imgsize*imgsize/4)
 
   for ii=0, neclip-1 do begin
     ; Generate some random radii
@@ -30,7 +30,7 @@ PRO dilute_eclipse_img, eclip, bkgnds, frac, ph_p, dx, dy, dilvec, aspix=aspix, 
     gd = where((r lt radmax) and (bkgnds.sec ne 1))
     if ((ii mod 1000.) eq 0) then print, "On eclipse ", ii, " of ", neclip, " with ", n_elements(gd), " stars"
     if (gd[0] ne -1) then begin
-
+     ; r[gd] = 0.0 ; test purposes only
       bkteff = bkgnds[gd].teff
       bkmagt = bkgnds[gd].mag.tsys
       bkrad  = r[gd]
@@ -48,14 +48,14 @@ PRO dilute_eclipse_img, eclip, bkgnds, frac, ph_p, dx, dy, dilvec, aspix=aspix, 
       ph_filt[where(ph_filt lt 0.0)] = 0.0
       
       ; Stack up the starz
-      dilpix = dblarr(radmax, radmax)
+      dilpix = dblarr(imgsize/2, imgsize/2)
       for kk=0, n_elements(gd)-1 do begin
-        pixdx = floor(bkx[kk] - dx[ii])
-        pixdy = floor(bky[kk] - dy[ii])
-        indx  = floor(10*(abs((bkx[kk] - dx[ii])) mod 1))
-        indy  = floor(10*(abs((bky[kk] - dy[ii])) mod 1))
-        xsel = indgen(radmax) + imgsize/2 + pixdy
-        ysel = indgen(radmax) + imgsize/2 + pixdx 
+        pixdx = floor(bkx[kk] + dx[ii]/10. + 0.1)
+        pixdy = floor(bky[kk] + dy[ii]/10. + 0.1)
+        indx  = round(10*(bkx[kk] - pixdx + dx[ii]/10.))
+        indy  = round(10*(bky[kk] - pixdy + dy[ii]/10.))
+        xsel = indgen(imgsize/2) + imgsize/4 + pixdx
+        ysel = indgen(imgsize/2) + imgsize/4 + pixdy 
         thisprf = reform(frac[indx,indy,fov[ii],*,0:(nfilt-1)])
         thisimg = reform(thisprf#ph_filt[*,kk], imgsize, imgsize)
         thisimgx  = thisimg[xsel,*]
@@ -63,7 +63,8 @@ PRO dilute_eclipse_img, eclip, bkgnds, frac, ph_p, dx, dy, dilvec, aspix=aspix, 
         dilpix[*,*] = dilpix[*,*] + $
 		10^(-0.4*(bkmagt[kk]-10.))*thisimgxy
       end ; loop over stars
+      ;stop
     end ; if gd
-    dilvec[ii,*] = reform(dilpix, radmax*radmax) 
+    dilvec[ii,*] = reform(dilpix, imgsize*imgsize/4) 
   end ; loop over eclipses
 END
