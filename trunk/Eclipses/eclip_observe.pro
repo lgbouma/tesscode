@@ -130,6 +130,11 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, $
     det = where(((eclipse.neclip_obs1 + eclipse.neclip_obs2) ge NTRA_OBS_MIN) and $
 	      (eclipse.snr ge SNR_MIN))
     if (det[0] ne -1) then begin
+      ;print, 'Calculating noise again'
+      detid = eclipse[det].hostid
+      ndet = n_elements(det)
+      print, 'Re-observing ', ndet, ' transits'
+      
       print, "Diluting with binary companions"
       bindil = where(eclip[det].class eq 1)
       if (bindil[0] ne -1) then $
@@ -137,17 +142,12 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, $
       print, "Diluting with other target stars"
       targdil = where(eclip[det].class eq 1 or eclip[det].class eq 2)
       if (targdil[0] ne -1) then $
-        dilute_eclipse, eclipse[det[targdil]], star, frac, rad, ph_p, aspix=aspix, sq_deg=13.4, radmax=4.0
+        dilute_eclipse_img, eclipse[det[targdil]], star, frac, ph_p, aspix=aspix, sq_deg=13.4, radmax=4.0
       print, "Diluting with background stars"
-      dilute_eclipse, eclipse[det], bk, frac, rad, ph_p, aspix=aspix, sq_deg=0.134, radmax=4.0
+      dilute_eclipse_img, eclipse[det], bk, frac, ph_p, aspix=aspix, sq_deg=0.134, radmax=4.0
       print, "Diluting with deep stars"
-      dilute_eclipse, eclipse[det], deep, frac, rad, ph_p, aspix=aspix, sq_deg=0.0134, radmax=2.0
+      dilute_eclipse_img, eclipse[det], deep, frac, ph_p, aspix=aspix, sq_deg=0.0134, radmax=2.0
 
-      ;print, 'Calculating noise again'
-      detid = eclipse[det].hostid
-      ndet = n_elements(det)
-      print, 'Re-observing ', ndet, ' transits'
-      ;  obs = indgen(n_elements(star))
 
       print, 'Stacking and sorting PRFs'
       ; ph_star is npix x nstar
