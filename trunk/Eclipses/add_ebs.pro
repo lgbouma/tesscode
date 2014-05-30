@@ -23,6 +23,8 @@ pro add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
   m2 = star[star[pris].companion.ind].m
   teff1 = star[pris].teff
   teff2 = star[star[pris].companion.ind].teff
+  tmag1 = star[pris].mag.t
+  tmag2 = star[star[pris].companion.ind].mag.t
   a = star[pris].companion.a
   p = star[pris].companion.p
   ;cosi = star[pris].companion.cosi
@@ -50,7 +52,8 @@ pro add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
     ; Same for all eclipse types
     pdur14 = (p[bin_ecl]/!dpi)*asin((r1[bin_ecl]*sqrt(1.0-b1^2)+r2[bin_ecl])/a)
     sdur14 = (p[bin_ecl]/!dpi)*asin((r2[bin_ecl]*sqrt(1.0-b2^2)+r1[bin_ecl])/a)
-    teff2phot, teff1, teff2, ph_p, phr1, phr2 ; Flux ratios
+    phr1 = phot_ratio(teff1, teff2, tmag1, tmag2, ph_p) ; Flux ratios
+    phr2 = 1.0-phr1
     ; Only for total eclipses
     if (tot_ecl[0] ne -1) then begin
       pdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r1[tot_ecl]*sqrt(1.0-b2^2)+r2[tot_ecl])/a)

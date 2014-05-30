@@ -20,8 +20,16 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, $
   if (keyword_set(downlink)) then downlink=downlink else downlink=16.0d/24.0d
   apo_blank = (dwell_time-downlink)*(1.0-duty_cycle/100.0)
   
-  npix_max = 49
+  npix_max = 64
   npix_min = 3
+  mask2d = intarr(16,16)
+  mid = indgen(8)+4
+  mask1 = mask2d
+  mask2 = mask2d
+  mask1[*,mid] = 1
+  mask2[mid,*] = 1
+  mask2d = mask1*mask2
+  mask1d = reform(mask2d, 16*16)
 
   nstars = n_elements(star)
   neclipses = n_elements(eclipse)
@@ -72,7 +80,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, $
     print, 'Stacking and sorting PRFs'
     ; ph_star is npix x nstar
     stack_prf_eclip, star[obsid].mag.t, star[obsid].teff, ph_p, frac, star_ph, $
-	dx=dx[obs], dy=dy[obs], fov_ind=eclipse[obs].coord.fov_ind
+	dx=dx[obs], dy=dy[obs], fov_ind=eclipse[obs].coord.fov_ind, mask=mask1d
     bk_ph = eclipse[obs].bk_ph
 
     zodi_flux, eclipse[obs].coord.elat, aspix, zodi_ph
@@ -135,34 +143,53 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, $
       ndet = n_elements(det)
       print, 'Re-observing ', ndet, ' transits'
       
-      print, "Diluting with binary companions"
-      bindil = where(eclip[det].class eq 1)
-      if (bindil[0] ne -1) then $
-	dilute_binary, eclipse[det[bindil]], star, frac, rad, ph_p, aspix=aspix, radmax=4.0
-      print, "Diluting with other target stars"
-      targdil = where(eclip[det].class eq 1 or eclip[det].class eq 2)
-      if (targdil[0] ne -1) then $
-        dilute_eclipse_img, eclipse[det[targdil]], star, frac, ph_p, aspix=aspix, sq_deg=13.4, radmax=4.0
-      print, "Diluting with background stars"
-      dilute_eclipse_img, eclipse[det], bk, frac, ph_p, aspix=aspix, sq_deg=0.134, radmax=4.0
-      print, "Diluting with deep stars"
-      dilute_eclipse_img, eclipse[det], deep, frac, ph_p, aspix=aspix, sq_deg=0.0134, radmax=2.0
-
-
       print, 'Stacking and sorting PRFs'
       ; ph_star is npix x nstar
       stack_prf_eclip, star[detid].mag.t, star[detid].teff, ph_p, frac, star_ph, $
-	dx=dx[det], dy=dy[det], fov_ind=eclipse[det].coord.fov_ind
-      bk_ph = eclipse[det].bk_ph
+	dx=dx[det], dy=dy[det], fov_ind=eclipse[det].coord.fov_ind, mask=mask1d, sind=sind
+      ;bk_ph = eclipse[det].bk_ph
+
+      dil_ph = dblarr(total(mask1d), ndet)
+      
+;     print, "Diluting with binary companions"
+      bindil = where(eclipse[det].class eq 1)
+      if (bindil[0] ne -1) then begin
+      stack_prf_eclip, star[star[bindil].companion.ind].mag.t, star[detid].teff, ph_p, frac, dilvec, $
+	dx=dx[det], dy=dy[det], fov_ind=eclipse[det].coord.fov_ind, mask=mask1d, sind=sind
+;	dilute_binary, eclipse[det[bindil]], star, frac, rad, ph_p, $
+;		dx[det[bindil]], dy[det[bindil]], dilvec, aspix=aspix, radmax=4.0
+;        dil_ph[bindil] = dil_ph[bindil] + dilvec
+      end
+      print, "Diluting with other target stars"
+      targdil = where(eclipse[det].class eq 1 or eclipse[det].class eq 2)
+      if (targdil[0] ne -1) then begin
+        dilute_eclipse_img, eclipse[det[targdil]], star, frac, ph_p, $
+		dx[det[targdil]], dy[det[targdil]], dilvec, aspix=aspix, sq_deg=13.4, radmax=6.0
+        dil_ph[targdil] = dil_ph[targdil] + dilvec
+      end
+      print, "Diluting with background stars"
+      dilute_eclipse_img, eclipse[det], bk, frac, ph_p, $
+		dx[det], dy[det], dilvec, aspix=aspix, sq_deg=0.134, radmax=4.0
+      dil_ph = dil_ph + dilvec
+      print, "Diluting with deep stars"
+      dilute_eclipse_img, eclipse[det], deep, frac, ph_p, $
+		dx[det], dy[det], dilvec, aspix=aspix, sq_deg=0.0134, radmax=2.0
+      dil_ph = dil_ph + dilvec
+   
+      ; Sort into the same pixel order as target star flux
+      for jj=0,ndet-1 do begin
+        dil_ph[*,jj] = total(dil_ph[sind[*,jj],jj], /cumulative)
+      end      
 
       zodi_flux, eclipse[det].coord.elat, aspix, zodi_ph
       eclipse[det].zodi_ph = zodi_ph
+
       noises = dblarr(n_elements(det), npix_max)
       dilution = dblarr(n_elements(det), npix_max)
       ;shot_noises = dblarr(n_elements(obs), npix_max-npix_min+1)
       exptime = dblarr(n_elements(det)) + 3600.
       for ii=0,(npix_max-1) do begin
-        calc_noise_eclip, star_ph, bk_ph, exptime, $
+        calc_noise_eclip, star_ph, dil_ph, exptime, $
 		 readnoise, sys_limit, noise, $
 		 npix_aper=(ii+1), $
                  field_angle=eclipse[det].coord.field_angle, $

@@ -100,7 +100,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip
       glon = phi[thispix[coordind]]*180./!dpi
       glat = (theta[thispix[coordind]]-!dpi/2.)*180./!dpi
       ; Transform from galactic healpix to ecliptic observations
-      euler, glon, glat, elon, elat, select=5
+      euler, glon, glat, elon, elat, select=6
       euler, glon, glat, ra, dec, select=2
       eclip_trial.coord.elon = elon
       eclip_trial.coord.elat = elat

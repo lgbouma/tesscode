@@ -64,7 +64,7 @@ PRO dilute_eclipse_img, eclip, bkgnds, frac, ph_p, dx, dy, dilvec, aspix=aspix, 
 		10^(-0.4*(bkmagt[kk]-10.))*thisimgxy
       end ; loop over stars
       ;stop
+      dilvec[ii,*] = reform(dilpix, imgsize*imgsize/4) 
     end ; if gd
-    dilvec[ii,*] = reform(dilpix, imgsize*imgsize/4) 
   end ; loop over eclipses
 END
