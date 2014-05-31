@@ -1,4 +1,5 @@
-PRO dilute_eclipse_img, eclip, bkgnds, frac, ph_p, dx, dy, dilvec, aspix=aspix, sq_deg=sq_deg, radmax=radmax
+PRO dilute_eclipse_img, eclip, bkgnds, frac, ph_p, dx, dy, dilvec, $
+	aspix=aspix, sq_deg=sq_deg, radmax=radmax
   ; Offset 0,0 maps to pixel 7.9,7.9
   ; Offset 9,9 maps to pixel 7,7 (exactl)
   ; So increasing dx, dy -> decreasing pixel value

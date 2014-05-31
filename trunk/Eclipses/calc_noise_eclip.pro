@@ -60,15 +60,13 @@ pro calc_noise_eclip, $
   n_exposures = exptime/subexptime
 
   ; electrons from the star
-  e_star = reform(ph_star[npix_aper-1,*]) * geom_area * cos(!DPI * field_angle/180.)* exptime
+  e_star =   reform(ph_star[npix_aper-1,*]) * geom_area * cos(!DPI * field_angle/180.)* exptime
+  e_pix_dil = reform(ph_dil[npix_aper-1,*]) * geom_area * cos(!DPI * field_angle/180.)* exptime
   
-  e_pix_dil = ph_dil * geom_area * cos(!DPI * field_angle/180.)* exptime
-  
-
   if (v) then print, 'e_star = ', median(e_star)
 
   ; e/pix from zodi
-  e_pix_zodi = zodi_ph * geom_area * cos(!DPI * field_angle/180.) *  exptime
+  e_pix_zodi = zodi_ph * geom_area * cos(!DPI * field_angle/180.) *  exptime * npix_aper
 
   if (v) then print, 'vmag_zodi = ', median(vmag_zodi)
   if (v) then print, 'e_pix_zodi = ', median(e_pix_zodi)
@@ -92,7 +90,7 @@ pro calc_noise_eclip, $
 ;  if (v) then print, 'e_pix_bgstars = ', median(e_pix_bgstars)
 
   ; compute noise sources
-  e_tot_sky = npix_aper*(e_pix_zodi + e_pix_dil) 
+  e_tot_sky = e_pix_zodi + e_pix_dil
 
 ;  e_bin = dblarr(n_elements(e_tot_sky))
 ;  if(keyword_set(bin_sys)) then nbin=total(bin_sys) else nbin=0

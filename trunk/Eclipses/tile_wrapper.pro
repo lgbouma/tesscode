@@ -1,4 +1,4 @@
-PRO tile_wrapper, fpath, fnums, outname, eclip=eclip
+PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
   numfil = n_elements(fnums)
 
   ; User-adjustable settings (yes, that's you!)
@@ -16,7 +16,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip
   tranmin = 2.0 ; minimum number of eclipses for detection
   min_depth=1D-6 ; minimum transit depth to retain from eclipses
   sys_limit=60. ; in ppm/hr
-  n_trial = 3 ; number of trials in this run
+  if (keyword_set(n_trial)) then n_trial=n_trial else n_trial = 10 ; number of trials in this run
   ffi_len=30. ; in minutes
   ps_len=30. ; in minutes
   duty_cycle=100.+fltarr(numfil)

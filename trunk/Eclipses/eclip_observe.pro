@@ -81,7 +81,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, $
     ; ph_star is npix x nstar
     stack_prf_eclip, star[obsid].mag.t, star[obsid].teff, ph_p, frac, star_ph, $
 	dx=dx[obs], dy=dy[obs], fov_ind=eclipse[obs].coord.fov_ind, mask=mask1d
-    bk_ph = eclipse[obs].bk_ph
+    dil_ph = dblarr(total(mask1d), nobs)
 
     zodi_flux, eclipse[obs].coord.elat, aspix, zodi_ph
     eclipse[obs].zodi_ph = zodi_ph
@@ -92,7 +92,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, $
     ;shot_noises = dblarr(n_elements(obs), npix_max-npix_min+1)
     exptime = dblarr(n_elements(obs)) + 3600.
     for ii=0,(npix_max-1) do begin
-       calc_noise_eclip, star_ph, bk_ph, exptime, $
+       calc_noise_eclip, star_ph, dil_ph, exptime, $
 		 readnoise, sys_limit, noise, $
 		 npix_aper=(ii+1), $
                  field_angle=eclipse[obs].coord.field_angle, $
@@ -154,11 +154,11 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, $
 ;     print, "Diluting with binary companions"
       bindil = where(eclipse[det].class eq 1)
       if (bindil[0] ne -1) then begin
-      stack_prf_eclip, star[star[bindil].companion.ind].mag.t, star[detid].teff, ph_p, frac, dilvec, $
-	dx=dx[det], dy=dy[det], fov_ind=eclipse[det].coord.fov_ind, mask=mask1d, sind=sind
-;	dilute_binary, eclipse[det[bindil]], star, frac, rad, ph_p, $
-;		dx[det[bindil]], dy[det[bindil]], dilvec, aspix=aspix, radmax=4.0
-;        dil_ph[bindil] = dil_ph[bindil] + dilvec
+;     stack_prf_eclip, star[star[bindil].companion.ind].mag.t, star[detid].teff, ph_p, frac, dilvec, $
+;	dx=dx[det], dy=dy[det], fov_ind=eclipse[det].coord.fov_ind, mask=mask1d, sind=sind
+	dilute_binary, eclipse[det[bindil]], star, frac, rad, ph_p, $
+		dx[det[bindil]], dy[det[bindil]], dilvec, aspix=aspix, radmax=6.0
+        dil_ph[bindil] = dil_ph[bindil] + dilvec
       end
       print, "Diluting with other target stars"
       targdil = where(eclipse[det].class eq 1 or eclipse[det].class eq 2)
