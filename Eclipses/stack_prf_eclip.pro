@@ -25,9 +25,7 @@ PRO stack_prf_eclip, imag, teff, ph_p, prf, ph_star, dx=dx, dy=dy, fov_ind=fov_i
     prf_this = reform(prf[dx[i],dy[i],fov_ind[i],*,0:(nfilt-1)])
     ph_star_full = prf_this#ph_10_filt[*,i]
     ph_star_sub = ph_star_full[minds] 
-    if ~(keyword_set(sort)) then
-      sind[*,i] = reverse(sort(ph_star_sub))
-    end
+    sind[*,i] = reverse(sort(ph_star_sub))
     ph_star[*,i] = 10.0^(-0.4*(imag[i]-10.))*total(ph_star_sub[sind[*,i]], /cumulative)
   end
 
