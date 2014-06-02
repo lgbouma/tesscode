@@ -66,7 +66,7 @@ pro add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
     if (gra_ecl[0] ne -1) then begin
       dur1[gra_ecl] = pdur14[gra_ecl]/2. ; FWHM of "V" shaped eclipse
       dur2[gra_ecl] = sdur14[gra_ecl]/2.
-      delt = (a[gra_ecl]*cosi[gra_ecl]) ; All defined on ph. 24-26 of Kopal (1979)
+      delt = a[gra_ecl]*abs(cosi[gra_ecl]) ; All defined on ph. 24-26 of Kopal (1979)
       ph1  = acos((delt^2. + r1[gra_ecl]^2. - r2[gra_ecl]^2.)/(2*r1[gra_ecl]*delt))
       ph2  = acos((delt^2. - r1[gra_ecl]^2. + r2[gra_ecl]^2.)/(2*r2[gra_ecl]*delt))
       da1  = r1[gra_ecl]^2.*(ph1-0.5*sin(2*ph1))
