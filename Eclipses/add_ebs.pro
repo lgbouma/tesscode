@@ -25,15 +25,16 @@ pro add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
   teff2 = star[star[pris].companion.ind].teff
   tmag1 = star[pris].mag.t
   tmag2 = star[star[pris].companion.ind].mag.t
-  a = star[pris].companion.a
+  ars = star[pris].companion.a*AU_IN_RSUN
+  a   = star[pris].companion.a
   p = star[pris].companion.p
   ;cosi = star[pris].companion.cosi
   cosi = -1.0 + 2.0*randomu(seed, npri)
-  b1 = a*cosi/r1
-  b2 = a*cosi/r2
+  b1 = ars*cosi/r1
+  b2 = ars*cosi/r2
   
-  ; Where are the eclipsing systems? 
-  bin_ecl = where((abs(cosi) lt (r1+r2)/a) and (a gt (r1+r2)/AU_IN_RSUN))
+  ; Where are the (non-contact) eclipsing systems? 
+  bin_ecl = where((abs(cosi) lt (r1+r2)/ars) and (ars gt (r1+r2)))
     
   if (bin_ecl[0] ne -1) then begin
     neb = n_elements(bin_ecl)
@@ -46,38 +47,59 @@ pro add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
     dep1 = dblarr(neb) 
     dep2 = dblarr(neb) 
     dur1 = dblarr(neb) 
-    dur2 = dblarr(neb) 
-    tot_ecl = where(abs(cosi) lt (r1-r2)/a)
-    gra_ecl = where((abs(cosi) ge (r1-r2)/a) and (abs(cosi) lt (r1+r2)/a))
+    dur2 = dblarr(neb)
+    a1 = dblarr(neb) 
+    a2 = dblarr(neb)
+
+    r1 = r1[bin_ecl]
+    m1 = m1[bin_ecl]
+    teff1 = teff1[bin_ecl]
+    tmag1 = tmag1[bin_ecl]
+    r2 = r2[bin_ecl]
+    m2 = m2[bin_ecl]
+    teff2 = teff2[bin_ecl]
+    tmag2 = tmag2[bin_ecl]
+    a = a[bin_ecl]
+    ars = ars[bin_ecl]
+    p = p[bin_ecl]
+    b1 = b1[bin_ecl]
+    b2 = b2[bin_ecl]
+    cosi = cosi[bin_ecl] 
+
+    tot_ecl = where((abs(cosi) lt (r1-r2)/ars) and (ars gt (r1+r2)))
+    gra_ecl = where((abs(cosi) ge (r1-r2)/ars) $
+	and (abs(cosi) lt (r1+r2)/ars) and (ars gt (r1+r2)))
     ; Same for all eclipse types
-    pdur14 = (p[bin_ecl]/!dpi)*asin((r1[bin_ecl]*sqrt(1.0-b1^2)+r2[bin_ecl])/a)
-    sdur14 = (p[bin_ecl]/!dpi)*asin((r2[bin_ecl]*sqrt(1.0-b2^2)+r1[bin_ecl])/a)
+    pdur14 = (p[bin_ecl]/!dpi)*asin((r1[bin_ecl]*sqrt(1.0-b1^2)+r2[bin_ecl])/ars)
+    sdur14 = (p[bin_ecl]/!dpi)*asin((r2[bin_ecl]*sqrt(1.0-b2^2)+r1[bin_ecl])/ars)
     phr1 = phot_ratio(teff1, teff2, tmag1, tmag2, ph_p) ; Flux ratios
     phr2 = 1.0-phr1
     ; Only for total eclipses
     if (tot_ecl[0] ne -1) then begin
-      pdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r1[tot_ecl]*sqrt(1.0-b2^2)+r2[tot_ecl])/a)
-      sdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r2[tot_ecl]*sqrt(1.0-b1^2)+r1[tot_ecl])/a)
+      pdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r1[tot_ecl]*sqrt(1.0-b2^2)+r2[tot_ecl])/ars)
+      sdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r2[tot_ecl]*sqrt(1.0-b1^2)+r1[tot_ecl])/ars)
       dur1[tot_ecl] = (pdur14[tot_ecl] + pdur23[tot_ecl])/2. ; Trapezoidal area
       dur2[tot_ecl] = (sdur14[tot_ecl] + sdur23[tot_ecl])/2.
-      dep1[tot_ecl] = phr1*(r2[tot_ecl]/r1[tot_ecl])^2.
-      dep2[tot_ecl] = phr2*(r1[tot_ecl]/r2[tot_ecl])^2.
+      a1[tot_ecl] = (r2[tot_ecl]/r1[tot_ecl])^2.
+      a2[tot_ecl] = (r1[tot_ecl]/r2[tot_ecl])^2.
     end
     if (gra_ecl[0] ne -1) then begin
       dur1[gra_ecl] = pdur14[gra_ecl]/2. ; FWHM of "V" shaped eclipse
       dur2[gra_ecl] = sdur14[gra_ecl]/2.
-      delt = a[gra_ecl]*abs(cosi[gra_ecl]) ; All defined on ph. 24-26 of Kopal (1979)
+      delt = ars[gra_ecl]*abs(cosi[gra_ecl]) ; All defined on ph. 24-26 of Kopal (1979)
       ph1  = acos((delt^2. + r1[gra_ecl]^2. - r2[gra_ecl]^2.)/(2*r1[gra_ecl]*delt))
       ph2  = acos((delt^2. - r1[gra_ecl]^2. + r2[gra_ecl]^2.)/(2*r2[gra_ecl]*delt))
       da1  = r1[gra_ecl]^2.*(ph1-0.5*sin(2*ph1))
       da2  = r2[gra_ecl]^2.*(ph2-0.5*sin(2*ph2))
-      dep1[gra_ecl] = phr1*(da1+da2)/(!dpi*r1^2.)
-      dep2[gra_ecl] = phr2*(da1+da2)/(!dpi*r2^2.)
+      a1[gra_ecl] = (da1+da2)/(!dpi*r1^2.)
+      a2[gra_ecl] = (da1+da2)/(!dpi*r2^2.)
     end
-    toodeep = where(dep1 gt 1.0)
-    if (toodeep[0] ne -1) then dep1[toodeep] = 1.0
-    toodeep = where(dep2 gt 1.0)
-    if (toodeep[0] ne -1) then dep2[toodeep] = 1.0
+    dep1 = phr1*a1
+    toodeep = where(a1 gt 1.0)
+    if (toodeep[0] ne -1) then dep1[toodeep] = phr1[toodeep]
+    dep2 = phr2*a2
+    toodeep = where(a2 gt 1.0)
+    if (toodeep[0] ne -1) then dep2[toodeep] = phr2[toodeep]
     eclipse_hid = pris[bin_ecl]
     ; RV amplitude
     ;eclipse_k = RV_AMP*eclipse_p^(-1./3.) * eclipse_m * $ 

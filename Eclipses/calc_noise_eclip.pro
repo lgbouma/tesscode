@@ -19,7 +19,8 @@ pro calc_noise_eclip, $
    ;frac_aper = frac_aper, $         ; fraction of flux enclosed in photometric aperture
    geom_area = geom_area, $         ; geometric collecting area
    aspix = aspix, $                 ; arcsec per pixel
-   zodi_ph = zodi_ph, $
+   zodi_ph = zodi_ph, $             ; zodiacal photons/s/cm^2
+   noise_cr = noise_cr, $           ; cosmic ray noise
    verbose=verbose, $               ; request verbose output
    field_angle = field_angle, $	    ; Field angle for effective area
    bin_sys=bin_sys, $		    ; Is this a binary?
@@ -62,6 +63,8 @@ pro calc_noise_eclip, $
   ; electrons from the star
   e_star =   reform(ph_star[npix_aper-1,*]) * geom_area * cos(!DPI * field_angle/180.)* exptime
   e_pix_dil = reform(ph_dil[npix_aper-1,*]) * geom_area * cos(!DPI * field_angle/180.)* exptime
+  
+  if (keyword_set(noise_cr)) then noise_cr = reform(noise_cr[*,npix_aper-1]) else noise_cr = 0.0 
   
   if (v) then print, 'e_star = ', median(e_star)
 
