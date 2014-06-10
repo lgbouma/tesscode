@@ -70,14 +70,14 @@ pro add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
     gra_ecl = where((abs(cosi) ge (r1-r2)/ars) $
 	and (abs(cosi) lt (r1+r2)/ars) and (ars gt (r1+r2)))
     ; Same for all eclipse types
-    pdur14 = (p[bin_ecl]/!dpi)*asin((r1[bin_ecl]*sqrt(1.0-b1^2)+r2[bin_ecl])/ars)
-    sdur14 = (p[bin_ecl]/!dpi)*asin((r2[bin_ecl]*sqrt(1.0-b2^2)+r1[bin_ecl])/ars)
+    pdur14 = (p/!dpi)*asin((r1*sqrt(1.0-b1^2)+r2)/ars)
+    sdur14 = (p/!dpi)*asin((r2*sqrt(1.0-b2^2)+r1)/ars)
     phr1 = phot_ratio(teff1, teff2, tmag1, tmag2, ph_p) ; Flux ratios
     phr2 = 1.0-phr1
     ; Only for total eclipses
     if (tot_ecl[0] ne -1) then begin
-      pdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r1[tot_ecl]*sqrt(1.0-b2^2)+r2[tot_ecl])/ars)
-      sdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r2[tot_ecl]*sqrt(1.0-b1^2)+r1[tot_ecl])/ars)
+      pdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r1[tot_ecl]*sqrt(1.0-b1^2)+r2[tot_ecl])/ars[tot_ecl])
+      sdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r2[tot_ecl]*sqrt(1.0-b2^2)+r1[tot_ecl])/ars[tot_ecl])
       dur1[tot_ecl] = (pdur14[tot_ecl] + pdur23[tot_ecl])/2. ; Trapezoidal area
       dur2[tot_ecl] = (sdur14[tot_ecl] + sdur23[tot_ecl])/2.
       a1[tot_ecl] = (r2[tot_ecl]/r1[tot_ecl])^2.
@@ -91,8 +91,8 @@ pro add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
       ph2  = acos((delt^2. - r1[gra_ecl]^2. + r2[gra_ecl]^2.)/(2*r2[gra_ecl]*delt))
       da1  = r1[gra_ecl]^2.*(ph1-0.5*sin(2*ph1))
       da2  = r2[gra_ecl]^2.*(ph2-0.5*sin(2*ph2))
-      a1[gra_ecl] = (da1+da2)/(!dpi*r1^2.)
-      a2[gra_ecl] = (da1+da2)/(!dpi*r2^2.)
+      a1[gra_ecl] = (da1+da2)/(!dpi*r1[gra_ecl]^2.)
+      a2[gra_ecl] = (da1+da2)/(!dpi*r2[gra_ecl]^2.)
     end
     dep1 = phr1*a1
     toodeep = where(a1 gt 1.0)
@@ -109,19 +109,19 @@ pro add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
     ; Work out transit properties
     eclip = replicate({eclipstruct}, neb)
     eclip.class=2
-    eclip.m1 = m1[bin_ecl]
-    eclip.m2 = m2[bin_ecl]
-    eclip.k = RV_AMP*2.0*!dpi*a[bin_ecl]*m2[bin_ecl]* $ 
-	sqrt(1.0-cosi[bin_ecl]^2.)/(p[bin_ecl]*m1[bin_ecl])
-    eclip.r1 = r1[bin_ecl]
-    eclip.r2 = r2[bin_ecl]
-    eclip.teff1 = teff1[bin_ecl]
-    eclip.teff2 = teff2[bin_ecl]
-    eclip.a = a[bin_ecl]
+    eclip.m1 = m1
+    eclip.m2 = m2
+    eclip.k = RV_AMP*2.0*!dpi*a*m2* $ 
+	sqrt(1.0-cosi^2.)/(p*m1)
+    eclip.r1 = r1
+    eclip.r2 = r2
+    eclip.teff1 = teff1
+    eclip.teff2 = teff2
+    eclip.a = a
     ;planet_eclip.s = s
-    eclip.p = p[bin_ecl]
-    eclip.b = b1[bin_ecl]
-    eclip.cosi = cosi[bin_ecl]
+    eclip.p = p
+    eclip.b = b1
+    eclip.cosi = cosi
     eclip.hostid = eclipse_hid
     eclip.dep1 = dep1
     eclip.dep2 = dep2
@@ -129,5 +129,6 @@ pro add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
     eclip.dur2 = dur2
     print, 'Created ', neb, ' eclipsing binaries out of ', n_elements(pris), ' primaries.'
     estruct=eclip
+    stop
   end
 end
