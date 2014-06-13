@@ -129,6 +129,5 @@ pro add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
     eclip.dur2 = dur2
     print, 'Created ', neb, ' eclipsing binaries out of ', n_elements(pris), ' primaries.'
     estruct=eclip
-    stop
   end
 end

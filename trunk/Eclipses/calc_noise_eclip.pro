@@ -20,18 +20,19 @@ pro calc_noise_eclip, $
    geom_area = geom_area, $         ; geometric collecting area
    aspix = aspix, $                 ; arcsec per pixel
    zodi_ph = zodi_ph, $             ; zodiacal photons/s/cm^2
-   noise_cr = noise_cr, $           ; cosmic ray noise
    verbose=verbose, $               ; request verbose output
    field_angle = field_angle, $	    ; Field angle for effective area
    bin_sys=bin_sys, $		    ; Is this a binary?
    bin_sep=bin_sep, $		    ; Separation to binary
    bin_ph=bin_ph, $		    ; imag of binary
+   cr_noise=cr_noise, $             ; noise from cosmic rays
 
 ; optional outputs
 ;
    noise_star=noise_star, $         ; noise from star counts alone
    noise_sky=noise_sky, $           ; noise from sky counts only
    noise_ro=noise_ro,$              ; noise from readout only
+   noise_cr=noise_cr,$              ; noise from readout only
    noise_sys=noise_sys, $           ; noise from systematic limit only
    e_tot_sub=e_tot_sub, $ 	    ; subexposure electron count (for saturation check)
    
@@ -39,6 +40,7 @@ pro calc_noise_eclip, $
 ;
 ;
   if (keyword_set(zodi_ph)) then zodi_ph=zodi_ph else zodi_ph = 0.
+  if (keyword_set(cr_noise)) then cr_noise=cr_noise else cr_noise = 0.
   if (keyword_set(subexptime)) then subexptime=subexptime else subexptime=2.0
   if (keyword_set(geom_area)) then geom_area=geom_area else geom_area=69.1
   if (keyword_set(pix_scale)) then pix_scale=pix_scale else pix_scale=21.1
@@ -118,9 +120,10 @@ pro calc_noise_eclip, $
   noise_star = sqrt(e_star) / e_tot
   noise_sky  = sqrt(e_tot_sky) / e_tot
   noise_ro   = sqrt(npix_aper*n_exposures)*e_pix_ro / e_tot
+  noise_cr   = cr_noise / e_tot
   noise_sys  = 0.0*noise_star + sys_limit/1d6/sqrt(exptime/3600.)
 
   dilution = e_tot / e_star
-  noise = sqrt( noise_star^2. + noise_sky^2. + noise_ro^2. + noise_sys^2.)
+  noise = sqrt( noise_star^2. + noise_sky^2. + noise_ro^2. + noise_sys^2. + cr_noise^2.)
 
 end
