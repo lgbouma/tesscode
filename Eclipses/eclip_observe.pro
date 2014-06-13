@@ -1,4 +1,4 @@
-pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, $
+pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
 	aspix=aspix, effarea=effarea, readnoise=readnoise, $
         tranmin=tranmin, thresh=thresh, $
 	ps_len=ps_len, ffi_len=ffi_len, saturation=saturation, $
@@ -36,6 +36,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, $
   print, 'Observing ', neclipses, ' eclipses around ', nstars,' stars.'
   dx = floor(10*randomu(seed, neclipses))
   dy = floor(10*randomu(seed, neclipses))
+  crind = dx*10 + dy
   
   ecid = eclipse.hostid
   print, 'Calculating number of eclipses'
@@ -92,10 +93,12 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, $
     ;shot_noises = dblarr(n_elements(obs), npix_max-npix_min+1)
     exptime = dblarr(n_elements(obs)) + 3600.
     for ii=0,(npix_max-1) do begin
+       thiscr = cr[*,ii]
        calc_noise_eclip, star_ph, dil_ph, exptime, $
 		 readnoise, sys_limit, noise, $
 		 npix_aper=(ii+1), $
                  field_angle=eclipse[obs].coord.field_angle, $
+                 cr_noise = thiscr[crind[obs]]/sqrt(60.0/ffi_len)*star[obsid].ffi, $
 		 subexptime=subexptime, $
                  geom_area = effarea, $
                  aspix=aspix, $
@@ -189,10 +192,12 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, $
       ;shot_noises = dblarr(n_elements(obs), npix_max-npix_min+1)
       exptime = dblarr(n_elements(det)) + 3600.
       for ii=0,(npix_max-1) do begin
+        thiscr = cr[*,ii]
         calc_noise_eclip, star_ph, dil_ph, exptime, $
 		 readnoise, sys_limit, noise, $
 		 npix_aper=(ii+1), $
                  field_angle=eclipse[det].coord.field_angle, $
+                 cr_noise = thiscr[crind[det]]/sqrt(60.0/ffi_len)*star[detid].ffi, $
 		 subexptime=subexptime, $
                  geom_area = effarea, $
                  aspix=aspix, $

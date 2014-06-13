@@ -5,6 +5,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
   frac_file = 'bigfrac24_105_f3p33.fits' ; prf file 
   rad_file = 'bigrad24_105_f3p33.fits' ; radius file 
   ph_file = 'ph_filt_t.fits' ; photon fluxes for T=10 vs Teff
+  cr_file = 'crnoise.fits' ; photon fluxes for T=10 vs Teff
   fov = 24.
   seg = 13
   skirt=6.
@@ -40,6 +41,8 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
   frac_fits = mrdfits(frac_file)
   rad_fits = mrdfits(rad_file)/60. ; put into pixels
   ph_fits = mrdfits(ph_file)
+;  cr_fits = fltarr(100,64)
+  cr_fits = mrdfits(cr_file)
   ; Make random spherical coords
   u = randomu(seed, 1D7)
   v = randomu(seed, 1D7)
@@ -48,7 +51,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
   ang2pix_ring, 16, theta, phi, ipring
    
   totdet = 0L
-  star_out = dblarr(1E6*n_trial,nparam)
+  star_out = dblarr(1E3*n_trial,nparam)
   for ii=0, numfil-1 do begin
     ; Gather the .sav files
     print, 'Restoring files for tile ', fnums[ii]
@@ -140,7 +143,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
     ;dilute_eclipse, eclip, deeps, frac_fits, rad_fits, ph_fits, aspix=aspix, sq_deg=0.0134, radmax=2.0
     ; Observe
     eclip_observe, eclip, targets, bkgnds, deeps, $
-       frac_fits, rad_fits, ph_fits, $
+       frac_fits, rad_fits, ph_fits, cr_fits, $
        aspix=aspix, effarea=effarea, sys_limit=sys_limit, $ ;infil=sp_name,outfile=spo_name
        readnoise=readnoise, thresh=thresh, tranmin=tranmin, ps_len=ps_len, $
        duty_cycle=duty_cycle[ii], ffi_len=ffi_len, saturation=saturation, $
