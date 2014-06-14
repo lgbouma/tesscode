@@ -1,4 +1,6 @@
-ipro add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, aspix=aspix, radmax=radmax
+pro add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, $ ;input
+	bebdil,  $ ;output
+  	aspix=aspix, radmax=radmax
 
   sz_ph_p = size(ph_p)
   nfilt = sz_ph_p[1]
@@ -30,6 +32,7 @@ ipro add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, aspix=aspix, radmax=
 
   pris = where(bkgnd.pri eq 1)
   secs = where(bkgnd.sec eq 1)
+
   npri = n_elements(pris)
   r1 = bkgnd[pris].r
   r2 = bkgnd[bkgnd[pris].companion.ind].r
@@ -37,17 +40,23 @@ ipro add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, aspix=aspix, radmax=
   m2 = bkgnd[bkgnd[pris].companion.ind].m
   teff1 = bkgnd[pris].teff
   teff2 = bkgnd[bkgnd[pris].companion.ind].teff
-  a = bkgnd[pris].companion.a
+  tmag1 = bkgnd[pris].mag.t
+  tsys = bkgnd[pris].mag.tsys
+  tmag2 = bkgnd[bkgnd[pris].companion.ind].mag.t
+  ars = bkgnd[pris].companion.a*AU_IN_RSUN
+  a   = bkgnd[pris].companion.a
   p = bkgnd[pris].companion.p
-  ;cosi = bkgnd[pris].companion.cosi
- 
+  cosi = -1.0 + 2.0*randomu(seed, npri)
+  b1 = ars*cosi/r1
+  b2 = ars*cosi/r2
+
   for ii=0,mult-1 do begin
     ; Re-randomize the inclinations 
     cosi = -1.0 + 2.0*randomu(seed, npri)
     b1 = a*cosi/r1
     b2 = a*cosi/r2
-    ; Where are the eclipsing systems? 
-    bin_ecl = where((abs(cosi) lt (r1+r2)/a) and (a gt (r1+r2)/AU_IN_RSUN))
+    ; Where are the (non-contact) eclipsing systems? 
+    bin_ecl = where((abs(cosi) lt (r1+r2)/ars) and (ars gt (r1+r2)))
     
     if (bin_ecl[0] ne -1) then begin
       neb = n_elements(bin_ecl)
@@ -61,20 +70,41 @@ ipro add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, aspix=aspix, radmax=
       dep2 = dblarr(neb) 
       dur1 = dblarr(neb) 
       dur2 = dblarr(neb) 
-      tot_ecl = where(abs(cosi) lt (r1-r2)/a)
-      gra_ecl = where((abs(cosi) ge (r1-r2)/a) and (abs(cosi) lt (r1+r2)/a))
+      a1 = dblarr(neb)
+      a2 = dblarr(neb)
+      r1 = r1[bin_ecl]
+      m1 = m1[bin_ecl]
+      teff1 = teff1[bin_ecl]
+      tmag1 = tmag1[bin_ecl]
+      r2 = r2[bin_ecl]
+      m2 = m2[bin_ecl]
+      teff2 = teff2[bin_ecl]
+      tmag2 = tmag2[bin_ecl]
+      tsys = tsys[bin_ecl]
+      a = a[bin_ecl]
+      ars = ars[bin_ecl]
+      p = p[bin_ecl]
+      b1 = b1[bin_ecl]
+      b2 = b2[bin_ecl]
+      cosi = cosi[bin_ecl]
+ 
+      tot_ecl = where((abs(cosi) lt (r1-r2)/ars) and (ars gt (r1+r2)))
+      gra_ecl = where((abs(cosi) ge (r1-r2)/ars) $
+        and (abs(cosi) lt (r1+r2)/ars) and (ars gt (r1+r2)))
+
       ; Same for all eclipse types
       pdur14 = (p[bin_ecl]/!dpi)*asin((r1[bin_ecl]*sqrt(1.0-b1^2)+r2[bin_ecl])/a)
       sdur14 = (p[bin_ecl]/!dpi)*asin((r2[bin_ecl]*sqrt(1.0-b2^2)+r1[bin_ecl])/a)
-      teff2phot, teff1, teff2, ph_p, phr1, phr2 ; Flux ratios
+      phr1 = phot_ratio(teff1, teff2, tmag1, tmag2, ph_p) ; Flux ratios
+      phr2 = 1.0-phr1
       ; Only for total eclipses
       if (tot_ecl[0] ne -1) then begin
-        pdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r1[tot_ecl]*sqrt(1.0-b2^2)+r2[tot_ecl])/a)
-        sdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r2[tot_ecl]*sqrt(1.0-b1^2)+r1[tot_ecl])/a)
+        pdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r1[tot_ecl]*sqrt(1.0-b1^2)+r2[tot_ecl])/a)
+        sdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r2[tot_ecl]*sqrt(1.0-b2^2)+r1[tot_ecl])/a)
         dur1[tot_ecl] = (pdur14[tot_ecl] + pdur23[tot_ecl])/2. ; Trapezoidal area
         dur2[tot_ecl] = (sdur14[tot_ecl] + sdur23[tot_ecl])/2.
-        dep1[tot_ecl] = phr1*(r2[tot_ecl]/r1[tot_ecl])^2.
-        dep2[tot_ecl] = phr2*(r1[tot_ecl]/r2[tot_ecl])^2.
+        a1[tot_ecl] = (r2[tot_ecl]/r1[tot_ecl])^2.
+        a2[tot_ecl] = (r1[tot_ecl]/r2[tot_ecl])^2.
       end
       if (gra_ecl[0] ne -1) then begin
         dur1[gra_ecl] = pdur14[gra_ecl]/2. ; FWHM of "V" shaped eclipse
@@ -84,13 +114,17 @@ ipro add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, aspix=aspix, radmax=
         ph2  = acos((delt^2. - r1[gra_ecl]^2. + r2[gra_ecl]^2.)/(2*r2[gra_ecl]*delt))
         da1  = r1[gra_ecl]^2.*(ph1-0.5*sin(2*ph1))
         da2  = r2[gra_ecl]^2.*(ph2-0.5*sin(2*ph2))
-        dep1[gra_ecl] = phr1*(da1+da2)/(!dpi*r1^2.)
-        dep2[gra_ecl] = phr2*(da1+da2)/(!dpi*r2^2.)
+        a1[gra_ecl] = (da1+da2)/(!dpi*r1[gra_ecl]^2.)
+        a2[gra_ecl] = (da1+da2)/(!dpi*r2[gra_ecl]^2.)
       end
-      toodeep = where(dep1 gt 1.0)
-      if (toodeep[0] ne -1) then dep1[toodeep] = 1.0
-      toodeep = where(dep2 gt 1.0)
-      if (toodeep[0] ne -1) then dep2[toodeep] = 1.0
+      dep1 = phr1*a1
+      toodeep = where(a1 gt 1.0)
+      if (toodeep[0] ne -1) then dep1[toodeep] = phr1[toodeep]
+      dep2 = phr2*a2
+      toodeep = where(a2 gt 1.0)
+      if (toodeep[0] ne -1) then dep2[toodeep] = phr2[toodeep]
+      eclipse_hid = pris[bin_ecl]
+      
       ; RV amplitude
       ;eclipse_k = RV_AMP*eclipse_p^(-1./3.) * eclipse_m * $ 
       ;	sqrt(1.0-star[allid].cosi^2.) * (star[allid].m)^(-2./3.) 
@@ -98,24 +132,25 @@ ipro add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, aspix=aspix, radmax=
       gress2 = (sdur14-sdur23)/2.0
       ; Work out transit properties
       eclip = replicate({eclipstruct}, neb)
-      eclip.class=2
+      eclip.class=3
       eclip.m1 = m1[bin_ecl]
       eclip.m2 = m2[bin_ecl]
-      eclip.k = RV_AMP*2.0*!dpi*a[bin_ecl]*m2[bin_ecl]* $ 
-	sqrt(1.0-cosi[bin_ecl]^2.)/(p[bin_ecl]*m1[bin_ecl])
-      eclip.r1 = r1[bin_ecl]
-      eclip.r2 = r2[bin_ecl]
-      eclip.teff1 = teff1[bin_ecl]
-      eclip.teff2 = teff2[bin_ecl]
-      eclip.a = a[bin_ecl]
+      eclip.k = RV_AMP*2.0*!dpi*a*m2 * $ 
+	sqrt(1.0-cosi^2.)/(p*m1)
+      eclip.r1 = r1
+      eclip.r2 = r2
+      eclip.teff1 = teff1
+      eclip.teff2 = teff2
+      eclip.a = a
       ;planet_eclip.s = s
-      eclip.p = p[bin_ecl]
-      eclip.b = b1[bin_ecl]
-      eclip.cosi = cosi[bin_ecl]
+      eclip.p = p
+      eclip.b = b1
+      eclip.cosi = cosi
       eclip.dep1 = dep1
       eclip.dep2 = dep2
       eclip.dur1 = dur1
       eclip.dur2 = dur2
+      eclip.tsys = tsys
       print, 'Created ', neb, ' eclipsing binaries out of ', n_elements(pris), ' primaries.'
       if (ii gt 0) then estruct=struct_append(estruct, eclip) $
 	else estruct = eclip
@@ -123,7 +158,7 @@ ipro add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, aspix=aspix, radmax=
     end ; if ebs
   end ; mult loop
 
-  keep = intarr(nbebtot)
+  keep = lonarr(nbebtot)
   ; Blend with target stars
   for ii=0, nebtot-1 do begin
     randomp, r, 1., nstars, range_x=[0., radpix]
@@ -133,40 +168,23 @@ ipro add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, aspix=aspix, radmax=
       ; ID the brightest star
       brightt = min(star[gd].mag.t, ind)
       estruct[ii].hostid = gd[ind]
-      keep[0] = 1 ; set the keep flag
-      bkteff = bkgnds[gd].teff
-      bkmagt = bkgnds[gd].mag.tsys
-      recipteff = 4000./bkteff
-      ph_filt = dblarr(nfilt, n_elements(gd))
-      bk_frac = dblarr(nfilt, n_elements(gd))
-      ; Compute the fluxes in each sub-filter for each star
-      for jj=0, nfilt-1 do begin
-        ph_filt[jj,*] = ph_p[jj,0] + ph_p[jj,1]*recipteff + $
-           ph_p[jj,2]*recipteff^2. + ph_p[jj,3]*recipteff^3.
-      end
-      ph_filt[where(ph_filt lt 0.0)] = 0.0
-      ; Find brightest band; this becomes the "center"
-      ph_max = max(ph_filt, ph_ind, dimension=1)
-      ph_ind = ph_ind mod (nfilt)
-      ; Identify prf pixel for each neighbor (slow?)
-      rand_ind = randomu(seed, n_elements(gd))
-      for kk=0, n_elements(gd)-1 do begin
-        ;thisprf = reform(frac[*,*,fov[ii],*,*])
-        ;thisrad =  reform(rad[*,*,fov[ii],*,ph_ind[kk]])
-        ;minrad = min(abs(thisrad-r[gd[kk]]), rind)
-        ;bk_frac[*,kk] = thisprf(rind+lindgen(nfilt)*npts)      
-        thisprf = reform(frac[*,*,fov[ii],*,*])
-        thisrad = reform( rad[*,*,fov[ii],*,ph_ind[kk]])
-        inrad = where(thisrad lt radmax)
-        rad_ind = inrad[floor(n_elements(inrad)*rand_ind[kk])]+lindgen(nfilt)*npts
-        bk_frac[*,kk] = thisprf[rad_ind]
-      end
-      phr1 = phot_ratio(teff1, teff2, tmag1, tmag2, ph_p) ; Flux ratios
-      estruct.dep1 = estruct.dep1*phr1
-      eclip[ii].bk_ph = eclip[ii].bk_ph + $
-        total(10.^(-0.4*(bkmagt-10.))*total(bk_frac*ph_filt, 1))
+      estruct[ii].sep= r[gd[ind]] ; in pixels
+      keep[ii] = 1 ; set the keep flag
     end
   end
-  if (total(keep) gt 0) then estruct = estruct(where[keep]) $
-    else delvar, estruct
+  if (total(keep) gt 0) then begin
+    keepers = where(keep)  
+    estruct = estruct[keepers] 
+    ;bkteff = estruct.teff1
+    ;bkmagt = tsys[keepers]
+    ;starteff = star[gd].teff
+    ;starmagt = star[gd].mag.t
+      
+    ;phr1 = phot_ratio(bkteff, starteff, bkmagt, starmagt, ph_p) ; Flux ratios
+    ;phr2 = 1.0-phr1
+    ;phr = phr1/phr2
+      
+   ; bkrad  = r[gd]
+
+  endif  else delvar, estruct
 end

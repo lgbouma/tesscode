@@ -163,6 +163,17 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
 		dx[det[bindil]], dy[det[bindil]], dilvec, aspix=aspix, radmax=6.0
         dil_ph[bindil] = dil_ph[bindil] + dilvec
       end
+      bebdil = where(eclipse[det].class eq 3)
+      if (bebdil[0] ne -1) then begin
+        nbeb = n_elements(bebdil)
+        beb_ph = dblarr(total(mask1d), nbeb)
+	dilute_beb, eclipse[det[bebdil]], star, frac, rad, ph_p, $
+		dx[det[bebdil]], dy[det[bebdil]], bebvec, aspix=aspix, radmax=6.0
+        dil_ph[bebdil] = dil_ph[bebdil] + bebvec
+        for kk=0, nbeb-1 do begin
+	  beb_ph[*,kk] = total(bebvec[sind[*,bebdil[kk]],kk], /cumulative)
+        end
+      end
       print, "Diluting with other target stars"
       targdil = where(eclipse[det].class eq 1 or eclipse[det].class eq 2)
       if (targdil[0] ne -1) then begin
@@ -220,6 +231,14 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
       eclipse[det].snrhr = minnoise
       for ss=0,ndet-1 do eclipse[det[ss]].star_ph = star_ph[eclipse[det[ss]].npix-1,ss]
       ;eclipse[obs].star_ph = reform(star_ph[eclipse[obs].npix-1, *])
+      
+      ; Dilute the BEBs (and HEBs)
+      if (bebdil[0] ne -1) then begin
+        beb_pixph = dblarr(nbeb)
+        for tt=0,nbeb-1 do beb_pixph[tt] = beb_ph[eclipse[det[bebdil[tt]]].npix-1,tt]
+        beb_starph = eclipse[det[bebdil]].star_ph
+        eclipse[det[bebdil]].dep1_eff =  eclipse[det[bebdil]].dep1_eff*beb_pixph/beb_starph
+      end  
       ; Calculate SNR in phase-folded lightcurve
       et1_folded = double(eclipse[det].neclip_obs1) * $
       eclipse[det].dur1_eff * 24.0 * 3600

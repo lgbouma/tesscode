@@ -178,6 +178,5 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
     end
   endfor
   mwrfits, star_out[0:(totdet-1),*], outname
-  stop
 
 END
