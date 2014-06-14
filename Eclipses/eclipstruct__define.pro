@@ -41,10 +41,12 @@ PRO eclipstruct__define
                     det1: 0, $  ; Detected primary?
                     det2: 0, $  ; Detected secondary?
                     npix: 0, $       ; Optimal number of pix in aperture
+                    tsys: 0.0, $      ; system tmag (for binaries)
                     star_ph: 0.0, $      ; photons/s/cm^2 from star
                     bin_ph: 0.0, $      ; photons/s/cm^2 from within 0.5 pix
                     bk_ph: 0.0, $      ; photons/s/cm^2/pix from other stars
                     zodi_ph: 0.0, $      ; photons/s/cm^2/pix
+                    sep: 0.0, $         ; separation (in pixels) of eclipse from host
                     sat: 0, $        ; saturation flag
                     dil: 0.0, $        ; dilution ratio
                     hostid: 0L $
