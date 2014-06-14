@@ -1,4 +1,4 @@
-pro add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
+function add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
 
   AU_IN_RSUN = 215.093990942D0          ; in solar radii
   REARTH_IN_RSUN = 0.0091705248         ; in solar radii
@@ -76,8 +76,8 @@ pro add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
     phr2 = 1.0-phr1
     ; Only for total eclipses
     if (tot_ecl[0] ne -1) then begin
-      pdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r1[tot_ecl]*sqrt(1.0-b1^2)+r2[tot_ecl])/ars[tot_ecl])
-      sdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r2[tot_ecl]*sqrt(1.0-b2^2)+r1[tot_ecl])/ars[tot_ecl])
+      pdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r1[tot_ecl]*sqrt(1.0-b1[tot_ecl]^2)+r2[tot_ecl])/ars[tot_ecl])
+      sdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r2[tot_ecl]*sqrt(1.0-b2[tot_ecl]^2)+r1[tot_ecl])/ars[tot_ecl])
       dur1[tot_ecl] = (pdur14[tot_ecl] + pdur23[tot_ecl])/2. ; Trapezoidal area
       dur2[tot_ecl] = (sdur14[tot_ecl] + sdur23[tot_ecl])/2.
       a1[tot_ecl] = (r2[tot_ecl]/r1[tot_ecl])^2.
@@ -130,4 +130,5 @@ pro add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
     print, 'Created ', neb, ' eclipsing binaries out of ', n_elements(pris), ' primaries.'
     estruct=eclip
   end
+  return, neb
 end
