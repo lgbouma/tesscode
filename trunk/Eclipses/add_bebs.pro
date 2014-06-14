@@ -1,5 +1,4 @@
-pro add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, $ ;input
-	bebdil,  $ ;output
+function add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, $ ;input
   	aspix=aspix, radmax=radmax
 
   sz_ph_p = size(ph_p)
@@ -7,12 +6,13 @@ pro add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, $ ;input
   sz_frac = size(frac)
   npts = sz_frac[1]*sz_frac[2]*sz_frac[4]
   if (keyword_set(aspix)) then aspix=aspix else aspix=21.1
-  if (keyword_set(radmax)) then radmax=radmax else radmax=8.0
+  if (keyword_set(radmax)) then radmax=radmax else radmax=1.0
   if (keyword_set(sq_deg)) then sq_deg=sq_deg else sq_deg=13.54
   ; Background catalog contains 0.134 sq degrees of stars
   ; Radius of 0.134 sq degree circle in pixels
   radas = sqrt(sq_deg/!dpi)*3600.
   radpix = radas/aspix
+  thresh = (double(radmax)/double(radpix))^2.
 
   AU_IN_RSUN = 215.093990942D0          ; in solar radii
   REARTH_IN_RSUN = 0.0091705248         ; in solar radii
@@ -33,24 +33,24 @@ pro add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, $ ;input
   pris = where(bkgnd.pri eq 1)
   secs = where(bkgnd.sec eq 1)
 
-  npri = n_elements(pris)
-  r1 = bkgnd[pris].r
-  r2 = bkgnd[bkgnd[pris].companion.ind].r
-  m1 = bkgnd[pris].m
-  m2 = bkgnd[bkgnd[pris].companion.ind].m
-  teff1 = bkgnd[pris].teff
-  teff2 = bkgnd[bkgnd[pris].companion.ind].teff
-  tmag1 = bkgnd[pris].mag.t
-  tsys = bkgnd[pris].mag.tsys
-  tmag2 = bkgnd[bkgnd[pris].companion.ind].mag.t
-  ars = bkgnd[pris].companion.a*AU_IN_RSUN
-  a   = bkgnd[pris].companion.a
-  p = bkgnd[pris].companion.p
-  cosi = -1.0 + 2.0*randomu(seed, npri)
-  b1 = ars*cosi/r1
-  b2 = ars*cosi/r2
-
   for ii=0,mult-1 do begin
+    npri = n_elements(pris)
+    r1 = bkgnd[pris].r
+    r2 = bkgnd[bkgnd[pris].companion.ind].r
+    m1 = bkgnd[pris].m
+    m2 = bkgnd[bkgnd[pris].companion.ind].m
+    teff1 = bkgnd[pris].teff
+    teff2 = bkgnd[bkgnd[pris].companion.ind].teff
+    tmag1 = bkgnd[pris].mag.t
+    tsys = bkgnd[pris].mag.tsys
+    tmag2 = bkgnd[bkgnd[pris].companion.ind].mag.t
+    ars = bkgnd[pris].companion.a*AU_IN_RSUN
+    a   = bkgnd[pris].companion.a
+    p = bkgnd[pris].companion.p
+    cosi = -1.0 + 2.0*randomu(seed, npri)
+    b1 = ars*cosi/r1
+    b2 = ars*cosi/r2
+
     ; Re-randomize the inclinations 
     cosi = -1.0 + 2.0*randomu(seed, npri)
     b1 = a*cosi/r1
@@ -93,14 +93,14 @@ pro add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, $ ;input
         and (abs(cosi) lt (r1+r2)/ars) and (ars gt (r1+r2)))
 
       ; Same for all eclipse types
-      pdur14 = (p[bin_ecl]/!dpi)*asin((r1[bin_ecl]*sqrt(1.0-b1^2)+r2[bin_ecl])/a)
-      sdur14 = (p[bin_ecl]/!dpi)*asin((r2[bin_ecl]*sqrt(1.0-b2^2)+r1[bin_ecl])/a)
+      pdur14 = (p[bin_ecl]/!dpi)*asin((r1[bin_ecl]*sqrt(1.0-b1^2)+r2[bin_ecl])/ars)
+      sdur14 = (p[bin_ecl]/!dpi)*asin((r2[bin_ecl]*sqrt(1.0-b2^2)+r1[bin_ecl])/ars)
       phr1 = phot_ratio(teff1, teff2, tmag1, tmag2, ph_p) ; Flux ratios
       phr2 = 1.0-phr1
       ; Only for total eclipses
       if (tot_ecl[0] ne -1) then begin
-        pdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r1[tot_ecl]*sqrt(1.0-b1^2)+r2[tot_ecl])/a)
-        sdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r2[tot_ecl]*sqrt(1.0-b2^2)+r1[tot_ecl])/a)
+        pdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r1[tot_ecl]*sqrt(1.0-b1[tot_ecl]^2)+r2[tot_ecl])/ars[tot_ecl])
+        sdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r2[tot_ecl]*sqrt(1.0-b2[tot_ecl]^2)+r1[tot_ecl])/ars[tot_ecl])
         dur1[tot_ecl] = (pdur14[tot_ecl] + pdur23[tot_ecl])/2. ; Trapezoidal area
         dur2[tot_ecl] = (sdur14[tot_ecl] + sdur23[tot_ecl])/2.
         a1[tot_ecl] = (r2[tot_ecl]/r1[tot_ecl])^2.
@@ -109,7 +109,7 @@ pro add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, $ ;input
       if (gra_ecl[0] ne -1) then begin
         dur1[gra_ecl] = pdur14[gra_ecl]/2. ; FWHM of "V" shaped eclipse
         dur2[gra_ecl] = sdur14[gra_ecl]/2.
-        delt = (a[gra_ecl]*cosi[gra_ecl]) ; All defined on ph. 24-26 of Kopal (1979)
+        delt = (ars[gra_ecl]*cosi[gra_ecl]) ; All defined on ph. 24-26 of Kopal (1979)
         ph1  = acos((delt^2. + r1[gra_ecl]^2. - r2[gra_ecl]^2.)/(2*r1[gra_ecl]*delt))
         ph2  = acos((delt^2. - r1[gra_ecl]^2. + r2[gra_ecl]^2.)/(2*r2[gra_ecl]*delt))
         da1  = r1[gra_ecl]^2.*(ph1-0.5*sin(2*ph1))
@@ -151,30 +151,37 @@ pro add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, $ ;input
       eclip.dur1 = dur1
       eclip.dur2 = dur2
       eclip.tsys = tsys
-      print, 'Created ', neb, ' eclipsing binaries out of ', n_elements(pris), ' primaries.'
+      ;print, 'Created ', neb, ' eclipsing binaries out of ', n_elements(pris), ' primaries.'
       if (ii gt 0) then estruct=struct_append(estruct, eclip) $
 	else estruct = eclip
       nebtot = nebtot + neb
     end ; if ebs
   end ; mult loop
-
-  keep = lonarr(nbebtot)
-  ; Blend with target stars
-  for ii=0, nebtot-1 do begin
-    randomp, r, 1., nstars, range_x=[0., radpix]
-    ; How many of these are primaries and fall within radmax?
-    gd = where((r lt radmax) and (star.sec ne 1))
-    if (gd[0] ne -1) then begin
-      ; ID the brightest star
-      brightt = min(star[gd].mag.t, ind)
-      estruct[ii].hostid = gd[ind]
-      estruct[ii].sep= r[gd[ind]] ; in pixels
-      keep[ii] = 1 ; set the keep flag
+  if (nebtot gt 0) then begin
+    randomp, sep, 1., nebtot, range_x=[0., radmax]
+    print, 'Created ', nebtot, ' eclipsing binaries in all.'
+    keep = lonarr(nebtot)
+    ; Blend with target stars
+    for ii=0, nebtot-1 do begin
+      ; draw star from random
+      r = randomu(seed, nstars)
+      ; How many of these are primaries and fall within radmax?
+      gd = where((r lt thresh) and (star.sec ne 1))
+      ;print, 'found goods'
+      if (gd[0] ne -1) then begin
+        ; ID the brightest star
+        brightt = min(star[gd].mag.t, ind)
+        ;print, 'done with min'
+        estruct[ii].hostid = gd[ind]
+        estruct[ii].sep= sep[ii] ; in pixels
+        keep[ii] = 1 ; set the keep flag
+      end
     end
-  end
-  if (total(keep) gt 0) then begin
-    keepers = where(keep)  
-    estruct = estruct[keepers] 
+
+    if (total(keep) gt 0) then begin
+      print, 'Keeping ', round(total(keep)), ' binaries'
+      keepers = where(keep)  
+      estruct = estruct[keepers] 
     ;bkteff = estruct.teff1
     ;bkmagt = tsys[keepers]
     ;starteff = star[gd].teff
@@ -185,6 +192,7 @@ pro add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, $ ;input
     ;phr = phr1/phr2
       
    ; bkrad  = r[gd]
-
-  endif  else delvar, estruct
+    endif
+  endif
+return, total(keep)
 end

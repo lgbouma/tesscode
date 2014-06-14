@@ -1,4 +1,4 @@
-pro add_planets, star, pstruct, frac, rad, ph_p, aspix=aspix, fov=fov, dressing=dressing
+function add_planets, star, pstruct, frac, rad, ph_p, aspix=aspix, fov=fov, dressing=dressing
 
   sz_ph_p = size(ph_p)
   nfilt = sz_ph_p[1]
@@ -135,6 +135,7 @@ pro add_planets, star, pstruct, frac, rad, ph_p, aspix=aspix, fov=fov, dressing=
 	;	(star[pla].planet.p * star[pla].m * MSUN_IN_MEARTH)
 ; Work out transit properties
   tra = where(abs(planet_b) lt 1.0)
+  ntra = 0
   if (tra[0] ne -1) then begin
     traid = planet_hid[tra]
     ntra = n_elements(tra)
@@ -163,7 +164,8 @@ pro add_planets, star, pstruct, frac, rad, ph_p, aspix=aspix, fov=fov, dressing=
 ;        sqrt(1.-(planet_eclip[tra].b)^2.) / $
 ;        (!PI*planet_eclip[tra].a*AU_IN_RSUN)
   
-    print, 'Created ', n_elements(tra), ' transiting planets out of ', nplanets, ' total.'
+    print, 'Created ', ntra, ' transiting planets out of ', nplanets, ' total.'
   end
   pstruct=planet_eclip
+  return, ntra
 end

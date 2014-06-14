@@ -41,8 +41,8 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
   frac_fits = mrdfits(frac_file)
   rad_fits = mrdfits(rad_file)/60. ; put into pixels
   ph_fits = mrdfits(ph_file)
-;  cr_fits = fltarr(100,64)
-  cr_fits = mrdfits(cr_file)
+  cr_fits = fltarr(100,64)
+;  cr_fits = mrdfits(cr_file)
   ; Make random spherical coords
   u = randomu(seed, 1D7)
   v = randomu(seed, 1D7)
