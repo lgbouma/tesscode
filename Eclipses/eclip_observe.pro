@@ -167,7 +167,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
       if (bebdil[0] ne -1) then begin
         nbeb = n_elements(bebdil)
         beb_ph = dblarr(total(mask1d), nbeb)
-	dilute_beb, eclipse[det[bebdil]], star, frac, rad, ph_p, $
+	dilute_beb, eclipse[det[bebdil]], frac, rad, ph_p, $
 		dx[det[bebdil]], dy[det[bebdil]], bebvec, aspix=aspix, radmax=6.0
         dil_ph[bebdil] = dil_ph[bebdil] + bebvec
         for kk=0, nbeb-1 do begin
@@ -264,6 +264,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
         eclipse[det].det = 1
         print, 'Detected ', n_elements(det), ' eclipses.'
       endif
+      stop
       ;  detected = where(star.eclipse_hz.tra gt 0 and star.eclipse_hz.neclp1_obs ge NTRA_OBS_MIN and star.eclipse_hz.snr ge SNR_MIN)
       ;  star[detected].eclipse_hz.det = 1
     end ;det if

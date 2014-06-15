@@ -51,7 +51,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
   ang2pix_ring, 16, theta, phi, ipring
    
   totdet = 0L
-  star_out = dblarr(1E3*n_trial,nparam)
+  star_out = dblarr(1E5*n_trial,nparam)
   for ii=0, numfil-1 do begin
     ; Gather the .sav files
     print, 'Restoring files for tile ', fnums[ii]
@@ -85,36 +85,38 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
       targets[sing[selsing]].ffi=0
       numps[ii] = numps[ii]+n_elements(selsing)
     end
-
+    ecliplen_tot = 0L
     for jj=0,n_trial-1 do begin
       ; re-radomize the inclination
       targets.cosi = -1 + 2.0*randomu(seed, n_elements(targets))
       ; Add eclipses
-      make_eclipse, targets, bkgnds, eclip_trial, frac_fits, rad_fits, ph_fits, min_depth=min_depth
-      eclip_trial.trial = jj + 1
-      ; Add coordinates to the eclipses
-      neclip = n_elements(eclip_trial)
-      thispix = where(ipring eq fnums[ii])
-      ncoord = n_elements(thispix)
-      coordind = lindgen(neclip) mod ncoord
-      if (neclip gt ncoord) then $
-        print, "Needed ", neclip, " coords but got ", ncoord, " on tile ", ii
-      ;print, "Filling in tile ", ii
-      glon = phi[thispix[coordind]]*180./!dpi
-      glat = (theta[thispix[coordind]]-!dpi/2.)*180./!dpi
-      ; Transform from galactic healpix to ecliptic observations
-      euler, glon, glat, elon, elat, select=6
-      euler, glon, glat, ra, dec, select=2
-      eclip_trial.coord.elon = elon
-      eclip_trial.coord.elat = elat
-      eclip_trial.coord.ra = ra
-      eclip_trial.coord.dec = dec
-      eclip_trial.coord.glon = glon
-      eclip_trial.coord.glat = glat
-      eclip_trial.coord.healpix_n = fnums[ii]
+      ecliplen =  make_eclipse(targets, bkgnds, eclip_trial, frac_fits, rad_fits, ph_fits, min_depth=min_depth)
+      if (ecliplen gt 0) then begin
+        eclip_trial.trial = jj + 1
+        ; Add coordinates to the eclipses
+        thispix = where(ipring eq fnums[ii])
+        ncoord = n_elements(thispix)
+        coordind = lindgen(ecliplen) mod ncoord
+        if (ecliplen gt ncoord) then $
+          print, "Needed ", ecliplen, " coords but got ", ncoord, " on tile ", ii
+        ;print, "Filling in tile ", ii
+        glon = phi[thispix[coordind]]*180./!dpi
+        glat = (theta[thispix[coordind]]-!dpi/2.)*180./!dpi
+        ; Transform from galactic healpix to ecliptic observations
+        euler, glon, glat, elon, elat, select=6
+        euler, glon, glat, ra, dec, select=2
+        eclip_trial.coord.elon = elon
+        eclip_trial.coord.elat = elat
+        eclip_trial.coord.ra = ra
+        eclip_trial.coord.dec = dec
+        eclip_trial.coord.glon = glon
+        eclip_trial.coord.glat = glat
+        eclip_trial.coord.healpix_n = fnums[ii]
       
-      if (jj gt 0) then eclip = struct_append(eclip, eclip_trial) $
-      else eclip = eclip_trial
+        if (ecliplen_tot gt 0) then eclip = struct_append(eclip, eclip_trial) $
+        else eclip = eclip_trial
+        ecliplen_tot = ecliplen_tot + ecliplen
+      end
     end
     ; Survey: figure out npointings and field angles
     eclip_survey, seg, fov, eclip, offset=skirt
@@ -177,6 +179,5 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
       ;if (keyword_set(sav)) then save, filen=spo_name, stard
     end
   endfor
-  mwrfits, star_out[0:(totdet-1),*], outname
-
+  if (totdet gt 0) then mwrfits, star_out[0:(totdet-1),*], outname
 END
