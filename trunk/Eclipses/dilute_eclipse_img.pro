@@ -22,7 +22,7 @@ PRO dilute_eclipse_img, eclip, bkgnds, frac, ph_p, dx, dy, dilvec, $
   
   neclip = n_elements(eclip)
   fov = eclip.coord.fov_ind
-  dilvec = dblarr(neclip, imgsize*imgsize/4)
+  dilvec = dblarr(imgsize*imgsize/4, neclip)
 
   for ii=0, neclip-1 do begin
     ; Generate some random radii
@@ -65,7 +65,7 @@ PRO dilute_eclipse_img, eclip, bkgnds, frac, ph_p, dx, dy, dilvec, $
 		10^(-0.4*(bkmagt[kk]-10.))*thisimgxy
       end ; loop over stars
       ;stop
-      dilvec[ii,*] = reform(dilpix, imgsize*imgsize/4) 
+      dilvec[*,ii] = reform(dilpix, imgsize*imgsize/4) 
     end ; if gd
   end ; loop over eclipses
 END

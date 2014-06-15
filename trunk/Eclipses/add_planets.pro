@@ -1,4 +1,5 @@
-function add_planets, star, pstruct, frac, rad, ph_p, aspix=aspix, fov=fov, dressing=dressing
+function add_planets, star, pstruct, frac, rad, ph_p, $
+	aspix=aspix, fov=fov, dressing=dressing, min_depth=min_depth
 
   sz_ph_p = size(ph_p)
   nfilt = sz_ph_p[1]
@@ -11,6 +12,7 @@ function add_planets, star, pstruct, frac, rad, ph_p, aspix=aspix, fov=fov, dres
   G_CM_S2 = 98.1 ; cm/s^2
  
   if (keyword_set(fov)) then fov=fov else fov=24.0 
+  if (keyword_set(min_depth)) then min_depth=min_depth else min_depth=1E-5 
   ccd_pix = 4096.0
   if (keyword_set(aspix)) then aspix=aspix else aspix=21.1
 
@@ -134,9 +136,10 @@ function add_planets, star, pstruct, frac, rad, ph_p, aspix=aspix, fov=fov, dres
 	;2.0*!dpi*sqrt(1.0-star[pla].cosi^2.)*star[pla].planet.a * AU_DAY_IN_CM_S * planet_mass /  $
 	;	(star[pla].planet.p * star[pla].m * MSUN_IN_MEARTH)
 ; Work out transit properties
-  tra = where(abs(planet_b) lt 1.0)
+  dep1 = (planet_rad*REARTH_IN_RSUN / star[allid].r )^2.0
+  tra = where((abs(planet_b) lt 1.0) and (dep1 gt min_depth))
   ntra = 0
-  if (tra[0] ne -1) then begin
+  if (tra[0] ne -1)  then begin
     traid = planet_hid[tra]
     ntra = n_elements(tra)
     planet_eclip = replicate({eclipstruct}, ntra)

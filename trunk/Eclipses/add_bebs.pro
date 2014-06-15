@@ -6,7 +6,7 @@ function add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, $ ;input
   sz_frac = size(frac)
   npts = sz_frac[1]*sz_frac[2]*sz_frac[4]
   if (keyword_set(aspix)) then aspix=aspix else aspix=21.1
-  if (keyword_set(radmax)) then radmax=radmax else radmax=1.0
+  if (keyword_set(radmax)) then radmax=radmax else radmax=2.0
   if (keyword_set(sq_deg)) then sq_deg=sq_deg else sq_deg=13.54
   ; Background catalog contains 0.134 sq degrees of stars
   ; Radius of 0.134 sq degree circle in pixels
@@ -157,6 +157,7 @@ function add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, $ ;input
       nebtot = nebtot + neb
     end ; if ebs
   end ; mult loop
+  keep = 0L
   if (nebtot gt 0) then begin
     randomp, sep, 1., nebtot, range_x=[0., radmax]
     print, 'Created ', nebtot, ' eclipsing binaries in all.'

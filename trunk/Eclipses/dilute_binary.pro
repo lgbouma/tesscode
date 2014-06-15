@@ -12,7 +12,7 @@ PRO dilute_binary, eclip, star, frac, rad, ph_p, dx, dy, dilvec, $
   ; Radius of 0.134 sq degree circle in pixels
 
   ; allocate the appropriately-sized dilution vector
-  dilvec = dblarr(n_elements(eclip), imgsize*imgsize/4)
+  dilvec = dblarr(imgsize*imgsize/4, n_elements(eclip))
 
   hostid = eclip.hostid
   binsys = where((star[hostid].pri or star[hostid].sec) and (star[hostid].companion.sep/aspix lt radmax))
@@ -52,7 +52,7 @@ PRO dilute_binary, eclip, star, frac, rad, ph_p, dx, dy, dilvec, $
       thisimgx  = thisimg[xsel,*]
       thisimgxy = thisimgx[*,ysel]
       dilpix = 10^(-0.4*(bintmag[kk]-10.))*thisimgxy
-      dilvec[binsys[kk],*] = reform(dilpix, imgsize*imgsize/4) 
+      dilvec[*,binsys[kk]] = reform(dilpix, imgsize*imgsize/4) 
     end
   end
 END
