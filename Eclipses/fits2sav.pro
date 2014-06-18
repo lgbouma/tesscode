@@ -49,7 +49,7 @@ PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax, dbl=dbl
   q = m2/m1
   
   star.logage = logA[pris]
-  star.feh = z[pris]
+  star.feh = alog10(z[pris]/19.0)
   star.mini = mini[pris]
   star.teff = 10.^(logT[pris])
   star.logg = logG[pris]
@@ -112,11 +112,11 @@ PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax, dbl=dbl
       bin_star.companion.m = star[sind].m
      
       ; Add up the fluxes
-      star[sind].mag.icsys = -alog10(10.^(-1.*bin_star.mag.ic) + 10.^(-1.*star[sind].mag.ic))
+      star[sind].mag.icsys = -2.5*alog10(10.^(-0.4*bin_star.mag.ic) + 10.^(-0.4*star[sind].mag.ic))
       bin_star.mag.icsys = star[sind].mag.icsys
-      star[sind].mag.jsys = -alog10(10.^(-1.*bin_star.mag.j) + 10.^(-1.*star[sind].mag.j))
+      star[sind].mag.jsys =  -2.5*alog10(10.^(-0.4*bin_star.mag.j) + 10.^(-0.4*star[sind].mag.j))
       bin_star.mag.jsys = star[sind].mag.jsys
-      star[sind].mag.tsys = -alog10(10.^(-1.*bin_star.mag.t) + 10.^(-1.*star[sind].mag.t))
+      star[sind].mag.tsys =  -2.5*alog10(10.^(-0.4*bin_star.mag.t) + 10.^(-0.4*star[sind].mag.t))
       bin_star.mag.tsys = star[sind].mag.tsys
       
       ; Convert mean separation into mean period
