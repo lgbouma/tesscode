@@ -18,7 +18,7 @@ PRO dartmouth_combine, fpath, starstruct=starstruct
      if ((n_elements(fname) gt 1) or (fname eq '')) then print, 'wrong file name from '+fstub else begin
        ;  print, 'Found '+fname+' from '+fstub
        ;  #EEP   M/Mo    LogTeff  LogG   LogL/Lo U       B       V       R       I       J       H       Ks      Kp      D51
-       readcol, fname, eep, mass, logT, logG, logL, U, B, V, R, I, J, H, Ks, Kp, D51
+       readcol, fname, eep, mass, logT, logG, logL, U, B, V, R, Ic, J, H, Ks, Kp, D51
        
        starstruct[*,fi,ai].age = ages[ai]
        starstruct[*,fi,ai].feh = feh[fi]
