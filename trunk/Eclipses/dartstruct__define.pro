@@ -1,11 +1,11 @@
 PRO dartstruct__define
 
   template_star = {dartstruct, $
-                  m: 0.0, $     ; Mass (solar)
-                  teff: 0.0, $  ; Effective T (Kelvin)
 		  age: 0.0, $
 		  feh: 0.0, $
- 	          logg: 0.0, $
+                  m: 0.0, $     ; Mass (solar)
+                  teff: 0.0, $  ; Effective T (Kelvin)
+ 	          rad: 0.0, $
   		  logl: 0.0, $
                   u: 0.0, $
 		  b: 0.0, $

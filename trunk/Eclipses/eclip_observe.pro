@@ -264,7 +264,6 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
         eclipse[det].det = 1
         print, 'Detected ', n_elements(det), ' eclipses.'
       endif
-      stop
       ;  detected = where(star.eclipse_hz.tra gt 0 and star.eclipse_hz.neclp1_obs ge NTRA_OBS_MIN and star.eclipse_hz.snr ge SNR_MIN)
       ;  star[detected].eclipse_hz.det = 1
     end ;det if

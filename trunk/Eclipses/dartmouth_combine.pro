@@ -1,4 +1,4 @@
-PRO dartmouth_combine, fpath
+PRO dartmouth_combine, fpath, starstruct=starstruct
  ages = [0.250, 0.299, 0.349, 0.400, 0.450, 0.500, 0.550, 0.599, 0.650, 0.699, $
          0.750, 0.800, 0.849, 0.900, 0.949, 1.000, 1.250, 1.500, 1.750, 2.000, $ 
          2.250, 2.500, 2.750, 3.000, 3.250, 3.500, 3.750, 4.000, 4.250, 4.500, $
@@ -19,14 +19,26 @@ PRO dartmouth_combine, fpath
        ;  print, 'Found '+fname+' from '+fstub
        ;  #EEP   M/Mo    LogTeff  LogG   LogL/Lo U       B       V       R       I       J       H       Ks      Kp      D51
        readcol, fname, eep, mass, logT, logG, logL, U, B, V, R, I, J, H, Ks, Kp, D51
+       
+       starstruct[*,fi,ai].age = ages[ai]
+       starstruct[*,fi,ai].feh = feh[fi]
        starstruct[*,fi,ai].m = mass[0:nmass-1]
        starstruct[*,fi,ai].teff = 10.^logT[0:nmass-1]
+       starstruct[*,fi,ai].rad = sqrt(mass[0:nmass-1])/sqrt((10.^logG[0:nmass-1])/27542.3)
+       starstruct[*,fi,ai].logL = logL[0:nmass-1]
+       starstruct[*,fi,ai].u  = U[0:nmass-1]
+       starstruct[*,fi,ai].b  = B[0:nmass-1]
+       starstruct[*,fi,ai].v  = V[0:nmass-1]
+       starstruct[*,fi,ai].r  = R[0:nmass-1]
+       starstruct[*,fi,ai].ic = Ic[0:nmass-1]
+       starstruct[*,fi,ai].j  = J[0:nmass-1]
+       starstruct[*,fi,ai].h  = H[0:nmass-1]
+       starstruct[*,fi,ai].ks = Ks[0:nmass-1]
+      
        ;flen[fi,ai] = max(mass)
 
      end ; if file found
    end ; age loop
  end ; feh loop
-    stop
-
 END	
 
