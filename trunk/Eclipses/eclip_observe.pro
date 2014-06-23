@@ -155,7 +155,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
       dil_ph = dblarr(total(mask1d), ndet)
       
 ;     print, "Diluting with binary companions"
-      bindil = where(eclipse[det].class eq 1)
+      bindil = where(eclipse[det].class eq 1) ; planets only
       if (bindil[0] ne -1) then begin
 ;     stack_prf_eclip, star[star[bindil].companion.ind].mag.t, star[detid].teff, ph_p, frac, dilvec, $
 ;	dx=dx[det], dy=dy[det], fov_ind=eclipse[det].coord.fov_ind, mask=mask1d, sind=sind
@@ -163,7 +163,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
 		dx[det[bindil]], dy[det[bindil]], dilvec, aspix=aspix, radmax=6.0
         dil_ph[bindil] = dil_ph[bindil] + dilvec
       end
-      bebdil = where(eclipse[det].class eq 3)
+      bebdil = where(eclipse[det].class eq 3 or eclipse[det].class eq 4)
       if (bebdil[0] ne -1) then begin
         nbeb = n_elements(bebdil)
         beb_ph = dblarr(total(mask1d), nbeb)
@@ -175,7 +175,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
         end
       end
       print, "Diluting with other target stars"
-      targdil = where(eclipse[det].class eq 1 or eclipse[det].class eq 2)
+      targdil = where(eclipse[det].class ne 3) ; BEBs are already diluted by brightest 
       if (targdil[0] ne -1) then begin
         dilute_eclipse_img, eclipse[det[targdil]], star, frac, ph_p, $
 		dx[det[targdil]], dy[det[targdil]], dilvec, aspix=aspix, sq_deg=13.4, radmax=6.0

@@ -121,9 +121,9 @@ pro calc_noise_eclip, $
   noise_sky  = sqrt(e_tot_sky) / e_tot
   noise_ro   = sqrt(npix_aper*n_exposures)*e_pix_ro / e_tot
   noise_cr   = cr_noise / e_tot
-  noise_sys  = 0.0*noise_star + sys_limit/1d6/sqrt(exptime/3600.)
-
   dilution = e_tot / e_star
+  noise_sys  = 0.0*noise_star + sys_limit/1d6/sqrt(exptime/3600.)/dilution
+
   noise = sqrt( noise_star^2. + noise_sky^2. + noise_ro^2. + noise_sys^2. + cr_noise^2.)
 
 end

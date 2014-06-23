@@ -133,8 +133,8 @@ function add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, $ ;input
       ; Work out transit properties
       eclip = replicate({eclipstruct}, neb)
       eclip.class=3
-      eclip.m1 = m1[bin_ecl]
-      eclip.m2 = m2[bin_ecl]
+      eclip.m1 = m1
+      eclip.m2 = m2
       eclip.k = RV_AMP*2.0*!dpi*a*m2 * $ 
 	sqrt(1.0-cosi^2.)/(p*m1)
       eclip.r1 = r1

@@ -1,4 +1,5 @@
-function add_hebs, star, estruct, frac, rad, ph_p, $ ;input
+function add_hebs, star, eclip, $
+        frac, rad, ph_p, dartstruct, tefftic, $ ;input
   	aspix=aspix, radmax=radmax
 
   sz_ph_p = size(ph_p)
@@ -27,37 +28,39 @@ function add_hebs, star, estruct, frac, rad, ph_p, $ ;input
 ;  PIX_SCALE = fov*3600./ccd_pix
 
   nstars = n_elements(star)
-  nebtot = 0L
 
-  spls = where(star.spl eq 1)
-  if (spls[0] ne -1) then begin
-    nspl = n_elements(spls)
+  spl = where(star.spl eq 1)
+  if (spl[0] ne -1) then begin
+    hostid = star[spl].companion.ind
+    hostp = star[spl].companion.p
+    hostsep = star[spl].companion.sep/aspix
+    nspl = n_elements(spl)
     mtot = star[spl].m
-    logage = star[spl].logage
+    age = star[spl].age
+    feh = star[spl].feh
     q = 1.0
-    m1 = mtot*(1.0+q)
+    m1 = mtot/(1.0+q)
     m2 = mtot*q/(1.0+q)
-    p = 
-    a = 
+    p = hostp/5.0
+    a = (m1+m2)^(1./3.)*(p/365.25)^(2./3.)
     ; Fill in stellar properties
-    r1 = 
-    r2 = 
-    teff1 = 
-    teff2 = 
-    tmag1 = 
-    tmag2 = 
-    tsys = -2.5*log10(10.^(-0.4*tmag1) + 10.^(-0.4*tmag2)) 
-    ars = bkgnd[pris].companion.a*AU_IN_RSUN
-    a   = bkgnd[pris].companion.a
-    p = bkgnd[pris].companion.p
-    cosi = -1.0 + 2.0*randomu(seed, npri)
+    dm = star[spl].mag.dm
+    av = star[spl].mag.av
+    dartmouth_interpolate, dartstruct, m1, age, feh, $
+        rad=r1, ic=ic1, teff=teff1, v=v1, j=j1, h=h1, ks=ks1
+    ;dartmouth_interpolate, dartmouth, m2, age, feh, $
+    ;    rad=r2, ic=ic2, teff=teff2, v=v2, j=j2, h=h2, ks=ks2
+    tmag1 = interpol(tefftic[*,1], tefftic[*,0], teff1) + ic1 + dm + 0.600*av
+    tmag2 = tmag1
+    r2 = r1
+    teff2 = teff1
+    
+    tsys = -2.5*alog10(10.^(-0.4*tmag1) + 10.^(-0.4*tmag2)) 
+    ars = a*AU_IN_RSUN
+    ; Re-randomize the inclinations 
+    cosi = -1.0 + 2.0*randomu(seed, nspl)
     b1 = ars*cosi/r1
     b2 = ars*cosi/r2
-
-    ; Re-randomize the inclinations 
-    cosi = -1.0 + 2.0*randomu(seed, npri)
-    b1 = a*cosi/r1
-    b2 = a*cosi/r2
     ; Where are the (non-contact) eclipsing systems? 
     bin_ecl = where((abs(cosi) lt (r1+r2)/ars) and (ars gt (r1+r2)))
     
@@ -90,6 +93,8 @@ function add_hebs, star, estruct, frac, rad, ph_p, $ ;input
       b1 = b1[bin_ecl]
       b2 = b2[bin_ecl]
       cosi = cosi[bin_ecl]
+      hostid = hostid[bin_ecl]
+      hostsep = hostsep[bin_ecl]
  
       tot_ecl = where((abs(cosi) lt (r1-r2)/ars) and (ars gt (r1+r2)))
       gra_ecl = where((abs(cosi) ge (r1-r2)/ars) $
@@ -126,7 +131,6 @@ function add_hebs, star, estruct, frac, rad, ph_p, $ ;input
       dep2 = phr2*a2
       toodeep = where(a2 gt 1.0)
       if (toodeep[0] ne -1) then dep2[toodeep] = phr2[toodeep]
-      eclipse_hid = pris[bin_ecl]
       
       ; RV amplitude
       ;eclipse_k = RV_AMP*eclipse_p^(-1./3.) * eclipse_m * $ 
@@ -135,9 +139,9 @@ function add_hebs, star, estruct, frac, rad, ph_p, $ ;input
       gress2 = (sdur14-sdur23)/2.0
       ; Work out transit properties
       eclip = replicate({eclipstruct}, neb)
-      eclip.class=3
-      eclip.m1 = m1[bin_ecl]
-      eclip.m2 = m2[bin_ecl]
+      eclip.class=4
+      eclip.m1 = m1
+      eclip.m2 = m2
       eclip.k = RV_AMP*2.0*!dpi*a*m2 * $ 
 	sqrt(1.0-cosi^2.)/(p*m1)
       eclip.r1 = r1
@@ -154,49 +158,10 @@ function add_hebs, star, estruct, frac, rad, ph_p, $ ;input
       eclip.dur1 = dur1
       eclip.dur2 = dur2
       eclip.tsys = tsys
+      eclip.hostid = hostid
+      eclip.sep = hostsep ; in pixels
       ;print, 'Created ', neb, ' eclipsing binaries out of ', n_elements(pris), ' primaries.'
-      if (ii gt 0) then estruct=struct_append(estruct, eclip) $
-	else estruct = eclip
-      nebtot = nebtot + neb
     end ; if ebs
   end ; spl loop
-  keep = 0L
-  if (nebtot gt 0) then begin
-    randomp, sep, 1., nebtot, range_x=[0., radmax]
-    print, 'Created ', nebtot, ' eclipsing binaries in all.'
-    keep = lonarr(nebtot)
-    ; Blend with target stars
-    for ii=0, nebtot-1 do begin
-      ; draw star from random
-      r = randomu(seed, nstars)
-      ; How many of these are primaries and fall within radmax?
-      gd = where((r lt thresh) and (star.sec ne 1))
-      ;print, 'found goods'
-      if (gd[0] ne -1) then begin
-        ; ID the brightest star
-        brightt = min(star[gd].mag.t, ind)
-        ;print, 'done with min'
-        estruct[ii].hostid = gd[ind]
-        estruct[ii].sep= sep[ii] ; in pixels
-        keep[ii] = 1 ; set the keep flag
-      end
-    end
-
-    if (total(keep) gt 0) then begin
-      print, 'Keeping ', round(total(keep)), ' binaries'
-      keepers = where(keep)  
-      estruct = estruct[keepers] 
-    ;bkteff = estruct.teff1
-    ;bkmagt = tsys[keepers]
-    ;starteff = star[gd].teff
-    ;starmagt = star[gd].mag.t
-      
-    ;phr1 = phot_ratio(bkteff, starteff, bkmagt, starmagt, ph_p) ; Flux ratios
-    ;phr2 = 1.0-phr1
-    ;phr = phr1/phr2
-      
-   ; bkrad  = r[gd]
-    endif
-  endif
-return, total(keep)
+  return, neb
 end
