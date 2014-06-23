@@ -4,8 +4,10 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
   ; User-adjustable settings (yes, that's you!)
   frac_file = 'bigfrac24_105_f3p33.fits' ; prf file 
   rad_file = 'bigrad24_105_f3p33.fits' ; radius file 
-  ph_file = 'ph_filt_t.fits' ; photon fluxes for T=10 vs Teff
+  ph_file = 'ph_T_filt.fits' ; photon fluxes for T=10 vs Teff
   cr_file = 'crnoise.fits' ; photon fluxes for T=10 vs Teff
+  tic_file = 'tic_teff.fits'
+  dart_file = 'dartmouth.sav'
   fov = 24.
   seg = 13
   skirt=6.
@@ -26,6 +28,10 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
   CCD_PIX = 4096.
   orbit_period = 13.66d0 ; days per orbit
   downlink = 16.0d0/24.0d0 ; downlink time in days
+  eclass = [	0, $ ; Planets
+	    	1, $ ; EBs
+		1, $ ; BEBs
+		1  ] ; HEBs
 
   ; Don't phuck with physics, though
   REARTH_IN_RSUN = 0.0091705248
@@ -43,6 +49,9 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
   ph_fits = mrdfits(ph_file)
   cr_fits = fltarr(100,64)
 ;  cr_fits = mrdfits(cr_file)
+  restore, dart_file
+  dartstruct = ss
+  tic_fits = mrdfits(tic_file)
   ; Make random spherical coords
   u = randomu(seed, 1D7)
   v = randomu(seed, 1D7)
@@ -90,7 +99,8 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
       ; re-radomize the inclination
       targets.cosi = -1 + 2.0*randomu(seed, n_elements(targets))
       ; Add eclipses
-      ecliplen =  make_eclipse(targets, bkgnds, eclip_trial, frac_fits, rad_fits, ph_fits, min_depth=min_depth)
+      ecliplen =  make_eclipse(targets, bkgnds, eclip_trial, frac_fits, $
+	rad_fits, ph_fits, dartstruct, tic_fits, eclass, min_depth=min_depth)
       if (ecliplen gt 0) then begin
         eclip_trial.trial = jj + 1
         ; Add coordinates to the eclipses

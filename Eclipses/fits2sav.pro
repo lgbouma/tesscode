@@ -1,8 +1,10 @@
-PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax, dbl=dbl
-
+PRO fits2sav, fname, dartmouth, tefftic, nstar=nstar, imax=imax, dmax=dmax, dbl=dbl
   dat = mrdfits(fname, 0, h, /SILENT)
+  print, fname
   if keyword_set(dbl) then dat = [dat, dat]
 
+  dartmin = 0.15
+  dartmax = 0.90
   ; Abs. mag ranges for binary properties
   mp_min = [0.0, 0.1, 0.6, 0.8, 1.0, 1.4]  
   mp_max = [     0.1, 0.6, 0.8, 1.0, 1.4, 99.]  
@@ -47,8 +49,12 @@ PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax, dbl=dbl
   m1 = mini[pris]
   m2 = mini[secs]
   q = m2/m1
+
+  ; error checking on feh
+  mz = where(z lt 0)
+  if (mz[0] ne -1) then z[mz] = 19.0
   
-  star.logage = logA[pris]
+  star.age = 10.^(logA[pris]-9.0)
   star.feh = alog10(z[pris]/19.0)
   star.mini = mini[pris]
   star.teff = 10.^(logT[pris])
@@ -71,6 +77,28 @@ PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax, dbl=dbl
   star.m = mnow[pris]
   star.r = sqrt(star.m)/sqrt(10.^star.logg/27542.3)
 
+  darts = where(star.m gt dartmin and star.m lt dartmax)
+  if (darts[0] ne -1) then begin
+    newdm = star[darts].mag.dm
+    newav = star[darts].mag.av
+    dartmouth_interpolate, dartmouth, star[darts].m, star[darts].age, star[darts].feh, $
+	rad=newrad, ic=newic, teff=newteff, v=newv, rc=newr, j=newj, h=newh, ks=newks
+    newt = interpol(tefftic[*,1], tefftic[*,0], newteff) + newic
+    star[darts].r = newrad
+    star[darts].mag.ic = newic + newdm + 0.600*newav
+    star[darts].mag.t = newt + newdm + 0.600*newav
+    star[darts].teff = newteff
+    star[darts].mag.v = newv + newdm + newav
+    star[darts].mag.r = newr + newdm + 0.292*newav
+    star[darts].mag.j = newj + newdm + 0.600*newav
+    star[darts].mag.h = newh + newdm + 0.186*newav
+    star[darts].mag.k = newks + newdm + 0.116*newav
+    star[darts].mag.icsys = star[darts].mag.ic
+    star[darts].mag.jsys = star[darts].mag.j
+    star[darts].mag.tsys = star[darts].mag.t
+    ; don't need to over-write mass, age, feh. Maybe add back extinction? 
+  end
+
   idx0 = long(npri)
 
   for ii=0,nmp-1 do begin
@@ -78,8 +106,8 @@ PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax, dbl=dbl
     if (sind[0] ne 0) then begin 
       nsec = n_elements(sind)
       bin_star = replicate({starstruct}, nsec)
-      bin_star.logage = logA[secs[sind]]
-      bin_star.feh = z[secs[sind]]
+      bin_star.age = 10.^(logA[secs[sind]]-9.0)
+      bin_star.feh = alog10(z[secs[sind]]/19.0)
       bin_star.mini = mini[secs[sind]]
       bin_star.teff = 10.^(logT[secs[sind]])
       bin_star.logg = logG[secs[sind]]
@@ -97,6 +125,28 @@ PRO fits2sav, fname, nstar=nstar, imax=imax, dmax=dmax, dbl=dbl
       bin_star.mag.t = t[secs[sind]]
       bin_star.m = mnow[secs[sind]]
       bin_star.r = sqrt(bin_star.m)/sqrt(10.^bin_star.logg/27542.3)
+   
+      darts = where(bin_star.m gt dartmin and bin_star.m lt dartmax)
+      if (darts[0] ne -1) then begin
+        newdm = bin_star[darts].mag.dm
+        newav = bin_star[darts].mag.av
+        dartmouth_interpolate, dartmouth, bin_star[darts].m, bin_star[darts].age, bin_star[darts].feh, $
+	  rad=newrad, ic=newic, teff=newteff, v=newv, rc=newr, j=newj, h=newh, ks=newks
+        newt = interpol(tefftic[*,1], tefftic[*,0], newteff) + newic
+        bin_star[darts].r = newrad
+        bin_star[darts].mag.ic = newic + newdm + 0.600*newav
+        bin_star[darts].mag.t = newt + newdm + 0.600*newav
+        bin_star[darts].teff = newteff
+        bin_star[darts].mag.v = newv + newdm + newav
+        bin_star[darts].mag.r = newr + newdm + 0.292*newav
+        bin_star[darts].mag.j = newj + newdm + 0.600*newav
+        bin_star[darts].mag.h = newh + newdm + 0.186*newav
+        bin_star[darts].mag.k = newks + newdm + 0.116*newav
+        bin_star[darts].mag.icsys = bin_star[darts].mag.ic
+        bin_star[darts].mag.jsys = bin_star[darts].mag.j
+        bin_star[darts].mag.tsys = bin_star[darts].mag.t
+        ; don't need to over-write mass, age, feh. Maybe add back extinction? 
+      end
     
       bin_inds = lindgen(nsec)+idx0
       ;print, min(bin_inds), max(bin_inds)
