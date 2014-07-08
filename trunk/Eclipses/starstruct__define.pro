@@ -1,6 +1,7 @@
 PRO starstruct__define
 
   template_star = {starstruct, $
+ 		  dart: 0,  $    ; from the Dartmouth over-write?
                   r: 0.0, $     ; Radius (solar)
                   ;oldr: 0.0, $     ; Radius (solar)
                   m: 0.0, $     ; Mass (solar)

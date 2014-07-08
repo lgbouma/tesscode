@@ -36,7 +36,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
   ; Don't phuck with physics, though
   REARTH_IN_RSUN = 0.0091705248
   AU_IN_RSUN = 215.093990942
-  nparam = 45 ; output table width
+  nparam = 49 ; output table width
 
   ; Here we go!
   numtargets = lonarr(numfil)
@@ -60,7 +60,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
   ang2pix_ring, 16, theta, phi, ipring
    
   totdet = 0L
-  star_out = dblarr(1E5*n_trial,nparam)
+  star_out = dblarr(1E7*n_trial,nparam)
   for ii=0, numfil-1 do begin
     ; Gather the .sav files
     print, 'Restoring files for tile ', fnums[ii]
@@ -166,8 +166,8 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
       ndet = n_elements(det)
       bins = targets[detid].pri + 2*targets[detid].sec
       tmp_star = [[eclip[det].trial], [targets[detid].mag.v], [targets[detid].mag.ic], $
-                [targets[detid].mag.t], $
-                [targets[detid].mag.j], [targets[detid].mag.k], [targets[detid].teff], $
+                [targets[detid].mag.t], [targets[detid].mag.j], $
+                [targets[detid].mag.h], [targets[detid].mag.k], [targets[detid].teff], $
                 [eclip[det].coord.elon], [eclip[det].coord.elat], $
                 [eclip[det].coord.glon], [eclip[det].coord.glat], $
                 [eclip[det].p], [eclip[det].a], [eclip[det].s], [eclip[det].b], $
@@ -181,6 +181,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
 	        [eclip[det].star_ph], [eclip[det].bk_ph], [eclip[det].zodi_ph], $
                 [eclip[det].npix], [eclip[det].dil], [targets[detid].ffi], [eclip[det].npointings] ,$
                 [eclip[det].sat], [eclip[det].coord.fov_r], $
+                [eclip[det].class], [eclip[det].sep], [eclip[det].tsys], $
                 [bins], [targets[detid].companion.sep], [targets[targets[detid].companion.ind].mag.t]]
       idx = lindgen(ndet) + totdet
       star_out[idx,*] = tmp_star
@@ -190,4 +191,5 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
     end
   endfor
   if (totdet gt 0) then mwrfits, star_out[0:(totdet-1),*], outname
+  print, numps, ' postage stamps assigned'
 END
