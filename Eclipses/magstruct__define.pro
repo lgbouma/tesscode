@@ -3,6 +3,9 @@ PRO magstruct__define
   template_mag = {magstruct, $
    	         av: 0.0, $
    	         dm: 0.0, $
+                 mv: 0.0, $
+		 mic: 0.0, $
+		 mj: 0.0, $
                  v: 0.0, $ ; apparent
                  g: 0.0, $ ; apparent
                  r: 0.0, $ ; apparent
