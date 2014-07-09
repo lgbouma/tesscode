@@ -1,4 +1,4 @@
-PRO sav2fits, fname
+PRO sav2fits, fname, vmag=vmag, newfname=newfname
 
   restore, fname
   m = star.m
@@ -21,6 +21,11 @@ PRO sav2fits, fname
   jsys = star.mag.jsys
 
   poop = [[m],[rad],[teff],[v],[r],[ic],[z],[j],[h],[k],[dm],[av],[ps],[mv],[mic],[mj],[icsys],[jsys]]
+  if (keyword_set(vmag)) then begin
+    gd = where(v le vmag)
+    poop = poop[gd,*]
+  end
+  if (keyword_set(newfname)) then newfname=newfname else $ 
   newfname = repstr(fname, 'sav', 'fits')
   mwrfits, poop, newfname
 
