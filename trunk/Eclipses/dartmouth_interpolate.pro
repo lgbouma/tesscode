@@ -8,10 +8,12 @@ PRO dartmouth_interpolate, starstruct, mass_in, age_in, feh_in, $ ;inputs
  nage = n_elements(ages)
  fehs = [-1.0, -0.5, 0.0, 0.2]
  nfe = n_elements(fehs)
- nmass = 265L
+ masses = (findgen(143) + 20.)/200.
+ nmass = n_elements(masses)
  
- ai = interpol(findgen(nage), ages, age_in)
- fi = interpol(findgen(nfe),  fehs, feh_in)
+ ai = (interpol(findgen(nage), ages, age_in))
+ fi = (interpol(findgen(nfe),  fehs, feh_in))
+ mi = (interpol(findgen(nmass), masses, mass_in))
  ; error checking
  toohigh = where(ai gt nage-1)
  if (toohigh[0] ne -1) then ai[toohigh] = nage-1
@@ -19,23 +21,31 @@ PRO dartmouth_interpolate, starstruct, mass_in, age_in, feh_in, $ ;inputs
  toohigh = where(fi gt nfe-1)
  if (toohigh[0] ne -1) then fi[toohigh] = nfe-1
  
+ toohigh = where(mi gt nmass-1)
+ if (toohigh[0] ne -1) then mi[toohigh] = nmass-1
+ 
  toolow = where(ai lt 0)
  if (toolow[0] ne -1) then ai[toolow] = 0
  
  toolow = where(fi lt 0)
  if (toolow[0] ne -1) then fi[toolow] = 0
  
- mi = lonarr(n_elements(mass_in))
- for ii=0,n_elements(mass_in)-1 do begin
-   masses = starstruct[*,fi[ii],ai[ii]].m
-   mi[ii] = interpol(findgen(nmass), masses, mass_in[ii])
- end
-
- toohigh = where(mi gt nmass-1)
- if (toohigh[0] ne -1) then mi[toohigh] = nmass-1
- 
  toolow = where(mi lt 0)
  if (toolow[0] ne -1) then mi[toolow] = 0
+ 
+; mi = lonarr(n_elements(mass_in))
+; for ii=0,n_elements(mass_in)-1 do begin
+;   masses = starstruct[*, fi[ii], ai[ii]].m
+;   mi[ii] = interpol(findgen(nmass), masses, mass_in[ii])
+; end
+; massinds = rebin(findgen(nmass), nmass, nfe, nage)
+; mi = interpolate(massinds, mass_in, fi, ai)
+
+; toohigh = where(mi gt nmass-1)
+; if (toohigh[0] ne -1) then mi[toohigh] = nmass-1
+ 
+; toolow = where(mi lt 0)
+; if (toolow[0] ne -1) then mi[toolow] = 0
  
    d_age = starstruct.age 
    d_feh = starstruct.feh
@@ -59,6 +69,8 @@ PRO dartmouth_interpolate, starstruct, mass_in, age_in, feh_in, $ ;inputs
   ic = interpolate(d_ic, mi, fi, ai) 
   j = interpolate(d_j, mi, fi, ai) 
   h = interpolate(d_h, mi, fi, ai) 
-  ks = interpolate(d_ks, mi, fi, ai) 
+  ks = interpolate(d_ks, mi, fi, ai)
+
+
 END	
 

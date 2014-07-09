@@ -5,9 +5,11 @@ PRO dartmouth_combine, fpath, starstruct=starstruct
 	 4.750, 5.000, 5.500, 6.000, 6.500, 7.000, 7.500, 8.000, 8.500, 9.000, $
          9.500, 10.00, 10.50, 11.00, 11.50, 12.00, 12.50, 13.00, 13.50, 14.00, 14.50, 15.00]
  nage = n_elements(ages)
+ masses = (findgen(143) + 20.)/200.
+ nmass = n_elements(masses)
  feh = [-1.0, -0.5, 0.0, 0.2]
  nfe = n_elements(feh)
- nmass = 265L
+; nmass = 265L
  starstruct = replicate({dartstruct}, nfe*nage*nmass)
  starstruct = reform(starstruct, nmass, nfe, nage) 
  for fi = 0,nfe-1 do begin
@@ -20,20 +22,35 @@ PRO dartmouth_combine, fpath, starstruct=starstruct
        ;  #EEP   M/Mo    LogTeff  LogG   LogL/Lo U       B       V       R       I       J       H       Ks      Kp      D51
        readcol, fname, eep, mass, logT, logG, logL, U, B, V, R, Ic, J, H, Ks, Kp, D51
        
+ ;      starstruct[*,fi,ai].age = ages[ai]
+ ;      starstruct[*,fi,ai].feh = feh[fi]
+ ;      starstruct[*,fi,ai].m = mass[0:nmass-1]
+ ;      starstruct[*,fi,ai].teff = 10.^logT[0:nmass-1]
+ ;      starstruct[*,fi,ai].rad = sqrt(mass[0:nmass-1])/sqrt((10.^logG[0:nmass-1])/27542.3)
+ ;      starstruct[*,fi,ai].logL = logL[0:nmass-1]
+ ;      starstruct[*,fi,ai].u  = U[0:nmass-1]
+ ;      starstruct[*,fi,ai].b  = B[0:nmass-1]
+ ;      starstruct[*,fi,ai].v  = V[0:nmass-1]
+ ;      starstruct[*,fi,ai].r  = R[0:nmass-1]
+ ;      starstruct[*,fi,ai].ic = Ic[0:nmass-1]
+ ;      starstruct[*,fi,ai].j  = J[0:nmass-1]
+ ;      starstruct[*,fi,ai].h  = H[0:nmass-1]
+ ;      starstruct[*,fi,ai].ks = Ks[0:nmass-1]
+       
        starstruct[*,fi,ai].age = ages[ai]
        starstruct[*,fi,ai].feh = feh[fi]
-       starstruct[*,fi,ai].m = mass[0:nmass-1]
-       starstruct[*,fi,ai].teff = 10.^logT[0:nmass-1]
-       starstruct[*,fi,ai].rad = sqrt(mass[0:nmass-1])/sqrt((10.^logG[0:nmass-1])/27542.3)
-       starstruct[*,fi,ai].logL = logL[0:nmass-1]
-       starstruct[*,fi,ai].u  = U[0:nmass-1]
-       starstruct[*,fi,ai].b  = B[0:nmass-1]
-       starstruct[*,fi,ai].v  = V[0:nmass-1]
-       starstruct[*,fi,ai].r  = R[0:nmass-1]
-       starstruct[*,fi,ai].ic = Ic[0:nmass-1]
-       starstruct[*,fi,ai].j  = J[0:nmass-1]
-       starstruct[*,fi,ai].h  = H[0:nmass-1]
-       starstruct[*,fi,ai].ks = Ks[0:nmass-1]
+       starstruct[*,fi,ai].m = masses
+       starstruct[*,fi,ai].teff = 10.^(interpol(logT, mass, masses))
+       starstruct[*,fi,ai].rad = interpol(sqrt(mass)/sqrt((10.^logG)/27542.3), mass, masses)
+       starstruct[*,fi,ai].logL = interpol(logL, mass, masses)
+       starstruct[*,fi,ai].u  = interpol(U, mass, masses)
+       starstruct[*,fi,ai].b  = interpol(B, mass, masses)
+       starstruct[*,fi,ai].v  = interpol(V, mass, masses)
+       starstruct[*,fi,ai].r  = interpol(R, mass, masses)
+       starstruct[*,fi,ai].ic = interpol(Ic, mass, masses)
+       starstruct[*,fi,ai].j  = interpol(J, mass, masses)
+       starstruct[*,fi,ai].h  = interpol(H, mass, masses)
+       starstruct[*,fi,ai].ks = interpol(Ks, mass, masses)
       
        ;flen[fi,ai] = max(mass)
 

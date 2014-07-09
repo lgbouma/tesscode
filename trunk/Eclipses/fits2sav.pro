@@ -1,15 +1,18 @@
 PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dmax=dmax, dbl=dbl
   dat = mrdfits(fname, 0, h, /SILENT)
   print, fname
-  if keyword_set(dbl) then dat = [dat, dat]
 
   if keyword_set(jlfr) then begin
     sz = size(jlfr)
     nmj = sz[1]
-  end  
-
-  dartmin = 0.15
-  dartmax = 0.85
+    lf_mj = jlfr[*,0]
+    lf_dm = lf_mj[1]-lf_mj[0]
+    lf_r  = jlfr[*,1]
+    print, "Applying LF from J=",min(lf_mj)-lf_dm/2.," to J=",max(lf_mj)+lf_dm/2.," with a median change of ",median(lf_r)
+  endif
+       
+  dartmin = 0.14
+  dartmax = 0.78
   ; Abs. mag ranges for binary properties
   mp_min = [0.0, 0.1, 0.6, 0.8, 1.0, 1.4]  
   mp_max = [     0.1, 0.6, 0.8, 1.0, 1.4, 99.]  
@@ -50,7 +53,7 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dm
   
  ; Derived quantities
   m = mnow
-  rad = sqrt(m)/sqrt(10.^star.logg/27542.3)
+  rad = sqrt(m)/sqrt(10.^logG/27542.3)
   v = g - 0.5784*(g - r) - 0.0038 ;Lupton 2005
   ic = i - 0.3780*(i - z) - 0.3974 ; Lupton 2005
   icsys = ic
@@ -79,6 +82,7 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dm
     v[darts] = newv + newdm + newav
     vr = newv-newrc
     ; Jordi (2005)
+    newr = newrc
     vr1 = where(vr le 0.93)
     if (vr1[0] ne -1) then newr[vr1] = newrc[vr1] + 0.267*vr[vr1] + 0.088
     vr2 = where(vr gt 0.93)
@@ -86,16 +90,54 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dm
     r[darts] = newr + newdm + 0.751*newav
     j[darts] = newj + newdm + 0.282*newav
     h[darts] = newh + newdm + 0.190*newav
-    k[darts] = newks + newdm + 0.114*newav
+    ks[darts] = newks + newdm + 0.114*newav
     icsys[darts] = ic[darts]
     jsys[darts] = j[darts]
     tsys[darts] = t[darts]
   endif
 
-  stop
- 
   pris = where(comp eq 1)
   secs = where(comp eq 2)
+  
+  if (keyword_set(dbl)) then begin
+     pris = [pris,pris]
+     secs = [secs,secs]
+  end
+  
+  ; Enforce luminosity function on primaries + singles
+  if (keyword_set(jlfr)) then begin
+    rm = []
+    ad = []
+    for ii=0,nmj-1 do begin
+      thismj = where((mj gt lf_mj[ii]-lf_dm/2.) and (mj le lf_mj[ii]+lf_dm/2.) and (comp eq 1))
+      ; If there are no stars in this mag bin, then do nothing
+      if (thismj[0] ne -1) then begin
+        ; Select stars for removal if over-abundant
+        if (lf_r[ii] lt 1.0) then begin
+          rmp = where(randomu(seed,n_elements(thismj)) gt (lf_r[ii]))
+          if (rmp[0] ne -1) then rm = [rm,thismj[rmp]]
+        ; select stars for duplication if under-abundant
+	endif else if (lf_r[ii] gt 1.0) then begin
+          if (lf_r[ii] ge 2.0) then begin
+            addp = lindgen(n_elements(thismj)*floor(lf_r[ii])) mod n_elements(thismj)
+            ad = [ad, thismj[addp]]
+          end
+          addp = where(randomu(seed, n_elements(thismj)) lt (lf_r[ii] mod 1)) 
+          if (addp[0] ne -1) then ad = [ad,thismj[addp]]
+        end
+      endif
+    endfor ; M_J loop
+    if (n_elements(rm) gt 0) then begin
+      remove, rm, pris ; also remove the indices
+      remove, rm, secs ; also remove the indices
+    endif 
+    if (n_elements(ad) gt 0) then begin
+       pris = [pris, pris[ad]]
+       secs = [secs, secs[ad]]
+    end
+    npri = n_elements(pris) ; over-write npri
+  endif ; LF enforcement
+
   npri = n_elements(pris)
   star = replicate({starstruct}, npri)
   
@@ -104,85 +146,61 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dm
   q = m2/m1
 
   ; error checking on feh
-  mz = where(z lt 0)
-  if (mz[0] ne -1) then z[mz] = 19.0
+  ;mz = where(z lt 0)
+  ;if (mz[0] ne -1) then z[mz] = 19.0
   
-  star.age = 10.^(logA[pris]-9.0)
-  star.feh = alog10(z[pris]/19.0)
+  star.age = age[pris]
+  star.feh = feh[pris]
   star.mini = mini[pris]
-  star.teff = 10.^(logT[pris])
+  star.teff = teff[pris]
   star.logg = logG[pris]
   star.mag.dm = dm[pris]
   star.mag.av = av[pris]
   star.mag.g = g[pris]
-  star.mag.v = g[pris] - 0.5784*(g[pris]-r[pris]) - 0.0038 ;Lupton 2005
+  star.mag.v = v[pris] 
   star.mag.r = r[pris]
   star.mag.i = i[pris]
-  star.mag.ic = i[pris] - 0.3780*(i[pris]-z[pris]) - 0.3974 ; Lupton 2005
+  star.mag.ic = ic[pris]  
   star.mag.z = z[pris]
   star.mag.j = j[pris]
   star.mag.h = h[pris]
   star.mag.k = ks[pris]
   star.mag.t = t[pris]
-  star.mag.mv = star.mag.v - star.mag.av - star.mag.dm
-  star.mag.mic = star.mag.ic - 0.479*star.mag.av - star.mag.dm
-  star.mag.mj = star.mag.j - 0.282*star.mag.av - star.mag.dm
-  star.mag.icsys = star.mag.ic
-  star.mag.jsys = star.mag.j
-  star.mag.tsys = star.mag.t
-  star.m = mnow[pris]
-  star.r = sqrt(star.m)/sqrt(10.^star.logg/27542.3)
+  star.mag.mv = mv[pris] ;star.mag.v - star.mag.av - star.mag.dm
+  star.mag.mic = mic[pris] ;star.mag.ic - 0.479*star.mag.av - star.mag.dm
+  star.mag.mj = mj[pris] ;star.mag.j - 0.282*star.mag.av - star.mag.dm
+  star.mag.icsys = ic[pris] ; star.mag.ic
+  star.mag.jsys = j[pris] ;star.mag.j
+  star.mag.tsys = t[pris] ;star.mag.t
+  star.m = m[pris]
+  star.r = rad[pris]
 
-  darts = where(star.m gt dartmin and star.m lt dartmax)
-  if (darts[0] ne -1) then begin
-    newdm = star[darts].mag.dm
-    newav = star[darts].mag.av
-    dartmouth_interpolate, dartmouth, star[darts].m, star[darts].age, star[darts].feh, $
-	rad=newrad, ic=newic, teff=newteff, v=newv, rc=newr, j=newj, h=newh, ks=newks
-    newt = interpol(tefftic[*,1], tefftic[*,0], newteff) + newic
-    star[darts].dart = 1
-    star[darts].r = newrad
-    star[darts].mag.mv = newv
-    star[darts].mag.mic = newic
-    star[darts].mag.mj = newj
-    star[darts].mag.ic = newic + newdm + 0.479*newav
-    star[darts].mag.t = newt + newdm + 0.479*newav
-    star[darts].teff = newteff
-    star[darts].mag.v = newv + newdm + newav
-    star[darts].mag.r = newr + newdm + 0.751*newav
-    star[darts].mag.j = newj + newdm + 0.282*newav
-    star[darts].mag.h = newh + newdm + 0.190*newav
-    star[darts].mag.k = newks + newdm + 0.114*newav
-    star[darts].mag.icsys = star[darts].mag.ic
-    star[darts].mag.jsys = star[darts].mag.j
-    star[darts].mag.tsys = star[darts].mag.t
-    ; don't need to over-write mass, age, feh. Maybe add back extinction? 
-  end
-
-  ; Enforce luminosity function on primaries + singles
-  if (keyword_set(jlf)) then begin
-    mj  = jlfr[*,0]
-    lfr = jlfr[*,1]
-    rm = []
-    for ii=0,nmj-1 do begin
-      thismj = where((star.mag.mj gt mj[ii]-0.5) and (star.mag.mj le mj[ii]+0.5) and (star.sec ne 1))
-      ; If there are no stars in this mag bin, then do nothing
-      if (thismj[0] ne -1) then begin
-        ; Select stars for removal if over-abundant
-        if (lfr[ii] gt 1.0) then begin
-          rmp = where(randomu(seed,n_elements(thismj)) lt (lfr[ii]-1.0))
-          if (rmp[0] ne -1) then rm = [rm,rmp]
-        ; select stars for duplication if under-abundant
-	endif else if (lfr[ii] lt 1.0) then begin
-          addp = where(randomu(seed, n_elements(thismj)) 
-        end
-      endif
-    endfor ; M_J loop
-    remove, rm, star ; remove at END to keep indices self-consistent
-    remove, rm, pris ; also remove the indices
-    remove, rm, secs ; also remove the indices
-    npri = n_elements(star) ; over-write npri
-  endif ; LF enforcement
+ ;  darts = where(star.m gt dartmin and star.m lt dartmax)
+ ;  if (darts[0] ne -1) then begin
+ ;    newdm = star[darts].mag.dm
+ ;    newav = star[darts].mag.av
+ ;   dartmouth_interpolate, dartmouth, star[darts].m, star[darts].age, star[darts].feh, $
+ ;	rad=newrad, ic=newic, teff=newteff, v=newv, rc=newr, j=newj, h=newh, ks=newks
+ ;    newt = interpol(tefftic[*,1], tefftic[*,0], newteff) + newic
+ ;    star[darts].dart = 1
+ ;   star[darts].r = newrad
+ ;   star[darts].mag.mv = newv
+ ;   star[darts].mag.mic = newic
+ ;   star[darts].mag.mj = newj
+ ;   star[darts].mag.ic = newic + newdm + 0.479*newav
+ ;   star[darts].mag.t = newt + newdm + 0.479*newav
+ ;   star[darts].teff = newteff
+ ;   star[darts].mag.v = newv + newdm + newav
+ ;   star[darts].mag.r = newr + newdm + 0.751*newav
+ ;   star[darts].mag.j = newj + newdm + 0.282*newav
+ ;   star[darts].mag.h = newh + newdm + 0.190*newav
+ ;   star[darts].mag.k = newks + newdm + 0.114*newav
+ ;   star[darts].mag.icsys = star[darts].mag.ic
+ ;   star[darts].mag.jsys = star[darts].mag.j
+ ;   star[darts].mag.tsys = star[darts].mag.t
+ ;   ; don't need to over-write mass, age, feh. Maybe add back extinction? 
+ ; end
+ ;
 
   idx0 = long(npri)
 
@@ -191,54 +209,54 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dm
     if (sind[0] ne 0) then begin 
       nsec = n_elements(sind)
       bin_star = replicate({starstruct}, nsec)
-      bin_star.age = 10.^(logA[secs[sind]]-9.0)
-      bin_star.feh = alog10(z[secs[sind]]/19.0)
+      bin_star.age = age[secs[sind]] ;10.^(logA[secs[sind]]-9.0)
+      bin_star.feh = feh[secs[sind]] ; alog10(z[secs[sind]]/19.0)
       bin_star.mini = mini[secs[sind]]
-      bin_star.teff = 10.^(logT[secs[sind]])
+      bin_star.teff = teff[secs[sind]] ;10.^(logT[secs[sind]])
       bin_star.logg = logG[secs[sind]]
       bin_star.mag.dm = dm[secs[sind]]
       bin_star.mag.av = av[secs[sind]]
       bin_star.mag.g = g[secs[sind]]
-      bin_star.mag.v = g[secs[sind]] - 0.5784*(g[secs[sind]]-r[secs[sind]]) - 0.0038 ;Lupton 2005
+      bin_star.mag.v = v[secs[sind]] ;g[secs[sind]] - 0.5784*(g[secs[sind]]-r[secs[sind]]) - 0.0038 ;Lupton 2005
       bin_star.mag.r = r[secs[sind]]
       bin_star.mag.i = i[secs[sind]]
-      bin_star.mag.ic = i[secs[sind]] - 0.3780*(i[secs[sind]]-z[secs[sind]]) - 0.3974 ; Lupton 2005
+      bin_star.mag.ic = ic[secs[sind]] ;i[secs[sind]] - 0.3780*(i[secs[sind]]-z[secs[sind]]) - 0.3974 ; Lupton 2005
       bin_star.mag.z = z[secs[sind]]
       bin_star.mag.j = j[secs[sind]]
       bin_star.mag.h = h[secs[sind]]
       bin_star.mag.k = ks[secs[sind]]
       bin_star.mag.t = t[secs[sind]]
-      bin_star.mag.mv = bin_star.mag.v - bin_star.mag.av - bin_star.mag.dm
-      bin_star.mag.mic = bin_star.mag.ic - 0.479*bin_star.mag.av - bin_star.mag.dm
-      bin_star.mag.mj = bin_star.mag.j - 0.282*bin_star.mag.av - bin_star.mag.dm
-      bin_star.m = mnow[secs[sind]]
-      bin_star.r = sqrt(bin_star.m)/sqrt(10.^bin_star.logg/27542.3)
+      bin_star.mag.mv = mv[secs[sind]] ;bin_star.mag.v - bin_star.mag.av - bin_star.mag.dm
+      bin_star.mag.mic = mic[secs[sind]] ; bin_star.mag.ic - 0.479*bin_star.mag.av - bin_star.mag.dm
+      bin_star.mag.mj = mj[secs[sind]] ; bin_star.mag.j - 0.282*bin_star.mag.av - bin_star.mag.dm
+      bin_star.m = m[secs[sind]]
+      bin_star.r = rad[secs[sind]] ;sqrt(bin_star.m)/sqrt(10.^bin_star.logg/27542.3)
    
-      darts = where(bin_star.m gt dartmin and bin_star.m lt dartmax)
-      if (darts[0] ne -1) then begin
-        newdm = bin_star[darts].mag.dm
-        newav = bin_star[darts].mag.av
-        dartmouth_interpolate, dartmouth, bin_star[darts].m, bin_star[darts].age, bin_star[darts].feh, $
-	  rad=newrad, ic=newic, teff=newteff, v=newv, rc=newr, j=newj, h=newh, ks=newks
-        newt = interpol(tefftic[*,1], tefftic[*,0], newteff) + newic
-        bin_star[darts].dart = 1
-        bin_star[darts].r = newrad
-        bin_star[darts].mag.mv = newv
-        bin_star[darts].mag.mic = newic
-        bin_star[darts].mag.mj = newj
-        bin_star[darts].mag.ic = newic + newdm + 0.479*newav
-        bin_star[darts].mag.t = newt + newdm + 0.479*newav
-        bin_star[darts].teff = newteff
-        bin_star[darts].mag.v = newv + newdm + newav
-        bin_star[darts].mag.r = newr + newdm + 0.751*newav
-        bin_star[darts].mag.j = newj + newdm + 0.282*newav
-        bin_star[darts].mag.h = newh + newdm + 0.190*newav
-        bin_star[darts].mag.k = newks + newdm + 0.114*newav
-        bin_star[darts].mag.icsys = bin_star[darts].mag.ic
-        bin_star[darts].mag.jsys = bin_star[darts].mag.j
-        bin_star[darts].mag.tsys = bin_star[darts].mag.t
-        ; don't need to over-write mass, age, feh. Maybe add back extinction? 
-      end
+;      darts = where(bin_star.m gt dartmin and bin_star.m lt dartmax)
+;      if (darts[0] ne -1) then begin
+;        newdm = bin_star[darts].mag.dm
+;        newav = bin_star[darts].mag.av
+;        dartmouth_interpolate, dartmouth, bin_star[darts].m, bin_star[darts].age, bin_star[darts].feh, $
+;	  rad=newrad, ic=newic, teff=newteff, v=newv, rc=newr, j=newj, h=newh, ks=newks
+ ;       newt = interpol(tefftic[*,1], tefftic[*,0], newteff) + newic
+ ;       bin_star[darts].dart = 1
+ ;       bin_star[darts].r = newrad
+ ;       bin_star[darts].mag.mv = newv
+ ;       bin_star[darts].mag.mic = newic
+ ;       bin_star[darts].mag.mj = newj
+ ;       bin_star[darts].mag.ic = newic + newdm + 0.479*newav
+ ;       bin_star[darts].mag.t = newt + newdm + 0.479*newav
+ ;       bin_star[darts].teff = newteff
+ ;       bin_star[darts].mag.v = newv + newdm + newav
+ ;       bin_star[darts].mag.r = newr + newdm + 0.751*newav
+ ;       bin_star[darts].mag.j = newj + newdm + 0.282*newav
+ ;       bin_star[darts].mag.h = newh + newdm + 0.190*newav
+ ;       bin_star[darts].mag.k = newks + newdm + 0.114*newav
+ ;       bin_star[darts].mag.icsys = bin_star[darts].mag.ic
+ ;       bin_star[darts].mag.jsys = bin_star[darts].mag.j
+ ;       bin_star[darts].mag.tsys = bin_star[darts].mag.t
+ ;       ; don't need to over-write mass, age, feh. Maybe add back extinction? 
+ ;     end
     
       bin_inds = lindgen(nsec)+idx0
       ;print, min(bin_inds), max(bin_inds)
@@ -262,14 +280,15 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dm
       bin_star.mag.tsys = star[sind].mag.tsys
       
       ; Convert mean separation into mean period
-      logpbar = alog10(365.25*abar[ii]^(1.5)*(star[sind].m*(1.0+q[sind]))^(-0.5))
+      mtot = star[sind].m + star[sind].companion.m
+      logpbar = alog10(365.25*abar[ii]^(1.5)*mtot^(-0.5))
       ;print, median(logpbar)
       ; Randomize the period
       logp = randomn(seed, nsec)*psig[ii] + logpbar
       bin_star.companion.p = 10.^logp
       ; Cross-reference p and a
       star[sind].companion.p = bin_star.companion.p
-      bin_star.companion.a = (star[sind].m*(1.0+q[sind]))^(1./3.)*(star[sind].companion.p/365.25)^(2./3.)
+      bin_star.companion.a = mtot^(1./3.)*(star[sind].companion.p/365.25)^(2./3.)
       star[sind].companion.a = bin_star.companion.a
       angseps = star[sind].companion.a/(10.*10.^(star[sind].mag.dm/5.)) ; AU/pc -> arcseconds!
       ;  Inclination and phase of binary
@@ -307,7 +326,7 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dm
       delvar, bin_star
     endif
   end
-
+ 
   ; Output for making distance-limited or mag-limited catalogs
   if (keyword_set(dmax)) then begin
 	near = where(star.mag.dm le dmax)
