@@ -8,7 +8,7 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dm
     lf_mj = jlfr[*,0]
     lf_dm = lf_mj[1]-lf_mj[0]
     lf_r  = jlfr[*,1]
-    print, "Applying LF from J=",min(lf_mj)-lf_dm/2.," to J=",max(lf_mj)+lf_dm/2.," with a median change of ",median(lf_r)
+    ;print, "Applying LF from J=",min(lf_mj)-lf_dm/2.," to J=",max(lf_mj)+lf_dm/2.," with a median change of ",median(lf_r)
   endif
        
   dartmin = 0.14
@@ -103,13 +103,13 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dm
      pris = [pris,pris]
      secs = [secs,secs]
   end
-  
+ 
   ; Enforce luminosity function on primaries + singles
   if (keyword_set(jlfr)) then begin
     rm = []
     ad = []
     for ii=0,nmj-1 do begin
-      thismj = where((mj gt lf_mj[ii]-lf_dm/2.) and (mj le lf_mj[ii]+lf_dm/2.) and (comp eq 1))
+      thismj = where((mj[pris] gt lf_mj[ii]-lf_dm/2.) and (mj[pris] le lf_mj[ii]+lf_dm/2.))
       ; If there are no stars in this mag bin, then do nothing
       if (thismj[0] ne -1) then begin
         ; Select stars for removal if over-abundant
@@ -127,15 +127,12 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dm
         end
       endif
     endfor ; M_J loop
-    if (n_elements(rm) gt 0) then begin
-      remove, rm, pris ; also remove the indices
-      remove, rm, secs ; also remove the indices
-    endif 
-    if (n_elements(ad) gt 0) then begin
-       pris = [pris, pris[ad]]
-       secs = [secs, secs[ad]]
-    end
-    npri = n_elements(pris) ; over-write npri
+    ;if (n_elements(rm) gt 0) then begin
+    print, 'Removing ', n_elements(rm), ' stars and duplicating ', n_elements(ad), ' stars'
+    pris = [pris, pris[ad]]
+    secs = [secs, secs[ad]]
+    remove, rm, pris ; also remove the indices
+    remove, rm, secs ; also remove the indices
   endif ; LF enforcement
 
   npri = n_elements(pris)
