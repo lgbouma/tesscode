@@ -269,6 +269,12 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dm
       bin_star.companion.m = star[sind].m
      
       ; Add up the fluxes
+      star[sind].mag.mvsys = -2.5*alog10(10.^(-0.4*bin_star.mag.mv) + 10.^(-0.4*star[sind].mag.mv))
+      bin_star.mag.mvsys = star[sind].mag.mvsys
+      star[sind].mag.micsys = -2.5*alog10(10.^(-0.4*bin_star.mag.mic) + 10.^(-0.4*star[sind].mag.mic))
+      bin_star.mag.micsys = star[sind].mag.micsys
+      star[sind].mag.mjsys =  -2.5*alog10(10.^(-0.4*bin_star.mag.mj) + 10.^(-0.4*star[sind].mag.mj))
+      bin_star.mag.mjsys = star[sind].mag.mjsys
       star[sind].mag.icsys = -2.5*alog10(10.^(-0.4*bin_star.mag.ic) + 10.^(-0.4*star[sind].mag.ic))
       bin_star.mag.icsys = star[sind].mag.icsys
       star[sind].mag.jsys =  -2.5*alog10(10.^(-0.4*bin_star.mag.j) + 10.^(-0.4*star[sind].mag.j))

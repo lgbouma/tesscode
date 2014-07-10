@@ -19,8 +19,11 @@ PRO sav2fits, fname, vmag=vmag, newfname=newfname
   mj = star.mag.mj
   icsys = star.mag.icsys
   jsys = star.mag.jsys
+  mvsys = star.mag.mvsys
+  micsys = star.mag.micsys
+  mjsys = star.mag.mjsys
 
-  poop = [[m],[rad],[teff],[v],[r],[ic],[z],[j],[h],[k],[dm],[av],[ps],[mv],[mic],[mj],[icsys],[jsys]]
+  poop = [[m],[rad],[teff],[v],[r],[ic],[z],[j],[h],[k],[dm],[av],[ps],[mv],[mic],[mj],[icsys],[jsys],[mvsys],[micsys],[mjsys]]
   if (keyword_set(vmag)) then begin
     gd = where(v le vmag)
     poop = poop[gd,*]
