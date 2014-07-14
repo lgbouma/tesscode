@@ -57,10 +57,12 @@ function add_hebs, star, eclip, $
     
     tsys = -2.5*alog10(10.^(-0.4*tmag1) + 10.^(-0.4*tmag2)) 
     ars = a*AU_IN_RSUN
-    ; Re-randomize the inclinations 
-    cosi = -1.0 + 2.0*randomu(seed, nspl)
+
+    ; Re-randomize the inclination. These are circular orbits
+    cosi = -1.0 + 2.0*randomu(seed, npri)
     b1 = ars*cosi/r1
     b2 = ars*cosi/r2
+
     ; Where are the (non-contact) eclipsing systems? 
     bin_ecl = where((abs(cosi) lt (r1+r2)/ars) and (ars gt (r1+r2)))
     
