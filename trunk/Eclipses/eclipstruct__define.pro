@@ -15,6 +15,9 @@ PRO eclipstruct__define
                     p: 0.0, $ ; Period (days)
                     a: 0.0, $ ; Semimajor axis (AU)
                     s: 0.0, $ ; Insolation of secondary
+                    w: 0.0, $ ; Argument of perigee
+                    f: 0.0, $ ; True anomaly
+                    ecc: 0.0, $ ; Eccentricity
 		    cosi: 0.0, $ ; -1 to 1
                     b: 0.0, $ ; Impact parameter (0-1)
                     dep1: 0.0, $ ; Eclipse depth (0-1)

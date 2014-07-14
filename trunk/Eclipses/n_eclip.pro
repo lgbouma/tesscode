@@ -1,10 +1,11 @@
 function n_eclip, $
-	period, obstime, npoint, $ 
-	periblank=periblank, apoblank=apoblank, ein=ein 
+	period, obstime, npoint, offday, $ 
+	periblank=periblank, apoblank=apoblank
 ; For a transit period with npoint observations of duration obstime,
 ; how many transits do I observe?
 ; Also, allow for an amount of blanking time at apogee (earth/moon) and 
-;  perigee (downlink)
+;  perigee (downlink).
+; Must also input the phase offset of the transit (in days)
 
   duration = npoint*obstime
  
@@ -12,11 +13,11 @@ function n_eclip, $
   if (keyword_set(periblank)) then periblank=periblank else periblank=0.0
 
   n = 0.0*period
-  if (keyword_set(ein)) then ein=ein else $
-  ein = randomu(seed,n_elements(period))
-  e = period*ein
+;  if (keyword_set(ein)) then ein=ein else $
+;  ein = randomu(seed,n_elements(period))
+;  e = period*ein
 
-  observed = where(e lt duration, complement=missed)
+  observed = where(offday lt duration, complement=missed)
 
   if (missed[0] ne -1) then n[missed] = 0.0
 

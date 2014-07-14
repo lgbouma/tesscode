@@ -169,6 +169,9 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dm
   star.mag.icsys = ic[pris] ; star.mag.ic
   star.mag.jsys = j[pris] ;star.mag.j
   star.mag.tsys = t[pris] ;star.mag.t
+  star.mag.mvsys = mv[pris] ;bin_star.mag.v - bin_star.mag.av - bin_star.mag.dm
+  star.mag.micsys = mic[pris] ; bin_star.mag.ic - 0.479*bin_star.mag.av - bin_star.mag.dm
+  star.mag.mjsys = mj[pris] ; bin_star.mag.j - 0.282*bin_star.mag.av - bin_star.mag.dm
   star.m = m[pris]
   star.r = rad[pris]
 
@@ -286,23 +289,55 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dm
       mtot = star[sind].m + star[sind].companion.m
       logpbar = alog10(365.25*abar[ii]^(1.5)*mtot^(-0.5))
       ;print, median(logpbar)
+      
       ; Randomize the period
       logp = randomn(seed, nsec)*psig[ii] + logpbar
       bin_star.companion.p = 10.^logp
+      
       ; Cross-reference p and a
       star[sind].companion.p = bin_star.companion.p
       bin_star.companion.a = mtot^(1./3.)*(star[sind].companion.p/365.25)^(2./3.)
       star[sind].companion.a = bin_star.companion.a
-      angseps = star[sind].companion.a/(10.*10.^(star[sind].mag.dm/5.)) ; AU/pc -> arcseconds!
+      
       ;  Inclination and phase of binary
       cosi = -1.0 + 2.0*randomu(seed, nsec)
-      phi = !DPI*2.0*randomu(seed, nsec)
-      angseps = angseps*sqrt(sin(phi)^2. + cosi^2.*cos(phi)^2.)
-      star[sind].companion.sep = angseps
-      bin_star.companion.sep = angseps
       star[sind].companion.cosi = cosi
       bin_star.companion.cosi = cosi
+      
+      ; Randomize the eccentricity. Total chi-by-eye from Raghavan et al. 2010
+      ecc = randomu(seed, nsec)*(atan((logp-1.5)*2.)+!dpi/2.)/!dpi
+      star[sind].companion.ecc = ecc
+      bin_star.companion.ecc = ecc
+      
+      ; Argument of periastron: need to know for angsep, but gets re-randomized for eclipses
+      w = 2.*!dpi*randomu(seed, nsec) 
+      star[sind].companion.w = w
+      bin_star.companion.w = w
+      
+      ; Mean anomaly is linear in time
+      ma = 2.*!dpi*randomu(seed, nsec) 
 
+      ; Find eccentric anomaly
+      e = fltarr(nsec)
+      ;print, 'Entering keplereq loop'
+      for jj=0, nsec-1 do begin
+        e[jj] = keplereq(ma[jj],ecc[jj])
+      end 
+      ;print, 'Done with keplereq loop'
+
+      ; Find true anomaly
+      f = 2.0*atan(sqrt(1.0+ecc)*sin(e/2.0), sqrt(1.0-ecc)*cos(e/2.0))
+      star[sind].companion.f = f
+      bin_star.companion.f = f
+
+      ; Angular separation on the sky
+      aang = star[sind].companion.a/(10.*10.^(star[sind].mag.dm/5.)) ; AU/pc -> arcseconds!
+      swfs = sin(w+f)^2.0
+      sis  = 1.0-cosi^2. 
+      angseps = aang*(1.0-ecc^2.)/(1.0+ecc*cos(f))*sqrt(1.0 - swfs*sis)
+      star[sind].companion.sep = angseps
+      bin_star.companion.sep = angseps
+      
       ; Mark stars for triples and quadruples
       if (homf[ii] gt 0) then begin
         tq = homf[ii]^(-2.) + homf[ii]^(-1.)
@@ -329,7 +364,7 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dm
       delvar, bin_star
     endif
   end
- 
+  
   ; Output for making distance-limited or mag-limited catalogs
   if (keyword_set(dmax)) then begin
 	near = where(star.mag.dm le dmax)

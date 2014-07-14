@@ -47,15 +47,16 @@ function add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, $ ;input
     ars = bkgnd[pris].companion.a*AU_IN_RSUN
     a   = bkgnd[pris].companion.a
     p = bkgnd[pris].companion.p
-    cosi = -1.0 + 2.0*randomu(seed, npri)
-    b1 = ars*cosi/r1
-    b2 = ars*cosi/r2
+    ecc = bkgnd[pris].companion.ecc
+    f = bkgnd[pris].companion.f
 
-    ; Re-randomize the inclinations 
+    ; Re-randomize the inclination and w
     cosi = -1.0 + 2.0*randomu(seed, npri)
-    b1 = a*cosi/r1
-    b2 = a*cosi/r2
-    ; Where are the (non-contact) eclipsing systems? 
+    w = 2.0*!dpi*randomu(seed, npri)
+    b1 = ars*cosi/r1*(1.0-e^2.)/(1.0+ecc*sin(w))
+    b2 = ars*cosi/r2*(1.0-e^2.)/(1.0-ecc*sin(w))
+
+   ; Where are the (non-contact) eclipsing systems? 
     bin_ecl = where((abs(cosi) lt (r1+r2)/ars) and (ars gt (r1+r2)))
     
     if (bin_ecl[0] ne -1) then begin

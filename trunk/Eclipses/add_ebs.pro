@@ -28,13 +28,17 @@ function add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
   ars = star[pris].companion.a*AU_IN_RSUN
   a   = star[pris].companion.a
   p = star[pris].companion.p
-  ;cosi = star[pris].companion.cosi
+  ecc = star[pris].companion.ecc
+  f = star[pris].companion.f
+
+  ; Re-randomize the inclination and w
   cosi = -1.0 + 2.0*randomu(seed, npri)
-  b1 = ars*cosi/r1
-  b2 = ars*cosi/r2
+  w = 2.0*!dpi*randomu(seed, npri)
+  b1 = ars*cosi/r1*(1.0-e^2.)/(1.0+ecc*sin(w))
+  b2 = ars*cosi/r2*(1.0-e^2.)/(1.0-ecc*sin(w))
   
   ; Where are the (non-contact) eclipsing systems? 
-  bin_ecl = where((abs(cosi) lt (r1+r2)/ars) and (ars gt (r1+r2)))
+  bin_ecl = where((r1*abs(b1) lt (r1+r2)) and (ars gt (r1+r2)))
     
   if (bin_ecl[0] ne -1) then begin
     neb = n_elements(bin_ecl)
@@ -65,41 +69,64 @@ function add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
     b1 = b1[bin_ecl]
     b2 = b2[bin_ecl]
     cosi = cosi[bin_ecl] 
+    w = w[bin_ecl] 
+    ecc = ecc[bin_ecl] 
+    f = f[bin_ecl] 
 
-    tot_ecl = where((abs(cosi) lt (r1-r2)/ars) and (ars gt (r1+r2)))
-    gra_ecl = where((abs(cosi) ge (r1-r2)/ars) $
-	and (abs(cosi) lt (r1+r2)/ars) and (ars gt (r1+r2)))
+    ; Totals and grazes
+    te1 = where((r1*abs(b1) lt abs(r1-r2)) and (ars gt (r1+r2)))
+    te2 = where((r2*abs(b2) lt abs(r2-r1)) and (ars gt (r1+r2)))
+    ge1 = where((r1*abs(b1) ge abs(r1-r2)) $
+	and (r1*abs(b1) lt (r1+r2)) and (ars gt (r1+r2)))
+    ge2 = where((r2*abs(b2) ge abs(r2-r1)) $
+	and (r2*abs(b2) lt (r1+r2)) and (ars gt (r1+r2)))
+
     ; Same for all eclipse types
-    pdur14 = (p/!dpi)*asin((r1*sqrt(1.0-b1^2)+r2)/ars)
-    sdur14 = (p/!dpi)*asin((r2*sqrt(1.0-b2^2)+r1)/ars)
-    phr1 = phot_ratio(teff1, teff2, tmag1, tmag2, ph_p) ; Flux ratios
+    sini = sqrt(1. - cosi^2.)
+    pdur14 = (p/!dpi)*asin(r1/ars*sqrt((1.+r2/r1)^2.-b1^2.)/sini) ; Eqn 14 of Winn
+    sdur14 = (p/!dpi)*asin(r2/ars*sqrt((1.+r1/r2)^2.-b2^2.)/sini)
+    ; change for eccentricity
+    pdur14 = pdur14*sqrt(1.0-ecc^2.)/(1.0 + ecc*sin(w)) ; Eqn 16 of Winn
+    sdur14 = sdur14*sqrt(1.0-ecc^2.)/(1.0 - ecc*sin(w))
+    ; flux ratios
+    phr1 = phot_ratio(teff1, teff2, tmag1, tmag2, ph_p) 
     phr2 = 1.0-phr1
+    
     ; Only for total eclipses
-    if (tot_ecl[0] ne -1) then begin
-      pdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r1[tot_ecl]*sqrt(1.0-b1[tot_ecl]^2)+r2[tot_ecl])/ars[tot_ecl])
-      sdur23[tot_ecl] = (p[tot_ecl]/!dpi)*asin((r2[tot_ecl]*sqrt(1.0-b2[tot_ecl]^2)+r1[tot_ecl])/ars[tot_ecl])
-      dur1[tot_ecl] = (pdur14[tot_ecl] + pdur23[tot_ecl])/2. ; Trapezoidal area
-      dur2[tot_ecl] = (sdur14[tot_ecl] + sdur23[tot_ecl])/2.
-      a1[tot_ecl] = (r2[tot_ecl]/r1[tot_ecl])^2.
-      a2[tot_ecl] = (r1[tot_ecl]/r2[tot_ecl])^2.
+    if (te1[0] ne -1) then begin
+      pdur23[te1] = (p[te1]/!dpi)*asin(r1[te1]/ars[te1]*$ ; Eqn 15 of Winn
+        sqrt((1.-r2[te1]/r1[te1])^2.-b1[te1]^2)/sini[te1]) ; 
+      pdur23[te1] = pdur23[te1]*sqrt(1.0-ecc[te1]^2.)/(1.0 + ecc[te1]*sin(w[te1]))
+      dur1[te1] = (pdur14[te1] + pdur23[te1])/2. ; Trapezoidal area
+      a1[te1] = (r2[te1]/r1[te1])^2. < 1.0
     end
-    if (gra_ecl[0] ne -1) then begin
+    if (te2[0] ne -1) then begin
+      sdur23[te2] = (p[te2]/!dpi)*asin(r2[te2]/ars[te2]*$ ; Eqn 15 of Winn
+        sqrt((1.-r1[te2]/r2[te2])^2.-b2[te2]^2)/sini[te2]) ; 
+      sdur23[te2] = sdur23[te2]*sqrt(1.0-ecc[te2]^2.)/(1.0 - ecc[te2]*sin(w[te2]))
+      dur2[te2] = (sdur14[te2] + sdur23[te2])/2.
+      a2[te2] = (r1[te2]/r2[te2])^2. < 1.0
+    end
+    if (ge1[0] ne -1) then begin
       dur1[gra_ecl] = pdur14[gra_ecl]/2. ; FWHM of "V" shaped eclipse
-      dur2[gra_ecl] = sdur14[gra_ecl]/2.
-      delt = ars[gra_ecl]*abs(cosi[gra_ecl]) ; All defined on ph. 24-26 of Kopal (1979)
-      ph1  = acos((delt^2. + r1[gra_ecl]^2. - r2[gra_ecl]^2.)/(2*r1[gra_ecl]*delt))
-      ph2  = acos((delt^2. - r1[gra_ecl]^2. + r2[gra_ecl]^2.)/(2*r2[gra_ecl]*delt))
-      da1  = r1[gra_ecl]^2.*(ph1-0.5*sin(2*ph1))
-      da2  = r2[gra_ecl]^2.*(ph2-0.5*sin(2*ph2))
-      a1[gra_ecl] = (da1+da2)/(!dpi*r1[gra_ecl]^2.)
-      a2[gra_ecl] = (da1+da2)/(!dpi*r2[gra_ecl]^2.)
+      delt = ars[ge1]*abs(cosi[ge1]) ; All defined on ph. 24-26 of Kopal (1979)
+      ph1  = acos((delt^2. + r1[ge1]^2. - r2[ge1]^2.)/(2*r1[ge1]*delt))
+      da1  = r1[ge1]^2.*(ph1-0.5*sin(2*ph1))
+      a1[ge1] = (da1+da2)/(!dpi*r1[ge1]^2.) < 1.0
+    end
+    if (ge2[0] ne -1) then begin
+      dur2[ge2] = sdur14[ge2]/2.
+      delt = ars[ge2]*abs(cosi[ge2]) ; All defined on ph. 24-26 of Kopal (1979)
+      ph2  = acos((delt^2. - r1[ge2]^2. + r2[ge2]^2.)/(2*r2[ge2]*delt))
+      da2  = r2[ge2]^2.*(ph2-0.5*sin(2*ph2))
+      a2[ge2] = (da1+da2)/(!dpi*r2[ge2]^2.) < 1.0
     end
     dep1 = phr1*a1
-    toodeep = where(a1 gt 1.0)
-    if (toodeep[0] ne -1) then dep1[toodeep] = phr1[toodeep]
+;i    toodeep = where(a1 gt 1.0)
+;    if (toodeep[0] ne -1) then dep1[toodeep] = phr1[toodeep]
     dep2 = phr2*a2
-    toodeep = where(a2 gt 1.0)
-    if (toodeep[0] ne -1) then dep2[toodeep] = phr2[toodeep]
+;    toodeep = where(a2 gt 1.0)
+;    if (toodeep[0] ne -1) then dep2[toodeep] = phr2[toodeep]
     eclipse_hid = pris[bin_ecl]
     ; RV amplitude
     ;eclipse_k = RV_AMP*eclipse_p^(-1./3.) * eclipse_m * $ 
@@ -122,6 +149,9 @@ function add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
     eclip.p = p
     eclip.b = b1
     eclip.cosi = cosi
+    eclip.w = w
+    eclip.ecc = ecc
+    eclip.f = f
     eclip.hostid = eclipse_hid
     eclip.dep1 = dep1
     eclip.dep2 = dep2

@@ -40,14 +40,35 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
   
   ecid = eclipse.hostid
   print, 'Calculating number of eclipses'
+  fnow = eclipse.f
+  ecc = eclipse.ecc
+  w = eclipse.w
+  p = eclipse.p
+  f1 = !dpi/2. - w
+  f2 = -!dpi/2. - w
+  ; Kepler problem in reverse
+  e1 = 2.0*atan(sqrt(1.0-ecc)*sin(f1/2.0), sqrt(1.0+ecc)*cos(f1/2.0))
+  e2 = 2.0*atan(sqrt(1.0-ecc)*sin(f2/2.0), sqrt(1.0+ecc)*cos(f2/2.0))
+  enow = 2.0*atan(sqrt(1.0-ecc)*sin(fnow/2.0), sqrt(1.0+ecc)*cos(fnow/2.0))
+  m1 = (e1-ecc*sin(e1))
+  m2 = (e2-ecc*sin(e2))
+  mnow = (enow-ecc*sin(enow))
+  dr1 = (m1-mnow)/(2.*!dpi) + 4.0
+  dr2 = (m2-mnow)/(2.*!dpi) + 4.0
+  
+;  toolow = where(m1 lt 0)
+;  if (toolow[0] ne -1) then m1(toolow) + m1(toolow)+1.0
+;  toolow = where(m2 lt 0)
+;  if (toolow[0] ne -1) then m2(toolow) + m2(toolow)+1.0
+  dayoff1 = (dr1 mod 1)*p 
+  dayoff2 = (dr2 mod 1)*p
+ 
   eclipse.neclip_obs1 = $
       n_eclip(eclipse.p, dwell_time, $
-      2.0*double(eclipse.npointings), periblank=downlink, apoblank=apo_blank, ein=e1)
- ; Flip the phase
-  e2 = 1.0-e1
+      2.0*double(eclipse.npointings), dayoff1, periblank=downlink, apoblank=apo_blank)
   eclipse.neclip_obs2 = $
       n_eclip(eclipse.p, DWELL_TIME, $
-      2.0*double(eclipse.npointings), periblank=downlink, apoblank=apo_blank, ein=e2)
+      2.0*double(eclipse.npointings), dayoff2, periblank=downlink, apoblank=apo_blank)
 
   print, 'Diluting FFIs'
   tra_ps = where(star[eclipse.hostid].ffi lt 1)
