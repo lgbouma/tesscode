@@ -108,15 +108,15 @@ function add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
       a2[te2] = (r1[te2]/r2[te2])^2. < 1.0
     end
     if (ge1[0] ne -1) then begin
-      dur1[gra_ecl] = pdur14[gra_ecl]/2. ; FWHM of "V" shaped eclipse
-      delt = ars[ge1]*abs(cosi[ge1]) ; All defined on ph. 24-26 of Kopal (1979)
+      dur1[ge1] = pdur14[ge1]/2. ; FWHM of "V" shaped eclipse
+      delt = r1[ge1]*abs(b1[ge1]) ; All defined on ph. 24-26 of Kopal (1979)
       ph1  = acos((delt^2. + r1[ge1]^2. - r2[ge1]^2.)/(2*r1[ge1]*delt))
       da1  = r1[ge1]^2.*(ph1-0.5*sin(2*ph1))
       a1[ge1] = (da1+da2)/(!dpi*r1[ge1]^2.) < 1.0
     end
     if (ge2[0] ne -1) then begin
       dur2[ge2] = sdur14[ge2]/2.
-      delt = ars[ge2]*abs(cosi[ge2]) ; All defined on ph. 24-26 of Kopal (1979)
+      delt = r2[ge2]*abs(b2[ge2]) ; All defined on ph. 24-26 of Kopal (1979)
       ph2  = acos((delt^2. - r1[ge2]^2. + r2[ge2]^2.)/(2*r2[ge2]*delt))
       da2  = r2[ge2]^2.*(ph2-0.5*sin(2*ph2))
       a2[ge2] = (da1+da2)/(!dpi*r2[ge2]^2.) < 1.0
