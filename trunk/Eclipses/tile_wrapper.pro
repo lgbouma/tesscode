@@ -30,8 +30,8 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
   downlink = 16.0d0/24.0d0 ; downlink time in days
   eclass = [	0, $ ; Planets
 	    	1, $ ; EBs
-		1, $ ; BEBs
-		1  ] ; HEBs
+		0, $ ; BEBs
+		0  ] ; HEBs
 
   ; Don't phuck with physics, though
   REARTH_IN_RSUN = 0.0091705248

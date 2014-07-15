@@ -22,12 +22,12 @@ function n_eclip, $
   if (missed[0] ne -1) then n[missed] = 0.0
 
   if (observed[0] ne -1) then begin
-     n[observed] = 1.0 + floor( (duration[observed] - e[observed])/period[observed] )
+     n[observed] = 1.0 + floor( (duration[observed] - offday[observed])/period[observed] )
      n0 = n
      ;print, e, ni
      ;print, "staring for loop", min(period), max(period)
      for m=0,max(n)-1 do begin
-	trantime = (e+m*period) mod obstime
+	trantime = (offday+m*period) mod obstime
         ;print, 'trantime = ', trantime
 	; Does the mth transit fall into the blanking zone?
 	apoblanked =  where((trantime gt (obstime-periblank-apoblank)/2.0) and $

@@ -59,7 +59,7 @@ function add_hebs, star, eclip, $
     ars = a*AU_IN_RSUN
 
     ; Re-randomize the inclination. These are circular orbits
-    cosi = -1.0 + 2.0*randomu(seed, npri)
+    cosi = -1.0 + 2.0*randomu(seed, nspl)
     b1 = ars*cosi/r1
     b2 = ars*cosi/r2
 
