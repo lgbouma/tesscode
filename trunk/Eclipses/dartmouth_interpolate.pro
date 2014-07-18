@@ -8,7 +8,7 @@ PRO dartmouth_interpolate, starstruct, mass_in, age_in, feh_in, $ ;inputs
  nage = n_elements(ages)
  fehs = [-1.0, -0.5, 0.0, 0.2]
  nfe = n_elements(fehs)
- masses = (findgen(143) + 20.)/200.
+ masses = (findgen(223) + 20.)/200.
  nmass = n_elements(masses)
  
  ai = (interpol(findgen(nage), ages, age_in))
