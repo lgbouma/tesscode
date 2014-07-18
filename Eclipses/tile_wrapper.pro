@@ -7,7 +7,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
   ph_file = 'ph_T_filt.fits' ; photon fluxes for T=10 vs Teff
   cr_file = 'crnoise.fits' ; photon fluxes for T=10 vs Teff
   tic_file = 'tic_teff.fits'
-  dart_file = 'dartmouth.sav'
+  dart_file = 'dartmouth_grid.sav'
   fov = 24.
   seg = 13
   skirt=6.
@@ -29,9 +29,9 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
   orbit_period = 13.66d0 ; days per orbit
   downlink = 16.0d0/24.0d0 ; downlink time in days
   eclass = [	0, $ ; Planets
-	    	1, $ ; EBs
+	    	0, $ ; EBs
 		0, $ ; BEBs
-		0  ] ; HEBs
+		1  ] ; HEBs
 
   ; Don't phuck with physics, though
   REARTH_IN_RSUN = 0.0091705248

@@ -33,27 +33,32 @@ function add_hebs, star, eclip, $
   if (spl[0] ne -1) then begin
     hostid = star[spl].companion.ind
     hostp = star[spl].companion.p
+    hostm = star[hostid].m
     hostsep = star[spl].companion.sep/aspix
     nspl = n_elements(spl)
     mtot = star[spl].m
     age = star[spl].age
     feh = star[spl].feh
-    q = 1.0
+    ;q = randomu(seed, nspl)*0.9 + 0.1
+    q = randomn(seed, nspl)*0.2 + 0.5
+    q[where((randomu(seed, nspl) lt 0.20) or (q lt 0.1) or (q gt 1.0))] = 1.0
     m1 = mtot/(1.0+q)
     m2 = mtot*q/(1.0+q)
-    p = hostp/5.0
+    pu = randomu(seed, nspl)
+    p = 0.2*hostp*10.^(-2.*pu)
     a = (m1+m2)^(1./3.)*(p/365.25)^(2./3.)
     ; Fill in stellar properties
     dm = star[spl].mag.dm
     av = star[spl].mag.av
     dartmouth_interpolate, dartstruct, m1, age, feh, $
         rad=r1, ic=ic1, teff=teff1, v=v1, j=j1, h=h1, ks=ks1
-    ;dartmouth_interpolate, dartmouth, m2, age, feh, $
-    ;    rad=r2, ic=ic2, teff=teff2, v=v2, j=j2, h=h2, ks=ks2
-    tmag1 = interpol(tefftic[*,1], tefftic[*,0], teff1) + ic1 + dm + 0.600*av
-    tmag2 = tmag1
-    r2 = r1
-    teff2 = teff1
+    dartmouth_interpolate, dartstruct, m2, age, feh, $
+        rad=r2, ic=ic2, teff=teff2, v=v2, j=j2, h=h2, ks=ks2
+    tmag1 = interpol(tefftic[*,1], tefftic[*,0], teff1) + ic1 + dm + 0.479*av
+    tmag2 = interpol(tefftic[*,1], tefftic[*,0], teff2) + ic1 + dm + 0.479*av
+    ;tmag2 = tmag1
+    ;r2 = r1
+    ;teff2 = teff1
     
     tsys = -2.5*alog10(10.^(-0.4*tmag1) + 10.^(-0.4*tmag2)) 
     ars = a*AU_IN_RSUN
@@ -65,7 +70,7 @@ function add_hebs, star, eclip, $
 
     ; Where are the (non-contact) eclipsing systems? 
     bin_ecl = where((abs(cosi) lt (r1+r2)/ars) and (ars gt (r1+r2)))
-    
+    stop 
     if (bin_ecl[0] ne -1) then begin
       neb = n_elements(bin_ecl)
       pdur14 = dblarr(neb)
