@@ -1,4 +1,5 @@
-PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dmax=dmax, dbl=dbl
+PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
+	icmax=icmax, dmax=dmax, homies=homies, dbl=dbl
   dat = mrdfits(fname, 0, h, /SILENT)
   print, fname
 
@@ -21,7 +22,7 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dm
   abar = [4.5, 5.3, 20.,  45.,  45., 350]
   psig = [0.5, 1.3, 2.0,  2.3,  2.3, 3.0]
   qgam = [4.0, 0.4, 0.35, 0.3, 0.3, -0.5]
-  homf = [0.0, 3.9, 3.8, 3.7, 3.7, 3.7]
+  homf = [4.0, 3.9, 3.8, 3.7, 3.7, 3.7]
   qnorm = 0.9*(qgam+1.0)*mf/(1.0-0.1^(qgam+1.0))
 ;  print, qnorm
 ;  readcol, fname, gc, logA, z, mini, logL, logT, logG, dm, av, $
@@ -340,12 +341,11 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dm
       
       ; Mark stars for triples and quadruples
       if (homf[ii] gt 0) then begin
-        tq = homf[ii]^(-2.) + homf[ii]^(-1.)
-        tqind = where((randomu(seed, nsec) lt tq))
+        tqind = where((randomu(seed, nsec) lt homf[ii]^(-1.)))
         if (tqind[0] ne -1) then begin
           ntq = n_elements(tqind)
           ; For quadruples, BOTH pri and sec get split
-          qind = where((randomu(seed, ntq) lt homf[ii]^(-1)), complement=tind)
+          qind = where((randomu(seed, ntq) lt homf[ii]^(-1.)), complement=tind)
           if (qind[0] ne -1) then begin
             star[sind[tqind[qind]]].spl = 1
             bin_star[tqind[qind]].spl = 1
@@ -372,8 +372,10 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, icmax=icmax, dm
   end else if (keyword_set(icmax)) then begin
 	near = where(star.mag.ic le icmax)
         if (near[0] eq -1) then nstar = 0 else nstar = n_elements(near)
+  end else if (keyword_set(homies)) then begin
+	near = where(star.spl)
+        if (near[0] eq -1) then nstar = 0 else nstar = n_elements(near)
   end else nstar = n_elements(star)
-
   newfname = repstr(fname, 'fits', 'sav')
   save, star, filen=newfname
 
