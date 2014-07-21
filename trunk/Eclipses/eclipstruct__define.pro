@@ -30,6 +30,10 @@ PRO eclipstruct__define
                     dur2_eff: 0.0, $ ; Effective duration
                     neclip_obs1: 0, $ ; Number of primary eclipses observed
                     neclip_obs2: 0, $ ; Number of secondary eclipses observed
+                    censhift1: 0.0, $ ; centroid shift (BEBs and HEBs only)
+                    censhift2: 0.0, $ ; centroid shift of sec eclipse (pixels)
+                    cenerr1: 0.0, $ ; centroid error in shift direction (pixels)
+                    cenerr2: 0.0, $ ; error in sec eclipse direction
                     snr: 0.0, $ ; SNR of primary+secondary eclipses in phase-folded lightcurve
                     snrhr: 0.0, $ ; SNR of target per hour
                     snr1: 0.0, $ ; SNR of primary eclipses in phase-folded lightcurve
@@ -45,6 +49,8 @@ PRO eclipstruct__define
                     det2: 0, $  ; Detected secondary?
                     npix: 0, $       ; Optimal number of pix in aperture
                     tsys: 0.0, $      ; system tmag (for binaries)
+                    icsys: 0.0, $      ; system tmag (for binaries)
+                    jsys: 0.0, $      ; system tmag (for binaries)
                     star_ph: 0.0, $      ; photons/s/cm^2 from star
                     bin_ph: 0.0, $      ; photons/s/cm^2 from within 0.5 pix
                     bk_ph: 0.0, $      ; photons/s/cm^2/pix from other stars
