@@ -31,6 +31,11 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
   mask2d = mask1*mask2
   mask1d = reform(mask2d, 16*16)
 
+  cind = findgen(8)
+  ones = fltarr(8)+1.
+  xx = cind#ones
+  yy = ones#cind
+
   nstars = n_elements(star)
   neclipses = n_elements(eclipse)
   print, 'Observing ', neclipses, ' eclipses around ', nstars,' stars.'
@@ -103,6 +108,9 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
     ; ph_star is npix x nstar
     stack_prf_eclip, star[obsid].mag.t, star[obsid].teff, ph_p, frac, star_ph, $
 	dx=dx[obs], dy=dy[obs], fov_ind=eclipse[obs].coord.fov_ind, mask=mask1d
+    for jj=0,nobs-1 do begin
+      star_ph[*,jj] = total(star_ph[sind[*,jj],jj], /cumulative)
+    end      
     dil_ph = dblarr(total(mask1d), nobs)
 
     zodi_flux, eclipse[obs].coord.elat, aspix, zodi_ph
@@ -158,7 +166,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
 ;		    (6.0*star[obsid].r*(1.0+eclipse[obs].b^2.)))
 ;   decide if it is 'detected'.
   
-; Dilute
+    ; Dilute
     det = where(((eclipse.neclip_obs1 + eclipse.neclip_obs2) ge NTRA_OBS_MIN) and $
 	      (eclipse.snr ge SNR_MIN))
     if (det[0] ne -1) then begin
@@ -173,35 +181,30 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
 	dx=dx[det], dy=dy[det], fov_ind=eclipse[det].coord.fov_ind, mask=mask1d, sind=sind
       ;bk_ph = eclipse[det].bk_ph
 
+      zodi_flux, eclipse[det].coord.elat, aspix, zodi_ph
+      eclipse[det].zodi_ph = zodi_ph
+
       dil_ph = dblarr(total(mask1d), ndet)
       
 ;     print, "Diluting with binary companions"
+      ; Binaries
       bindil = where(eclipse[det].class eq 1) ; planets only
       if (bindil[0] ne -1) then begin
-;     stack_prf_eclip, star[star[bindil].companion.ind].mag.t, star[detid].teff, ph_p, frac, dilvec, $
-;	dx=dx[det], dy=dy[det], fov_ind=eclipse[det].coord.fov_ind, mask=mask1d, sind=sind
 	dilute_binary, eclipse[det[bindil]], star, frac, rad, ph_p, $
 		dx[det[bindil]], dy[det[bindil]], dilvec, aspix=aspix, radmax=6.0
         dil_ph[bindil] = dil_ph[bindil] + dilvec
       end
-      bebdil = where(eclipse[det].class eq 3 or eclipse[det].class eq 4)
-      if (bebdil[0] ne -1) then begin
-        nbeb = n_elements(bebdil)
-        beb_ph = dblarr(total(mask1d), nbeb)
-	dilute_beb, eclipse[det[bebdil]], frac, rad, ph_p, $
-		dx[det[bebdil]], dy[det[bebdil]], bebvec, aspix=aspix, radmax=6.0
-        dil_ph[bebdil] = dil_ph[bebdil] + bebvec
-        for kk=0, nbeb-1 do begin
-	  beb_ph[*,kk] = total(bebvec[sind[*,bebdil[kk]],kk], /cumulative)
-        end
-      end
-      print, "Diluting with other target stars"
+  
+      ; All eclipses but BEBs
+      ;print, "Diluting with other target stars"
       targdil = where(eclipse[det].class ne 3) ; BEBs are already diluted by brightest 
       if (targdil[0] ne -1) then begin
         dilute_eclipse_img, eclipse[det[targdil]], star, frac, ph_p, $
 		dx[det[targdil]], dy[det[targdil]], dilvec, aspix=aspix, sq_deg=13.4, radmax=6.0
         dil_ph[targdil] = dil_ph[targdil] + dilvec
       end
+     
+      ; Everything
       print, "Diluting with background stars"
       dilute_eclipse_img, eclipse[det], bk, frac, ph_p, $
 		dx[det], dy[det], dilvec, aspix=aspix, sq_deg=0.134, radmax=4.0
@@ -211,13 +214,84 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
 		dx[det], dy[det], dilvec, aspix=aspix, sq_deg=0.0134, radmax=2.0
       dil_ph = dil_ph + dilvec
    
+      ; BEBs and HEBs
+      bebdil = where(eclipse[det].class eq 3 or eclipse[det].class eq 4)
+      if (bebdil[0] ne -1) then begin
+        nbeb = n_elements(bebdil)
+        beb_ph = dblarr(total(mask1d), nbeb)
+	dilute_beb, eclipse[det[bebdil]], frac, rad, ph_p, $
+		dx[det[bebdil]], dy[det[bebdil]], bebvec, aspix=aspix, radmax=6.0
+        dil_ph[bebdil] = dil_ph[bebdil] + bebvec
+        beb_dep1 = eclipse[det[bebdil]].dep1_eff
+        beb_dep2 = eclipse[det[bebdil]].dep2_eff
+        beb_dur1 = eclipse[det[bebdil]].dur1_eff
+        beb_dur2 = eclipse[det[bebdil]].dur2_eff
+        
+        ; Calculate centroid shift and uncertainty
+        cennoises   = fltarr(nbeb, npix_max-npix_min+1)
+        xcennoise1s = fltarr(nbeb, npix_max-npix_min+1)
+        xcennoise2s = fltarr(nbeb, npix_max-npix_min+1)
+        ycennoise1s = fltarr(nbeb, npix_max-npix_min+1)
+        ycennoise2s = fltarr(nbeb, npix_max-npix_min+1)
+        xcenshift1s = fltarr(nbeb, npix_max-npix_min+1)
+        xcenshift2s = fltarr(nbeb, npix_max-npix_min+1)
+        ycenshift1s = fltarr(nbeb, npix_max-npix_min+1)
+        ycenshift2s = fltarr(nbeb, npix_max-npix_min+1)
+        for ii=(npix_min-1),(npix_max-1) do begin
+          thiscr = cr[*,ii]
+          calc_noise_cen, star_ph, dil_ph, beb_ph, $
+	         beb_dur1, beb_dur2, $
+	         beb_dep1, beb_dep2, $
+		 xx, yy, sind[bebdil], $
+                 readnoise, sys_limit, $
+                 xcen, ycen, $
+                 xcenshift1, xcenshift2, $
+                 ycenshift1, ycenshift2, $
+                 xcennoise1, xcennoise2, $
+                 ycennoise1, ycennoise2, $
+		 npix_aper=(ii+1), $
+                 field_angle=eclipse[det].coord.field_angle, $
+                 cr_noise = thiscr[crind[det]]/sqrt(60.0/ffi_len)*star[detid].ffi, $
+		 subexptime=subexptime, $
+                 geom_area = effarea, $
+                 aspix=aspix, $
+                 zodi_ph=zodi_ph
+	  cennoises[*,ii] = sqrt(xcennoise1^2.+ycennoise1^2.)
+	  xcennoise1s[*,ii] = xcennoise1
+	  xcennoise2s[*,ii] = xcennoise2
+	  ycennoise1s[*,ii] = ycennoise1
+	  ycennoise2s[*,ii] = ycennoise2
+	  xcenshift1s[*,ii] = xcenshift1
+	  xcenshift2s[*,ii] = xcenshift2
+	  ycenshift1s[*,ii] = ycenshift1
+	  ycenshift2s[*,ii] = ycenshift2
+        end
+        minnoise = min(noises, ind, dimension=2)
+        cenpix = ind / nbeb + npix_min
+        censhift1 = sqrt(xcenshift1s[*,cenpix-1]^2. + ycenshift1s[*,cenpix-1]^2.)
+        censhift2 = sqrt(xcenshift2s[*,cenpix-1]^2. + ycenshift2s[*,cenpix-1]^2.)
+        eclipse[det[bebdil]].censhift1 = censhift1
+        eclipse[det[bebdil]].censhift2 = censhift2
+        den1 = sqrt((xcennoise1s[*,cenpix-1]*xcenshift1s[*,cenpix-1]/censhift1)^2. + $
+		    (ycennoise1s[*,cenpix-1]*ycenshift1s[*,cenpix-1]/censhift1)^2.)
+        eclipse[det[bebdil]].cenerr1 = xcennoise1s[*,cenpix-1]*ycennoise1s[*,cenpix-1]/den1
+        den2 = sqrt((xcennoise2s[*,cenpix-1]*xcenshift2s[*,cenpix-1]/censhift2)^2. + $
+		    (ycennoise2s[*,cenpix-1]*ycenshift2s[*,cenpix-1]/censhift2)^2.)
+        eclipse[det[bebdil]].cenerr2 = xcennoise2s[*,cenpix-1]*ycennoise2s[*,cenpix-1]/den2
+        eclipse[det].snrhr = minnoise
+        ;for ss=0,ndet-1 do eclipse[det[ss]].star_ph = star_ph[eclipse[det[ss]].npix-1,ss]
+          ;eclipse[obs].star_ph = reform(star_ph[eclipse[obs].npix-1, *])
+
+        for kk=0, nbeb-1 do begin
+	  beb_ph[*,kk] = total(bebvec[sind[*,bebdil[kk]],kk], /cumulative)
+        end
+      end
+
       ; Sort into the same pixel order as target star flux
       for jj=0,ndet-1 do begin
+        star_ph[*,jj] = total(star_ph[sind[*,jj],jj], /cumulative)
         dil_ph[*,jj] = total(dil_ph[sind[*,jj],jj], /cumulative)
       end      
-
-      zodi_flux, eclipse[det].coord.elat, aspix, zodi_ph
-      eclipse[det].zodi_ph = zodi_ph
 
       noises = dblarr(n_elements(det), npix_max)
       dilution = dblarr(n_elements(det), npix_max)

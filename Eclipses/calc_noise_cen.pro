@@ -1,0 +1,165 @@
+pro calc_noise_cen, $
+;
+; mandatory inputs
+;
+   ph_star, $                       ; ph/s/cm^2 from (npixels x nstars)
+   ph_dil, $                        ; ph/s/cm^2 per pixel
+   ph_beb, $                        ; ph/s/cm^2 per pixel from beb
+   dur1, $                      ; BEB/HEB dur 
+   dur2, $                      ; BEB/HEB dur
+   dep1, $                      ; BEB/HEB depth
+   dep2, $                      ; BEB/HEB depth
+   xx, $
+   yy, $
+   sind, $
+   e_pix_ro, $                      ; read noise per subexposure in e-
+   sys_limit, $ 	            ; noise floor (ppm)
+;
+; mandatory outputs
+;
+   xcen, $
+   ycen, $
+   xcen_shift1, $       ; output centroid shifts for BEB/HEBs
+   xcen_shift2, $       ; 
+   ycen_shift1, $       ;
+   ycen_shift2, $       ;
+   xcennoise1, $
+   xcennoise2, $
+   ycennoise1, $
+   ycennoise2, $
+
+; optional inputs
+;
+   subexptime=subexptime, $         ; subexposure time (n_exp = exptime/subexptime)
+   npix_aper = npix_aper, $         ; number of pixels in photometric aperture
+   ;frac_aper = frac_aper, $         ; fraction of flux enclosed in photometric aperture
+   geom_area = geom_area, $         ; geometric collecting area
+   aspix = aspix, $                 ; arcsec per pixel
+   zodi_ph = zodi_ph, $             ; zodiacal photons/s/cm^2
+   verbose=verbose, $               ; request verbose output
+   field_angle = field_angle, $	    ; Field angle for effective area
+   bin_sys=bin_sys, $		    ; Is this a binary?
+   bin_sep=bin_sep, $		    ; Separation to binary
+   bin_ph=bin_ph, $		    ; imag of binary
+   cr_noise=cr_noise, $             ; noise from cosmic rays
+
+; optional outputs
+;
+   noise_star=noise_star, $         ; noise from star counts alone
+   noise_sky=noise_sky, $           ; noise from sky counts only
+   noise_ro=noise_ro,$              ; noise from readout only
+   noise_cr=noise_cr,$              ; noise from readout only
+   noise_sys=noise_sys, $           ; noise from systematic limit only
+   e_tot_sub=e_tot_sub, $ 	    ; subexposure electron count (for saturation check)
+   
+   dilution=dilution		    ; background dilution factor
+;
+;
+  if (keyword_set(zodi_ph)) then zodi_ph=zodi_ph else zodi_ph = 0.
+  if (keyword_set(cr_noise)) then cr_noise=cr_noise else cr_noise = 0.
+  if (keyword_set(subexptime)) then subexptime=subexptime else subexptime=2.0
+  if (keyword_set(geom_area)) then geom_area=geom_area else geom_area=69.1
+  if (keyword_set(pix_scale)) then pix_scale=pix_scale else pix_scale=21.1
+  if (keyword_set(verbose)) then v=1 else v=0
+  if (keyword_set(field_angle)) then field_angle=field_angle else field_angle=0.0
+  
+  sz_ph = size(ph_star)
+  npix_max = sz_ph[1]
+  nstar = sz_ph[2]
+  if (v) then print, 'npix_max = ', npix_max
+
+  if (keyword_set(npix_aper)) then begin
+     npix_aper=npix_aper
+  endif else begin
+     npix_aper=3+intarr(n_elements(ph_star))
+  endelse
+ 
+  if (v) then print, 'npix_aper = ', npix_aper
+        
+  omega_pix = aspix^2.
+  n_exposures = exptime/subexptime
+  rn_pix   = sqrt(n_exposures)*e_pix_ro
+
+  ; truncate indices
+  npix_sind = sind[0:npix_aper-1,*]
+
+  exptime1 = dur1*24.0*3600.
+  exptime2 = dur2*24.0*3600.
+  exptime = 3600.
+
+  ; electrons from the star
+  e_pix_star = ph_star * geom_area * cos(!DPI * field_angle/180.) * exptime
+  e_pix_dil = ph_dil * geom_area * cos(!DPI * field_angle/180.) * exptime
+  e_pix_beb = ph_beb * geom_area * cos(!DPI * field_angle/180.) * exptime
+  
+  if (keyword_set(noise_cr)) then noise_cr = reform(noise_cr[*,npix_aper-1]) else noise_cr = 0.0 
+  
+  if (v) then print, 'e_star = ', median(e_star)
+
+  ; e/pix from zodi
+  e_pix_zodi = zodi_ph * geom_area * cos(!DPI * field_angle/180.) * exptime
+
+  if (v) then print, 'vmag_zodi = ', median(vmag_zodi)
+  if (v) then print, 'e_pix_zodi = ', median(e_pix_zodi)
+
+
+  ; compute noise sources
+  ;e_pix = e_pix_dil + e_pix_star
+  
+  xcenshift1 = fltarr(nstar)
+  xcenshift2 = fltarr(nstar)
+  ycenshift1 = fltarr(nstar)
+  ycenshift2 = fltarr(nstar)
+  xcennoise = fltarr(nstar)
+  ycennoise = fltarr(nstar)
+  xcen = fltarr(nstar)
+  xcen = fltarr(nstar)
+
+  for ii=0,nstar-1 do begin
+    this_estar = e_pix_star[*,ii]
+    this_edil = e_pix_dil[*,ii]
+    this_ebeb0 = e_pix_beb[*,ii]
+    this_ebeb1 = e_pix_beb[*,ii]*(1.0-dep1[ii])
+    this_ebeb2 = e_pix_beb[*,ii]*(1.0-dep2[ii])
+    this_epix0 = this_estar + this_edil + this_ebeb  + e_pix_zodi[ii]   ; electrons per pixel, unsorted
+    this_epix1 = this_estar + this_edil + this_ebeb1 + e_pix_zodi[ii]   ; electrons per pixel, unsorted
+    this_epix2 = this_estar + this_edil + this_ebeb2 + e_pix_zodi[ii]   ; electrons per pixel, unsorted
+    this_sind = npix_sind[*,ii]                ; sorting indices
+    this_epix0_sind = this_epix0[this_sind]      ; sorted electrons per pixel
+    this_epix1_sind = this_epix1[this_sind]      ; sorted electrons per pixel
+    this_epix2_sind = this_epix2[this_sind]      ; sorted electrons per pixel
+    
+    this_etot0 = total(this_epix0_sind)          ; total electrons
+    this_etot1 = total(this_epix1_sind)          ; total electrons
+    this_etot2 = total(this_epix2_sind)          ; total electrons
+    this_ntot0 = sqrt(this_etot0)/this_etot0      ; total noise 
+    this_ntot1 = sqrt(this_etot1)/this_etot1      ; total noise 
+    this_ntot2 = sqrt(this_etot2)/this_etot2      ; total noise 
+    this_epix_noise = sqrt(this_epix0_sind + rn_pix^2.)/this_etot0 ; noise per pixel
+
+    ; calculate centroid
+    xc0 = this_epix0_sind*xx[this_sind]
+    yc0 = this_epix0_sind*yy[this_sind]
+    xcen[ii] = total(xc0)/this_etot0
+    ycen[ii] = total(yc0)/this_etot0
+    xc1 = this_epix1_sind*xx[this_sind]
+    yc1 = this_epix1_sind*yy[this_sind]
+    xcenshift1[ii] = total(xc1)/this_etot1 - xcen[ii]
+    ycenshift1[ii] = total(yc1)/this_etot1 - ycen[ii]
+    xc2 = this_epix2_sind*xx[this_sind]
+    yc2 = this_epix2_sind*yy[this_sind]
+    xcenshift2[ii] = total(xc2)/this_etot2 - xcen[ii]
+    ycenshift2[ii] = total(yc2)/this_etot2 - ycen[ii]
+    ; calculate centroid noise
+    xcn = this_epix_noise*xx[this_sind]
+    ycn = this_epix_noise*yy[this_sind]
+    xcennoise[ii] = sqrt(xcen[ii]^2.*this_ntot^2. + total(xcn^2.))
+    ycennoise[ii] = sqrt(ycen[ii]^2.*this_ntot^2. + total(ycn^2.))
+
+  end
+  xcennoise1 = xcennoise*sqrt(exptime1/exptime)
+  xcennoise2 = xcennoise*sqrt(exptime2/exptime)
+  ycennoise1 = ycennoise*sqrt(exptime1/exptime)
+  ycennoise2 = ycennoise*sqrt(exptime2/exptime)
+
+end

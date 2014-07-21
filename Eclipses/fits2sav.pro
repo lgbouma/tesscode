@@ -22,7 +22,7 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
   abar = [4.5, 5.3, 20.,  45.,  45., 350]
   psig = [0.5, 1.3, 2.0,  2.3,  2.3, 3.0]
   qgam = [4.0, 0.4, 0.35, 0.3, 0.3, -0.5]
-  homf = [4.0, 3.9, 3.8, 3.7, 3.7, 3.7]
+  homf = [0.0, 3.9, 3.8, 3.7, 3.7, 3.7]
   qnorm = 0.9*(qgam+1.0)*mf/(1.0-0.1^(qgam+1.0))
 ;  print, qnorm
 ;  readcol, fname, gc, logA, z, mini, logL, logT, logG, dm, av, $
