@@ -307,6 +307,8 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
       
       ; Randomize the eccentricity. Total chi-by-eye from Raghavan et al. 2010
       ecc = randomu(seed, nsec)*(atan((logp-1.5)*2.)+!dpi/2.)/!dpi
+      ecc = ecc > 0.0
+      ecc = ecc < 1.0
       star[sind].companion.ecc = ecc
       bin_star.companion.ecc = ecc
       

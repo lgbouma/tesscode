@@ -25,6 +25,9 @@ function add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
   teff2 = star[star[pris].companion.ind].teff
   tmag1 = star[pris].mag.t
   tmag2 = star[star[pris].companion.ind].mag.t
+  tsys = star[pris].mag.tsys
+  icsys = star[pris].mag.icsys
+  jsys = star[pris].mag.jsys
   ars = star[pris].companion.a*AU_IN_RSUN
   a   = star[pris].companion.a
   p = star[pris].companion.p
@@ -63,6 +66,9 @@ function add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
     m2 = m2[bin_ecl]
     teff2 = teff2[bin_ecl]
     tmag2 = tmag2[bin_ecl]
+    tsys = tsys[bin_ecl]
+    icsys = icsys[bin_ecl]
+    jsys = jsys[bin_ecl]
     a = a[bin_ecl]
     ars = ars[bin_ecl]
     p = p[bin_ecl]
@@ -161,6 +167,9 @@ function add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
     eclip.dep2 = dep2
     eclip.dur1 = dur1
     eclip.dur2 = dur2
+    eclip.tsys = tsys
+    eclip.icsys = icsys
+    eclip.jsys = jsys
     print, 'Created ', neb, ' eclipsing binaries out of ', n_elements(pris), ' primaries.'
     estruct=eclip
   end

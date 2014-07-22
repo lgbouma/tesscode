@@ -107,7 +107,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
     print, 'Stacking and sorting PRFs'
     ; ph_star is npix x nstar
     stack_prf_eclip, star[obsid].mag.t, star[obsid].teff, ph_p, frac, star_ph, $
-	dx=dx[obs], dy=dy[obs], fov_ind=eclipse[obs].coord.fov_ind, mask=mask1d
+	dx=dx[obs], dy=dy[obs], fov_ind=eclipse[obs].coord.fov_ind, mask=mask1d, sind=sind
     for jj=0,nobs-1 do begin
       star_ph[*,jj] = total(star_ph[sind[*,jj],jj], /cumulative)
     end      
@@ -221,7 +221,6 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
         beb_ph = dblarr(total(mask1d), nbeb)
 	dilute_beb, eclipse[det[bebdil]], frac, rad, ph_p, $
 		dx[det[bebdil]], dy[det[bebdil]], bebvec, aspix=aspix, radmax=6.0
-        dil_ph[bebdil] = dil_ph[bebdil] + bebvec
         beb_dep1 = eclipse[det[bebdil]].dep1_eff
         beb_dep2 = eclipse[det[bebdil]].dep2_eff
         beb_dur1 = eclipse[det[bebdil]].dur1_eff
@@ -237,19 +236,19 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
         xcenshift2s = fltarr(nbeb, npix_max-npix_min+1)
         ycenshift1s = fltarr(nbeb, npix_max-npix_min+1)
         ycenshift2s = fltarr(nbeb, npix_max-npix_min+1)
-        for ii=(npix_min-1),(npix_max-1) do begin
+        for ii=0,(npix_max-npix_min) do begin
           thiscr = cr[*,ii]
-          calc_noise_cen, star_ph, dil_ph, beb_ph, $
+          calc_noise_cen, star_ph, dil_ph, bebvec, bebdil, $
 	         beb_dur1, beb_dur2, $
 	         beb_dep1, beb_dep2, $
-		 xx, yy, sind[bebdil], $
+		 xx, yy, sind[*,bebdil], $
                  readnoise, sys_limit, $
                  xcen, ycen, $
                  xcenshift1, xcenshift2, $
                  ycenshift1, ycenshift2, $
                  xcennoise1, xcennoise2, $
                  ycennoise1, ycennoise2, $
-		 npix_aper=(ii+1), $
+		 npix_aper=(ii+npix_min), $
                  field_angle=eclipse[det].coord.field_angle, $
                  cr_noise = thiscr[crind[det]]/sqrt(60.0/ffi_len)*star[detid].ffi, $
 		 subexptime=subexptime, $
@@ -265,28 +264,27 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
 	  xcenshift2s[*,ii] = xcenshift2
 	  ycenshift1s[*,ii] = ycenshift1
 	  ycenshift2s[*,ii] = ycenshift2
-        end
-        minnoise = min(noises, ind, dimension=2)
-        cenpix = ind / nbeb + npix_min
-        censhift1 = sqrt(xcenshift1s[*,cenpix-1]^2. + ycenshift1s[*,cenpix-1]^2.)
-        censhift2 = sqrt(xcenshift2s[*,cenpix-1]^2. + ycenshift2s[*,cenpix-1]^2.)
+        endfor
+        mincennoise = min(cennoises, ind, dimension=2)
+        cenind = ind / nbeb
+        censhift1 = sqrt(xcenshift1s[ind]^2. + ycenshift1s[ind]^2.)
+        censhift2 = sqrt(xcenshift2s[ind]^2. + ycenshift2s[ind]^2.)
         eclipse[det[bebdil]].censhift1 = censhift1
         eclipse[det[bebdil]].censhift2 = censhift2
-        den1 = sqrt((xcennoise1s[*,cenpix-1]*xcenshift1s[*,cenpix-1]/censhift1)^2. + $
-		    (ycennoise1s[*,cenpix-1]*ycenshift1s[*,cenpix-1]/censhift1)^2.)
-        eclipse[det[bebdil]].cenerr1 = xcennoise1s[*,cenpix-1]*ycennoise1s[*,cenpix-1]/den1
-        den2 = sqrt((xcennoise2s[*,cenpix-1]*xcenshift2s[*,cenpix-1]/censhift2)^2. + $
-		    (ycennoise2s[*,cenpix-1]*ycenshift2s[*,cenpix-1]/censhift2)^2.)
-        eclipse[det[bebdil]].cenerr2 = xcennoise2s[*,cenpix-1]*ycennoise2s[*,cenpix-1]/den2
-        eclipse[det].snrhr = minnoise
+        den1 = sqrt((xcennoise1s[ind]*xcenshift1s[ind]/censhift1)^2. + $
+		    (ycennoise1s[ind]*ycenshift1s[ind]/censhift1)^2.)
+        eclipse[det[bebdil]].cenerr1 = xcennoise1s[ind]*ycennoise1s[ind]/den1
+        den2 = sqrt((xcennoise2s[ind]*xcenshift2s[ind]/censhift2)^2. + $
+		    (ycennoise2s[ind]*ycenshift2s[ind]/censhift2)^2.)
+        eclipse[det[bebdil]].cenerr2 = xcennoise2s[ind]*ycennoise2s[ind]/den2
         ;for ss=0,ndet-1 do eclipse[det[ss]].star_ph = star_ph[eclipse[det[ss]].npix-1,ss]
           ;eclipse[obs].star_ph = reform(star_ph[eclipse[obs].npix-1, *])
-
+	; add it to the overall dilution
+        dil_ph[bebdil] = dil_ph[bebdil] + bebvec 
         for kk=0, nbeb-1 do begin
 	  beb_ph[*,kk] = total(bebvec[sind[*,bebdil[kk]],kk], /cumulative)
         end
       end
-
       ; Sort into the same pixel order as target star flux
       for jj=0,ndet-1 do begin
         star_ph[*,jj] = total(star_ph[sind[*,jj],jj], /cumulative)

@@ -61,13 +61,21 @@ function add_hebs, star, eclip, $
     ;teff2 = teff1
     
     tsys = -2.5*alog10(10.^(-0.4*tmag1) + 10.^(-0.4*tmag2)) 
+    icsys = -2.5*alog10(10.^(-0.4*ic1) + 10.^(-0.4*ic2)) + dm + 0.479*av
+    jsys = -2.5*alog10(10.^(-0.4*j1) + 10.^(-0.4*j2)) + dm + 0.282*av
+
+    ; over-write sys mags
+    star[spl].mag.tsys = tsys
+    star[spl].mag.jsys = jsys
+    star[spl].mag.icsys = icsys
 
     ; Separation in Rsun
     ars = a*AU_IN_RSUN
 
     ; eccentricity
-    ecc = randomu(seed, nspl)*(atan((logp-1.5)*2.)+!dpi/2.)/!dpi
-    
+    ecc = randomu(seed, nspl)*(atan((alog10(p)-1.5)*2.)+!dpi/2.)/!dpi
+    ecc = ecc > 0.0
+    ecc = ecc < 1.0
     ; Argument of periastron: 
     w = 2.*!dpi*randomu(seed, nspl)
 
@@ -114,6 +122,8 @@ function add_hebs, star, eclip, $
       teff2 = teff2[bin_ecl]
       tmag2 = tmag2[bin_ecl]
       tsys = tsys[bin_ecl]
+      icsys = icsys[bin_ecl]
+      jsys = jsys[bin_ecl]
       a = a[bin_ecl]
       ars = ars[bin_ecl]
       p = p[bin_ecl]
@@ -217,6 +227,8 @@ function add_hebs, star, eclip, $
       eclip.dur1 = dur1
       eclip.dur2 = dur2
       eclip.tsys = tsys
+      eclip.icsys = icsys
+      eclip.jsys = jsys
       eclip.hostid = hostid
       eclip.sep = hostsep ; in pixels
       ;print, 'Created ', neb, ' eclipsing binaries out of ', n_elements(pris), ' primaries.'
