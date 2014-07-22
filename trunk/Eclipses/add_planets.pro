@@ -155,6 +155,9 @@ function add_planets, star, pstruct, frac, rad, ph_p, $
     planet_eclip.s = planet_s[tra]
     planet_eclip.p = planet_per[tra]
     planet_eclip.b = planet_b[tra]
+    planet_eclip.tsys = star[traid].mag.tsys
+    planet_eclip.icsys = star[traid].mag.icsys
+    planet_eclip.jsys = star[traid].mag.jsys
     planet_eclip.hostid = planet_hid[tra]
     planet_eclip.dep1 = (planet_eclip.r2 / planet_eclip.r1 )^2.0
     toodeep = where(planet_eclip.dep1 gt 1.0)

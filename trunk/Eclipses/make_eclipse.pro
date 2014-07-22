@@ -3,10 +3,23 @@ function make_eclipse, sstruct, bkstruct, estruct, frac, rad, ph_p, dartstruct, 
   ecliplen = 0L
   if (keyword_set(min_depth)) then min_depth=min_depth else min_depth = 1D-5
   
+  ; Add HEBs
+  if (eclass[3]) then begin
+    gd = add_hebs(sstruct, heb_eclip, frac, rad, ph_p, dartstruct, tefftic)
+    if (gd gt 0) then begin
+      if (ecliplen gt 0) then estruct = struct_append(estruct, heb_eclip) $
+      else estruct = heb_eclip   
+    endif
+    ecliplen = ecliplen + gd
+  endif
+  
   ; Add Planets to all target stars
   if (eclass[0]) then begin
     gd = add_planets(sstruct, p_eclip, frac, rad, ph_p, min_depth=min_depth)
-    if (gd gt 0) then estruct = p_eclip
+    if (gd gt 0) then begin
+      if (ecliplen gt 0) then estruct = struct_append(estruct, p_eclip) $
+      else estruct = p_eclip
+    endif
     ecliplen = ecliplen + gd
   endif
 
@@ -30,15 +43,5 @@ function make_eclipse, sstruct, bkstruct, estruct, frac, rad, ph_p, dartstruct, 
     ecliplen = ecliplen + gd
   endif
   
-  ; Add HEBs
-  if (eclass[3]) then begin
-    gd = add_hebs(sstruct, heb_eclip, frac, rad, ph_p, dartstruct, tefftic)
-    if (gd gt 0) then begin
-      if (ecliplen gt 0) then estruct = struct_append(estruct, heb_eclip) $
-      else estruct = heb_eclip   
-    endif
-    ecliplen = ecliplen + gd
-  endif
-
   return, ecliplen
 END

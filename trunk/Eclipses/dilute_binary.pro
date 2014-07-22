@@ -19,7 +19,7 @@ PRO dilute_binary, eclip, star, frac, rad, ph_p, dx, dy, dilvec, $
   if (binsys[0] ne -1) then begin
     nbin = n_elements(binsys)
     print, 'Diluting ' , n_elements(binsys), ' binaries'
-    bintmag = star[star[hostid[binsys]].companion.ind].mag.t
+    bintmag = star[star[hostid[binsys]].companion.ind].mag.tsys
     binteff = star[star[hostid[binsys]].companion.ind].teff
     binsep  = star[star[hostid[binsys]].companion.ind].companion.sep/aspix ; in pixels
     bindx = dx[binsys]

@@ -43,6 +43,8 @@ function add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, $ ;input
     teff2 = bkgnd[bkgnd[pris].companion.ind].teff
     tmag1 = bkgnd[pris].mag.t
     tsys = bkgnd[pris].mag.tsys
+    icsys = bkgnd[pris].mag.icsys
+    jsys = bkgnd[pris].mag.jsys
     tmag2 = bkgnd[bkgnd[pris].companion.ind].mag.t
     ars = bkgnd[pris].companion.a*AU_IN_RSUN
     a   = bkgnd[pris].companion.a
@@ -82,6 +84,8 @@ function add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, $ ;input
       teff2 = teff2[bin_ecl]
       tmag2 = tmag2[bin_ecl]
       tsys = tsys[bin_ecl]
+      icsys = icsys[bin_ecl]
+      jsys = jsys[bin_ecl]
       a = a[bin_ecl]
       ars = ars[bin_ecl]
       p = p[bin_ecl]
@@ -183,6 +187,8 @@ function add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, $ ;input
       eclip.dur1 = dur1
       eclip.dur2 = dur2
       eclip.tsys = tsys
+      eclip.icsys = icsys
+      eclip.jsys = jsys
       ;print, 'Created ', neb, ' eclipsing binaries out of ', n_elements(pris), ' primaries.'
       if (ii gt 0) then estruct=struct_append(estruct, eclip) $
 	else estruct = eclip

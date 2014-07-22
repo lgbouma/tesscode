@@ -5,6 +5,7 @@ pro calc_noise_cen, $
    ph_star, $                       ; ph/s/cm^2 from (npixels x nstars)
    ph_dil, $                        ; ph/s/cm^2 per pixel
    ph_beb, $                        ; ph/s/cm^2 per pixel from beb
+   starind, $
    dur1, $                      ; BEB/HEB dur 
    dur2, $                      ; BEB/HEB dur
    dep1, $                      ; BEB/HEB depth
@@ -19,10 +20,10 @@ pro calc_noise_cen, $
 ;
    xcen, $
    ycen, $
-   xcen_shift1, $       ; output centroid shifts for BEB/HEBs
-   xcen_shift2, $       ; 
-   ycen_shift1, $       ;
-   ycen_shift2, $       ;
+   xcenshift1, $       ; output centroid shifts for BEB/HEBs
+   xcenshift2, $       ; 
+   ycenshift1, $       ;
+   ycenshift2, $       ;
    xcennoise1, $
    xcennoise2, $
    ycennoise1, $
@@ -63,10 +64,7 @@ pro calc_noise_cen, $
   if (keyword_set(verbose)) then v=1 else v=0
   if (keyword_set(field_angle)) then field_angle=field_angle else field_angle=0.0
   
-  sz_ph = size(ph_star)
-  npix_max = sz_ph[1]
-  nstar = sz_ph[2]
-  if (v) then print, 'npix_max = ', npix_max
+  nstar = n_elements(starind)
 
   if (keyword_set(npix_aper)) then begin
      npix_aper=npix_aper
@@ -76,6 +74,10 @@ pro calc_noise_cen, $
  
   if (v) then print, 'npix_aper = ', npix_aper
         
+  exptime1 = dur1*24.0*3600.
+  exptime2 = dur2*24.0*3600.
+  exptime = 3600.
+  
   omega_pix = aspix^2.
   n_exposures = exptime/subexptime
   rn_pix   = sqrt(n_exposures)*e_pix_ro
@@ -83,14 +85,6 @@ pro calc_noise_cen, $
   ; truncate indices
   npix_sind = sind[0:npix_aper-1,*]
 
-  exptime1 = dur1*24.0*3600.
-  exptime2 = dur2*24.0*3600.
-  exptime = 3600.
-
-  ; electrons from the star
-  e_pix_star = ph_star * geom_area * cos(!DPI * field_angle/180.) * exptime
-  e_pix_dil = ph_dil * geom_area * cos(!DPI * field_angle/180.) * exptime
-  e_pix_beb = ph_beb * geom_area * cos(!DPI * field_angle/180.) * exptime
   
   if (keyword_set(noise_cr)) then noise_cr = reform(noise_cr[*,npix_aper-1]) else noise_cr = 0.0 
   
@@ -113,29 +107,33 @@ pro calc_noise_cen, $
   xcennoise = fltarr(nstar)
   ycennoise = fltarr(nstar)
   xcen = fltarr(nstar)
-  xcen = fltarr(nstar)
+  ycen = fltarr(nstar)
 
   for ii=0,nstar-1 do begin
-    this_estar = e_pix_star[*,ii]
-    this_edil = e_pix_dil[*,ii]
-    this_ebeb0 = e_pix_beb[*,ii]
-    this_ebeb1 = e_pix_beb[*,ii]*(1.0-dep1[ii])
-    this_ebeb2 = e_pix_beb[*,ii]*(1.0-dep2[ii])
-    this_epix0 = this_estar + this_edil + this_ebeb  + e_pix_zodi[ii]   ; electrons per pixel, unsorted
-    this_epix1 = this_estar + this_edil + this_ebeb1 + e_pix_zodi[ii]   ; electrons per pixel, unsorted
-    this_epix2 = this_estar + this_edil + this_ebeb2 + e_pix_zodi[ii]   ; electrons per pixel, unsorted
+  ; electrons from the star
+    this_estar = ph_star[*,starind[ii]] * geom_area * cos(!DPI * field_angle[ii]/180.) * exptime
+    this_edil  = ph_dil[*,starind[ii]]  * geom_area * cos(!DPI * field_angle[ii]/180.) * exptime
+    this_ebeb0 = ph_beb[*,ii]  * geom_area * cos(!DPI * field_angle[ii]/180.) * exptime
+    this_ebeb1 = this_ebeb0*(1.0-dep1[ii])
+    this_ebeb2 = this_ebeb0*(1.0-dep2[ii])
     this_sind = npix_sind[*,ii]                ; sorting indices
+    this_epix_all = this_estar + this_edil + this_ebeb0 + e_pix_zodi[ii]   ; electrons per pixel, unsorted
+    this_epix0 = this_estar + this_edil + this_ebeb0    ; electrons per pixel, unsorted
+    this_epix1 = this_estar + this_edil + this_ebeb1    ; electrons per pixel, unsorted
+    this_epix2 = this_estar + this_edil + this_ebeb2    ; electrons per pixel, unsorted
+    this_epix_all_sind = this_epix_all[this_sind]      ; sorted electrons per pixel
     this_epix0_sind = this_epix0[this_sind]      ; sorted electrons per pixel
     this_epix1_sind = this_epix1[this_sind]      ; sorted electrons per pixel
     this_epix2_sind = this_epix2[this_sind]      ; sorted electrons per pixel
     
+    this_etot_all = total(this_epix_all_sind)          ; total electrons
     this_etot0 = total(this_epix0_sind)          ; total electrons
     this_etot1 = total(this_epix1_sind)          ; total electrons
     this_etot2 = total(this_epix2_sind)          ; total electrons
-    this_ntot0 = sqrt(this_etot0)/this_etot0      ; total noise 
-    this_ntot1 = sqrt(this_etot1)/this_etot1      ; total noise 
-    this_ntot2 = sqrt(this_etot2)/this_etot2      ; total noise 
-    this_epix_noise = sqrt(this_epix0_sind + rn_pix^2.)/this_etot0 ; noise per pixel
+    this_ntot = sqrt(this_etot_all + npix_aper*rn_pix^2.)/this_etot0      ; total noise 
+    ;this_ntot1 = sqrt(this_etot1 + npix_aper*rn_pix^2.)/this_etot1      ; total noise 
+    ;this_ntot2 = sqrt(this_etot2 + npix_aper*rn_pix^2.)/this_etot2      ; total noise 
+    this_epix_noise = sqrt(this_epix_all_sind + rn_pix^2.)/this_etot0 ; noise per pixel
 
     ; calculate centroid
     xc0 = this_epix0_sind*xx[this_sind]
@@ -155,7 +153,6 @@ pro calc_noise_cen, $
     ycn = this_epix_noise*yy[this_sind]
     xcennoise[ii] = sqrt(xcen[ii]^2.*this_ntot^2. + total(xcn^2.))
     ycennoise[ii] = sqrt(ycen[ii]^2.*this_ntot^2. + total(ycn^2.))
-
   end
   xcennoise1 = xcennoise*sqrt(exptime1/exptime)
   xcennoise2 = xcennoise*sqrt(exptime2/exptime)

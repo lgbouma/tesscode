@@ -1,4 +1,4 @@
-PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
+PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=eclass
   numfil = n_elements(fnums)
 
   ; User-adjustable settings (yes, that's you!)
@@ -28,15 +28,16 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
   CCD_PIX = 4096.
   orbit_period = 13.66d0 ; days per orbit
   downlink = 16.0d0/24.0d0 ; downlink time in days
+  if (keyword_set(eclass)) then eclass = eclass else $
   eclass = [	0, $ ; Planets
 	    	0, $ ; EBs
-		0, $ ; BEBs
-		1  ] ; HEBs
+		1, $ ; BEBs
+		0  ] ; HEBs
 
   ; Don't phuck with physics, though
   REARTH_IN_RSUN = 0.0091705248
   AU_IN_RSUN = 215.093990942
-  nparam = 49 ; output table width
+  nparam = 55 ; output table width
 
   ; Here we go!
   numtargets = lonarr(numfil)
@@ -126,19 +127,20 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
         if (ecliplen_tot gt 0) then eclip = struct_append(eclip, eclip_trial) $
         else eclip = eclip_trial
         ecliplen_tot = ecliplen_tot + ecliplen
-      end
-    end
-    ; Survey: figure out npointings and field angles
-    eclip_survey, seg, fov, eclip, offset=skirt
-    ; Determine FOV index
-    fov_ind = intarr(n_elements(eclip))
-    fov_ind[where((eclip.coord.fov_r ge 0.104*CCD_PIX) and $ ; was 104
+      endif
+    endfor
+    if (ecliplen_tot gt 0) then begin
+      ; Survey: figure out npointings and field angles
+      eclip_survey, seg, fov, eclip, offset=skirt
+      ; Determine FOV index
+      fov_ind = intarr(n_elements(eclip))
+      fov_ind[where((eclip.coord.fov_r ge 0.104*CCD_PIX) and $ ; was 104
                 (eclip.coord.fov_r lt 0.365*CCD_PIX))] = 1   ; was 391
-    fov_ind[where((eclip.coord.fov_r ge 0.365*CCD_PIX) and $
+      fov_ind[where((eclip.coord.fov_r ge 0.365*CCD_PIX) and $
                 (eclip.coord.fov_r lt 0.592*CCD_PIX))] = 2
-    fov_ind[where(eclip.coord.fov_r  ge 0.592*CCD_PIX)] = 3
-    eclip.coord.field_angle = eclip.coord.fov_r / CCD_PIX * fov
-    eclip.coord.fov_ind=fov_ind
+      fov_ind[where(eclip.coord.fov_r  ge 0.592*CCD_PIX)] = 3
+      eclip.coord.field_angle = eclip.coord.fov_r / CCD_PIX * fov
+      eclip.coord.fov_ind=fov_ind
 
     ; Dilute
     ;print, "Diluting with binary companions"
@@ -152,20 +154,20 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
     ;print, "Diluting with background stars"
     ;dilute_eclipse, eclip, bkgnds, frac_fits, rad_fits, ph_fits, aspix=aspix, sq_deg=0.134, radmax=4.0
     ;print, "Diluting with deep stars"
-    ;dilute_eclipse, eclip, deeps, frac_fits, rad_fits, ph_fits, aspix=aspix, sq_deg=0.0134, radmax=2.0
-    ; Observe
-    eclip_observe, eclip, targets, bkgnds, deeps, $
-       frac_fits, rad_fits, ph_fits, cr_fits, $
-       aspix=aspix, effarea=effarea, sys_limit=sys_limit, $ ;infil=sp_name,outfile=spo_name
-       readnoise=readnoise, thresh=thresh, tranmin=tranmin, ps_len=ps_len, $
-       duty_cycle=duty_cycle[ii], ffi_len=ffi_len, saturation=saturation, $
-       subexptime=subexptime, dwell_time=orbit_period, downlink=downlink
-    det = where(eclip.det1 or eclip.det2 or eclip.det)
-    if (det[0] ne -1) then begin
-      detid = eclip[det].hostid
-      ndet = n_elements(det)
-      bins = targets[detid].pri + 2*targets[detid].sec
-      tmp_star = [[eclip[det].trial], [targets[detid].mag.v], [targets[detid].mag.ic], $
+      ;dilute_eclipse, eclip, deeps, frac_fits, rad_fits, ph_fits, aspix=aspix, sq_deg=0.0134, radmax=2.0
+      ; Observe
+      eclip_observe, eclip, targets, bkgnds, deeps, $
+        frac_fits, rad_fits, ph_fits, cr_fits, $
+        aspix=aspix, effarea=effarea, sys_limit=sys_limit, $ ;infil=sp_name,outfile=spo_name
+        readnoise=readnoise, thresh=thresh, tranmin=tranmin, ps_len=ps_len, $
+        duty_cycle=duty_cycle[ii], ffi_len=ffi_len, saturation=saturation, $
+        subexptime=subexptime, dwell_time=orbit_period, downlink=downlink
+      det = where(eclip.det1 or eclip.det2 or eclip.det)
+      if (det[0] ne -1) then begin
+        detid = eclip[det].hostid
+        ndet = n_elements(det)
+        bins = targets[detid].pri + 2*targets[detid].sec
+        tmp_star = [[eclip[det].trial], [targets[detid].mag.v], [targets[detid].mag.ic], $
                 [targets[detid].mag.t], [targets[detid].mag.j], $
                 [targets[detid].mag.h], [targets[detid].mag.k], [targets[detid].teff], $
                 [eclip[det].coord.elon], [eclip[det].coord.elat], $
@@ -181,15 +183,19 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial
 	        [eclip[det].star_ph], [eclip[det].bk_ph], [eclip[det].zodi_ph], $
                 [eclip[det].npix], [eclip[det].dil], [targets[detid].ffi], [eclip[det].npointings] ,$
                 [eclip[det].sat], [eclip[det].coord.fov_r], $
-                [eclip[det].class], [eclip[det].sep], [eclip[det].tsys], $
+                [eclip[det].class], [eclip[det].sep], $
+                [eclip[det].icsys],  [eclip[det].tsys],  [eclip[det].jsys], $ 
+                [eclip[det].censhift1], [eclip[det].censhift2], $
+                [eclip[det].cenerr1], [eclip[det].cenerr2], $
                 [bins], [targets[detid].companion.sep], [targets[targets[detid].companion.ind].mag.t]]
-      idx = lindgen(ndet) + totdet
-      star_out[idx,*] = tmp_star
-      totdet = totdet+ndet
+        idx = lindgen(ndet) + totdet
+        star_out[idx,*] = tmp_star
+        totdet = totdet+ndet
       ;stard = star[det]
       ;if (keyword_set(sav)) then save, filen=spo_name, stard
-    end
+      endif
+    endif
   endfor
   if (totdet gt 0) then mwrfits, star_out[0:(totdet-1),*], outname
-  print, numps, ' postage stamps assigned'
+  print, total(numps), ' postage stamps assigned'
 END
