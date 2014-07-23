@@ -5,7 +5,7 @@ pro calc_noise_cen, $
    ph_star, $                       ; ph/s/cm^2 from (npixels x nstars)
    ph_dil, $                        ; ph/s/cm^2 per pixel
    ph_beb, $                        ; ph/s/cm^2 per pixel from beb
-   starind, $
+   bebind, $
    dur1, $                      ; BEB/HEB dur 
    dur2, $                      ; BEB/HEB dur
    dep1, $                      ; BEB/HEB depth
@@ -64,7 +64,9 @@ pro calc_noise_cen, $
   if (keyword_set(verbose)) then v=1 else v=0
   if (keyword_set(field_angle)) then field_angle=field_angle else field_angle=0.0
   
-  nstar = n_elements(starind)
+  nstar = n_elements(dur1)
+  if (bebind[0] ne -1) then nbeb = n_elements(beb_ind) $
+  else nbeb = 0
 
   if (keyword_set(npix_aper)) then begin
      npix_aper=npix_aper
@@ -85,7 +87,6 @@ pro calc_noise_cen, $
   ; truncate indices
   npix_sind = sind[0:npix_aper-1,*]
 
-  
   if (keyword_set(noise_cr)) then noise_cr = reform(noise_cr[*,npix_aper-1]) else noise_cr = 0.0 
   
   if (v) then print, 'e_star = ', median(e_star)
@@ -108,19 +109,26 @@ pro calc_noise_cen, $
   ycennoise = fltarr(nstar)
   xcen = fltarr(nstar)
   ycen = fltarr(nstar)
-
   for ii=0,nstar-1 do begin
   ; electrons from the star
-    this_estar = ph_star[*,starind[ii]] * geom_area * cos(!DPI * field_angle[ii]/180.) * exptime
-    this_edil  = ph_dil[*,starind[ii]]  * geom_area * cos(!DPI * field_angle[ii]/180.) * exptime
+    this_estar0 = ph_star[*,ii] * geom_area * cos(!DPI * field_angle[ii]/180.) * exptime
+    this_estar1 = this_estar0*(1.0-dep1[ii])
+    this_estar2 = this_estar0*(1.0-dep2[ii])
+    this_edil  = ph_dil[*,ii]  * geom_area * cos(!DPI * field_angle[ii]/180.) * exptime
     this_ebeb0 = ph_beb[*,ii]  * geom_area * cos(!DPI * field_angle[ii]/180.) * exptime
     this_ebeb1 = this_ebeb0*(1.0-dep1[ii])
     this_ebeb2 = this_ebeb0*(1.0-dep2[ii])
     this_sind = npix_sind[*,ii]                ; sorting indices
-    this_epix_all = this_estar + this_edil + this_ebeb0 + e_pix_zodi[ii]   ; electrons per pixel, unsorted
-    this_epix0 = this_estar + this_edil + this_ebeb0    ; electrons per pixel, unsorted
-    this_epix1 = this_estar + this_edil + this_ebeb1    ; electrons per pixel, unsorted
-    this_epix2 = this_estar + this_edil + this_ebeb2    ; electrons per pixel, unsorted
+    this_epix_all = this_estar0 + this_edil + this_ebeb0 + e_pix_zodi[ii]   ; electrons per pixel, unsorted
+    if total(ii eq bebind) then begin
+      this_epix0 = this_estar0 + this_edil + this_ebeb0    ; electrons per pixel, unsorted
+      this_epix1 = this_estar0 + this_edil + this_ebeb1    ; electrons per pixel, unsorted
+      this_epix2 = this_estar0 + this_edil + this_ebeb2    ; electrons per pixel, unsorted
+    endif else begin
+      this_epix0 = this_estar0 + this_edil + this_ebeb0    ; electrons per pixel, unsorted
+      this_epix1 = this_estar1 + this_edil + this_ebeb0    ; electrons per pixel, unsorted
+      this_epix2 = this_estar2 + this_edil + this_ebeb0    ; electrons per pixel, unsorted
+    endelse
     this_epix_all_sind = this_epix_all[this_sind]      ; sorted electrons per pixel
     this_epix0_sind = this_epix0[this_sind]      ; sorted electrons per pixel
     this_epix1_sind = this_epix1[this_sind]      ; sorted electrons per pixel

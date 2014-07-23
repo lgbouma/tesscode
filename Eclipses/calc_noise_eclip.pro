@@ -30,7 +30,8 @@ pro calc_noise_eclip, $
 ; optional outputs
 ;
    noise_star=noise_star, $         ; noise from star counts alone
-   noise_sky=noise_sky, $           ; noise from sky counts only
+   noise_dil=noise_dil, $           ; noise from sky counts only
+   noise_zodi=noise_zodi, $           ; noise from sky counts only
    noise_ro=noise_ro,$              ; noise from readout only
    noise_cr=noise_cr,$              ; noise from readout only
    noise_sys=noise_sys, $           ; noise from systematic limit only
@@ -95,7 +96,7 @@ pro calc_noise_eclip, $
 ;  if (v) then print, 'e_pix_bgstars = ', median(e_pix_bgstars)
 
   ; compute noise sources
-  e_tot_sky = e_pix_zodi + e_pix_dil
+  ;e_tot_sky = e_pix_zodi + e_pix_dil
 
 ;  e_bin = dblarr(n_elements(e_tot_sky))
 ;  if(keyword_set(bin_sys)) then nbin=total(bin_sys) else nbin=0
@@ -113,17 +114,19 @@ pro calc_noise_eclip, $
 ;    if (v) then print, 'e_pix_bin = ', median(e_bin[bins])
 ;  endif
   
-  e_tot = e_tot_sky + e_star
+  e_tot = e_pix_zodi + e_pix_dil + e_star ; noise
+  e_phot =  e_pix_dil + e_star ; in photometric aperture
   ; electrons in cadence
   e_tot_sub = e_tot*subexptime/exptime
   
-  noise_star = sqrt(e_star) / e_tot
-  noise_sky  = sqrt(e_tot_sky) / e_tot
-  noise_ro   = sqrt(npix_aper*n_exposures)*e_pix_ro / e_tot
-  noise_cr   = cr_noise / e_tot
-  dilution = e_tot / e_star
-  noise_sys  = 0.0*noise_star + sys_limit/1d6/sqrt(exptime/3600.)/dilution
+  noise_star = sqrt(e_star) / e_phot
+  noise_dil = sqrt(e_pix_dil) / e_phot
+  noise_zodi  = sqrt(e_pix_zodi) / e_phot
+  noise_ro   = sqrt(npix_aper*n_exposures)*e_pix_ro / e_phot
+  noise_cr   = cr_noise / e_phot
+  dilution = e_phot / e_star
+  noise_sys  = 0.0*noise_star + sys_limit/1d6/sqrt(exptime/3600.)
 
-  noise = sqrt( noise_star^2. + noise_sky^2. + noise_ro^2. + noise_sys^2. + cr_noise^2.)
+  noise = sqrt( noise_star^2. + noise_zodi^2. + noise_dil^2. + noise_ro^2. + noise_sys^2. + noise_cr^2.)
 
 end

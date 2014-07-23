@@ -61,7 +61,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   ang2pix_ring, 16, theta, phi, ipring
    
   totdet = 0L
-  star_out = dblarr(1E6*n_trial,nparam)
+  star_out = dblarr(1E7*n_trial,nparam)
   for ii=0, numfil-1 do begin
     ; Gather the .sav files
     print, 'Restoring files for tile ', fnums[ii]
@@ -171,12 +171,12 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
                 [targets[detid].mag.t], [targets[detid].mag.j], $
                 [targets[detid].mag.h], [targets[detid].mag.k], [targets[detid].teff], $
                 [eclip[det].coord.elon], [eclip[det].coord.elat], $
-                [eclip[det].coord.glon], [eclip[det].coord.glat], $
+                [eclip[det].coord.ra], [eclip[det].coord.dec], $
                 [eclip[det].p], [eclip[det].a], [eclip[det].s], [eclip[det].b], $
                 [eclip[det].teff2], [eclip[det].m2], [eclip[det].r2], $
-                [eclip[det].dep1], [eclip[det].dur1], [eclip[det].neclip_obs1], $
+                [eclip[det].dep1_eff], [eclip[det].dur1], [eclip[det].neclip_obs1], $
                 [eclip[det].teff1], [eclip[det].m1], [eclip[det].r1], $ 
-                [eclip[det].dep2], [eclip[det].dur2], [eclip[det].neclip_obs2], $
+                [eclip[det].dep2_eff], [eclip[det].dur2], [eclip[det].neclip_obs2], $
                 [eclip[det].snreclp1], [eclip[det].snrgress1], $
                 [eclip[det].snreclp2], [eclip[det].snrgress2], $
                 [eclip[det].k], [eclip[det].snrhr], $
