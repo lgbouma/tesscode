@@ -2,13 +2,13 @@ PRO noise_check, sys=sys
   imag = findgen(181)/10.+3.
   print, imag
   frac_file = 'bigfrac24_105_f3p33.fits' ; prf file 
-  rad_file = 'bigrad24_105_f3p33.fits' ; radius file 
+;  rad_file = 'bigrad24_105_f3p33.fits' ; radius file 
   ph_file = 'ph_T_filt.fits' ; photon fluxes for T=10 vs Teff
   cr_file = 'crnoise.fits' ; photon fluxes for T=10 vs Teff
   tic_file = 'tic_teff.fits'
   ; Open the fits files
   frac_fits = mrdfits(frac_file)
-  rad_fits = mrdfits(rad_file)/60. ; put into pixels
+; rad_fits = mrdfits(rad_file)/60. ; put into pixels
   ph_fits = mrdfits(ph_file)
   cr_fits = fltarr(100,64)
   ;  cr_fits = mrdfits(cr_file)
@@ -44,13 +44,16 @@ PRO noise_check, sys=sys
   noise_star = dblarr(n_elements(imag))
   noise_ro  = dblarr(n_elements(imag))
   noise_sys = dblarr(n_elements(imag))
-  noise_sky = dblarr(n_elements(imag))
+  noise_zodi = dblarr(n_elements(imag))
   exptime = dblarr(n_elements(imag)) + 3600. ; what's the noise per hour?
   
   ; ph_star is npix x nstar
   stack_prf_eclip, tmag, teff, ph_fits, frac_fits, star_ph, $
-      dx=dx, dy=dy, fov_ind=fov_ind, mask=mask1d
+      dx=dx, dy=dy, fov_ind=fov_ind, mask=mask1d, sind=sind
   dil_ph = dblarr(total(mask1d), n_elements(imag))
+  for jj=0,n_elements(imag)-1 do begin
+      star_ph[*,jj] = total(star_ph[sind[*,jj],jj], /cumulative)
+  end
 
   zodi_flux, elat, aspix, zodi_ph
 
@@ -100,18 +103,19 @@ PRO noise_check, sys=sys
                  dilution=dil, $
                  e_tot_sub=estar, $
                  noise_star=sn, $
-	         noise_sky=bn, $
+                 noise_dil=dn, $
+	         noise_zodi=zn, $
  		 noise_ro=rn, $
 		 noise_sys=syn
   
                  diln[ii] = dil
                  noise[ii] = n
                  noise_star[ii]=sn
-	         noise_sky[ii]=bn
+	         noise_zodi[ii]=zn
  		 noise_ro[ii]=rn 
 		 noise_sys[ii]=syn
   end
-  fitsout = [[imag], [npix], [noise], [noise_star], [noise_sky], [noise_ro], [noise_sys], [satn], [diln]]
+  fitsout = [[imag], [npix], [noise], [noise_star], [noise_zodi], [noise_ro], [noise_sys], [satn], [diln]]
   mwrfits, fitsout, 'noises_newphot.fits'
 END
 

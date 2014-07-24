@@ -1,4 +1,4 @@
-PRO dilute_binary, eclip, star, frac, rad, ph_p, dx, dy, dilvec, $
+PRO dilute_binary, eclip, star, frac, ph_p, dx, dy, dilvec, $
 	aspix=aspix, radmax=radmax
   ; How many filters in the prf?
   sz_ph_p = size(ph_p)

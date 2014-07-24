@@ -1,4 +1,4 @@
-PRO dilute_beb, eclip, frac, rad, ph_p, dx, dy, dilvec, $
+PRO dilute_beb, eclip, frac, ph_p, dx, dy, dilvec, $
 	aspix=aspix, radmax=radmax
   ; as a function of npix in the target star aperture, calculate the 
   ; diluting photon flux and the depth of eclipse
