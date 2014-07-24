@@ -1,4 +1,4 @@
-function add_planets, star, pstruct, frac, rad, ph_p, $
+function add_planets, star, pstruct, frac, ph_p, $
 	aspix=aspix, fov=fov, dressing=dressing, min_depth=min_depth
 
   sz_ph_p = size(ph_p)

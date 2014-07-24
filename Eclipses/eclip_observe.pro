@@ -1,4 +1,4 @@
-pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
+pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, $
 	aspix=aspix, effarea=effarea, readnoise=readnoise, $
         tranmin=tranmin, thresh=thresh, $
 	ps_len=ps_len, ffi_len=ffi_len, saturation=saturation, $
@@ -108,10 +108,22 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
     ; ph_star is npix x nstar
     stack_prf_eclip, star[obsid].mag.t, star[obsid].teff, ph_p, frac, star_ph, $
 	dx=dx[obs], dy=dy[obs], fov_ind=eclipse[obs].coord.fov_ind, mask=mask1d, sind=sind
+
+    ; BEBs and HEBs
+    bebdil = where(eclipse[obs].class eq 3 or eclipse[obs].class eq 4)
+    beb_ph = dblarr(total(mask1d), nobs)
+    if (bebdil[0] ne -1) then begin
+      nbeb = n_elements(bebdil)
+      ;beb_ph = dblarr(total(mask1d), nbeb)
+      dilute_beb, eclipse[obs[bebdil]], frac, ph_p, $
+		dx[obs[bebdil]], dy[obs[bebdil]], bebvec, aspix=aspix, radmax=6.0
+      for jj=0,nbeb-1 do beb_ph[*,bebdil[jj]] = bebvec[*,jj]
+    end   
     for jj=0,nobs-1 do begin
       star_ph[*,jj] = total(star_ph[sind[*,jj],jj], /cumulative)
+      beb_ph[*,jj] = total(beb_ph[sind[*,jj],jj], /cumulative)
     end      
-    dil_ph = dblarr(total(mask1d), nobs)
+    ;dil_ph = dblarr(total(mask1d), nobs)
 
     zodi_flux, eclipse[obs].coord.elat, aspix, zodi_ph
     eclipse[obs].zodi_ph = zodi_ph
@@ -123,7 +135,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
     exptime = dblarr(n_elements(obs)) + 3600.
     for ii=0,(npix_max-1) do begin
        thiscr = cr[*,ii]
-       calc_noise_eclip, star_ph, dil_ph, exptime, $
+       calc_noise_eclip, star_ph, beb_ph, exptime, $
 		 readnoise, sys_limit, noise, $
 		 npix_aper=(ii+1), $
                  field_angle=eclipse[obs].coord.field_angle, $
@@ -148,6 +160,12 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
     eclipse[obs].npix = ind / n_elements(obs) + npix_min
     eclipse[obs].dil = dilution[ind]
     for ss=0,nobs-1 do eclipse[obs[ss]].star_ph = star_ph[eclipse[obs[ss]].npix-1,ss]
+    if (bebdil[0] ne -1) then begin
+      beb_pixph = dblarr(nbeb)
+      for tt=0,nbeb-1 do beb_pixph[tt] = beb_ph[eclipse[obs[bebdil[tt]]].npix-1,bebdil[tt]]
+      beb_starph = eclipse[obs[bebdil]].star_ph
+      minnoise[bebdil] = minnoise[bebdil]*beb_starph/beb_pixph
+    end  
     ; Calculate SNR in phase-folded lightcurve
     et1_folded = double(eclipse[obs].neclip_obs1) * $
       eclipse[obs].dur1_eff * 24.0 * 3600
@@ -188,30 +206,43 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
       beb_ph = dblarr(total(mask1d), ndet)
       
 ;     print, "Diluting with binary companions"
-      ; Binaries
-      bindil = where(eclipse[det].class eq 1) ; planets only
+      ; Binaries dilute planets, BEB targets. Not EBs or HEBs
+      bindil = where(eclipse[det].class eq 1 or eclipse[det].class eq 3)
       if (bindil[0] ne -1) then begin
         nbindil = n_elements(bindil)
-	dilute_binary, eclipse[det[bindil]], star, frac, rad, ph_p, $
+	dilute_binary, eclipse[det[bindil]], star, frac,  ph_p, $
 		dx[det[bindil]], dy[det[bindil]], dilvec, aspix=aspix, radmax=6.0
         for jj=0,nbindil-1 do dil_ph[*,bindil[jj]] = dil_ph[*,bindil[jj]] + dilvec[*,jj]
       end
   
       ; All eclipses but BEBs
       ;print, "Diluting with other target stars"
-      targdil = where(eclipse[det].class ne 3) ; BEBs are already diluted by brightest 
-      if (targdil[0] ne -1) then begin
-        ntargdil = n_elements(targdil)
-        dilute_eclipse_img, eclipse[det[targdil]], star, frac, ph_p, $
-		dx[det[targdil]], dy[det[targdil]], dilvec, aspix=aspix, sq_deg=13.4, radmax=6.0
-        for jj=0,ntargdil-1 do dil_ph[*,targdil[jj]] = dil_ph[*,targdil[jj]] + dilvec[*,jj]
-      end
+      ;targdil = where(eclipse[det].class ne 3) ; BEBs are already diluted by brightest 
+      ;if (targdil[0] ne -1) then begin
+      ;  ntargdil = n_elements(targdil)
+      ;  dilute_eclipse_img, eclipse[det[targdil]], star, frac, ph_p, $
+      ;		dx[det[targdil]], dy[det[targdil]], dilvec, aspix=aspix, sq_deg=13.4, radmax=6.0
+      ;  for jj=0,ntargdil-1 do dil_ph[*,targdil[jj]] = dil_ph[*,targdil[jj]] + dilvec[*,jj]
+      ;end
      
       ; Everything
-      print, "Diluting with background stars"
-      dilute_eclipse_img, eclipse[det], bk, frac, ph_p, $
-		dx[det], dy[det], dilvec, aspix=aspix, sq_deg=0.134, radmax=4.0
+      print, "Diluting with other target stars"
+      dilute_eclipse_img, eclipse[det], star, frac, ph_p, $
+		dx[det], dy[det], dilvec, aspix=aspix, sq_deg=13.4, radmax=6.0
       for jj=0,ndet-1 do dil_ph[*,jj] = dil_ph[*,jj] + dilvec[*,jj]
+      
+      print, "Diluting with background stars"
+      bkdil = where(eclipse[det].class ne 3) ; BEB hosts are already diluted by the BEB
+      if (bkdil[0] ne -1) then begin
+        nbkdil = n_elements(bkdil)
+        dilute_eclipse_img, eclipse[det[bkdil]], bk, frac, ph_p, $
+      		dx[det[bkdil]], dy[det[bkdil]], dilvec, aspix=aspix, sq_deg=0.134, radmax=4.0
+        for jj=0,nbkdil-1 do dil_ph[*,bkdil[jj]] = dil_ph[*,bkdil[jj]] + dilvec[*,jj]
+      end
+      ;dilute_eclipse_img, eclipse[det], bk, frac, ph_p, $
+      ;		dx[det], dy[det], dilvec, aspix=aspix, sq_deg=0.134, radmax=4.0
+      ;for jj=0,ndet-1 do dil_ph[*,jj] = dil_ph[*,jj] + dilvec[*,jj]
+      ; Everything is diluted by deep stars
       print, "Diluting with deep stars"
       dilute_eclipse_img, eclipse[det], deep, frac, ph_p, $
 		dx[det], dy[det], dilvec, aspix=aspix, sq_deg=0.0134, radmax=2.0
@@ -222,7 +253,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
       if (bebdil[0] ne -1) then begin
         nbeb = n_elements(bebdil)
         ;beb_ph = dblarr(total(mask1d), nbeb)
-	dilute_beb, eclipse[det[bebdil]], frac, rad, ph_p, $
+	dilute_beb, eclipse[det[bebdil]], frac, ph_p, $
 		dx[det[bebdil]], dy[det[bebdil]], bebvec, aspix=aspix, radmax=6.0
         for jj=0,nbeb-1 do beb_ph[*,bebdil[jj]] = bebvec[*,jj]
       end   
@@ -272,6 +303,8 @@ pro eclip_observe, eclipse, star, bk, deep, frac, rad, ph_p, cr, $
 	ycenshift2s[*,ii] = ycenshift2
       endfor
       mincennoise = min(cennoises, ind, dimension=2)
+      ;ind = indgen(ndet)
+      mincennoise = cennoises[ind]
       cenind = ind / ndet
       censhift1 = sqrt(xcenshift1s[ind]^2. + ycenshift1s[ind]^2.)
       censhift2 = sqrt(xcenshift2s[ind]^2. + ycenshift2s[ind]^2.)

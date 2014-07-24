@@ -1,4 +1,4 @@
-function add_ebs, star, estruct, frac, rad, ph_p, aspix=aspix, fov=fov
+function add_ebs, star, estruct, frac, ph_p, aspix=aspix, fov=fov
 
   AU_IN_RSUN = 215.093990942D0          ; in solar radii
   REARTH_IN_RSUN = 0.0091705248         ; in solar radii

@@ -131,17 +131,19 @@ pro calc_noise_cen, $
     endelse
     this_epix_all_sind = this_epix_all[this_sind]      ; sorted electrons per pixel
     this_epix0_sind = this_epix0[this_sind]      ; sorted electrons per pixel
+    this_estar0_sind = this_estar0[this_sind]      ; sorted electrons per pixel
     this_epix1_sind = this_epix1[this_sind]      ; sorted electrons per pixel
     this_epix2_sind = this_epix2[this_sind]      ; sorted electrons per pixel
     
     this_etot_all = total(this_epix_all_sind)          ; total electrons
     this_etot0 = total(this_epix0_sind)          ; total electrons
+    this_estartot = total(this_estar0_sind)          ; total electrons
     this_etot1 = total(this_epix1_sind)          ; total electrons
     this_etot2 = total(this_epix2_sind)          ; total electrons
-    this_ntot = sqrt(this_etot_all + npix_aper*rn_pix^2.)/this_etot0      ; total noise 
+    this_ntot = sqrt(this_etot_all + npix_aper*rn_pix^2.)/this_estartot      ; total noise 
     ;this_ntot1 = sqrt(this_etot1 + npix_aper*rn_pix^2.)/this_etot1      ; total noise 
     ;this_ntot2 = sqrt(this_etot2 + npix_aper*rn_pix^2.)/this_etot2      ; total noise 
-    this_epix_noise = sqrt(this_epix_all_sind + rn_pix^2.)/this_etot0 ; noise per pixel
+    this_epix_noise = sqrt(this_epix_all_sind + rn_pix^2.)/this_estartot ; noise per pixel
 
     ; calculate centroid
     xc0 = this_epix0_sind*xx[this_sind]
@@ -161,10 +163,11 @@ pro calc_noise_cen, $
     ycn = this_epix_noise*yy[this_sind]
     xcennoise[ii] = sqrt(xcen[ii]^2.*this_ntot^2. + total(xcn^2.))
     ycennoise[ii] = sqrt(ycen[ii]^2.*this_ntot^2. + total(ycn^2.))
+   ; if (npix_aper gt 50) then stop
   end
-  xcennoise1 = xcennoise*sqrt(exptime1/exptime)
-  xcennoise2 = xcennoise*sqrt(exptime2/exptime)
-  ycennoise1 = ycennoise*sqrt(exptime1/exptime)
-  ycennoise2 = ycennoise*sqrt(exptime2/exptime)
+  xcennoise1 = xcennoise*sqrt(exptime/exptime1)
+  xcennoise2 = xcennoise*sqrt(exptime/exptime2)
+  ycennoise1 = ycennoise*sqrt(exptime/exptime1)
+  ycennoise2 = ycennoise*sqrt(exptime/exptime2)
 
 end

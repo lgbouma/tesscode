@@ -1,5 +1,5 @@
 function add_hebs, star, eclip, $
-        frac, rad, ph_p, dartstruct, tefftic, $ ;input
+        frac, ph_p, dartstruct, tefftic, $ ;input
   	aspix=aspix, radmax=radmax
 
   sz_ph_p = size(ph_p)

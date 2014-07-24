@@ -1,4 +1,4 @@
-function add_bebs, star, bkgnd, estruct, frac, rad, ph_p, mult, $ ;input
+function add_bebs, star, bkgnd, estruct, frac, ph_p, mult, $ ;input
   	aspix=aspix, radmax=radmax
 
   sz_ph_p = size(ph_p)
