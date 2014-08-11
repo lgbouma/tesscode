@@ -20,7 +20,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, $
   if (keyword_set(downlink)) then downlink=downlink else downlink=16.0d/24.0d
   apo_blank = (dwell_time-downlink)*(1.0-duty_cycle/100.0)
   
-  npix_max = 64
+  npix_max = 6
   npix_min = 3
   mask2d = intarr(16,16)
   mid = indgen(8)+4
