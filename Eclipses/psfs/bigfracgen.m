@@ -11,11 +11,11 @@ nrot = 2;
 nang = 4;
 pixsc = 60;
 
-dat = load('../PSFs/fromDeb/psf_F3P31_ch1.mat');
+dat = load('psf_f3p35.mat');
 onedat = dat.psf_fields(1,1).psfimage;
 imsize = size(onedat);
 imlen = imsize(1);
-[xx yy] = meshgrid(1:imlen, 1:imlen);
+[xx, yy] = meshgrid(1:imlen, 1:imlen);
 
 
 % Time step is 0.2 s, so need 600 points for 2-minute stack

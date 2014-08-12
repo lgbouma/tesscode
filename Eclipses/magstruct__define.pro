@@ -16,6 +16,7 @@ PRO magstruct__define
                  j: 0.0, $  ; apparent
                  icsys: 0.0, $ ; apparent
                  jsys: 0.0, $ ; apparent
+                 ksys: 0.0, $ ; apparent
                  tsys: 0.0, $ ; apparent
                  mvsys: 0.0, $ 
                  micsys: 0.0, $

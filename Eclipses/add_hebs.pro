@@ -1,6 +1,9 @@
 function add_hebs, star, eclip, $
         frac, ph_p, dartstruct, tefftic, $ ;input
   	aspix=aspix, radmax=radmax
+  
+  neb = 0.
+  nspl = 0.
 
   sz_ph_p = size(ph_p)
   nfilt = sz_ph_p[1]
@@ -226,12 +229,14 @@ function add_hebs, star, eclip, $
       eclip.dep2 = dep2
       eclip.dur1 = dur1
       eclip.dur2 = dur2
+      eclip.gress1 = gress1
+      eclip.gress2 = gress2
       eclip.tsys = tsys
       eclip.icsys = icsys
       eclip.jsys = jsys
       eclip.hostid = hostid
       eclip.sep = hostsep ; in pixels
-      ;print, 'Created ', neb, ' eclipsing binaries out of ', n_elements(pris), ' primaries.'
+      print, 'Created ', neb, ' hierarchical eclipsing binaries out of ', n_elements(nspl)
     end ; if ebs
   end ; spl loop
   return, neb

@@ -1,6 +1,8 @@
 function add_bebs, star, bkgnd, estruct, frac, ph_p, mult, $ ;input
   	aspix=aspix, radmax=radmax
 
+  keep = 0
+
   sz_ph_p = size(ph_p)
   nfilt = sz_ph_p[1]
   sz_frac = size(frac)
@@ -186,6 +188,8 @@ function add_bebs, star, bkgnd, estruct, frac, ph_p, mult, $ ;input
       eclip.dep2 = dep2
       eclip.dur1 = dur1
       eclip.dur2 = dur2
+      eclip.gress1 = gress1
+      eclip.gress2 = gress2
       eclip.tsys = tsys
       eclip.icsys = icsys
       eclip.jsys = jsys
@@ -218,7 +222,7 @@ function add_bebs, star, bkgnd, estruct, frac, ph_p, mult, $ ;input
     end
 
     if (total(keep) gt 0) then begin
-      print, 'Keeping ', round(total(keep)), ' binaries'
+      print, 'Keeping ', round(total(keep)), ' blended binaries'
       keepers = where(keep)  
       estruct = estruct[keepers] 
     ;bkteff = estruct.teff1

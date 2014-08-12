@@ -1,5 +1,8 @@
-function add_ebs, star, estruct, frac, ph_p, aspix=aspix, fov=fov
-
+function add_ebs, star, estruct, frac, ph_p, $
+  aspix=aspix, fov=fov, max_depth=max_depth
+  
+  neb = 0.
+ 
   AU_IN_RSUN = 215.093990942D0          ; in solar radii
   REARTH_IN_RSUN = 0.0091705248         ; in solar radii
   MSUN_IN_MEARTH = 332946D0
@@ -167,11 +170,19 @@ function add_ebs, star, estruct, frac, ph_p, aspix=aspix, fov=fov
     eclip.dep2 = dep2
     eclip.dur1 = dur1
     eclip.dur2 = dur2
+    eclip.gress1=gress1
+    eclip.gress2=gress2
     eclip.tsys = tsys
     eclip.icsys = icsys
     eclip.jsys = jsys
-    print, 'Created ', neb, ' eclipsing binaries out of ', n_elements(pris), ' primaries.'
-    estruct=eclip
+    if (keyword_set(max_depth)) then begin
+      gdeb = where((eclip.dep1 lt max_depth) and (eclip.dep2 lt max_depth))
+      if (gdeb[0] ne -1) then begin
+        estruct = eclip[gdeb]
+        neb = n_elements(gdeb)
+      endif else neb=0
+    endif
   end
+  print, 'Created ', neb, ' eclipsing binaries out of ', n_elements(pris), ' primaries.'
   return, neb
 end

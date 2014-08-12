@@ -71,7 +71,7 @@ pro calc_noise_eclip, $
   
   if (v) then print, 'e_star = ', median(e_star)
 
-  ; e/pix from zodi
+  ; e- from zodi
   e_pix_zodi = zodi_ph * geom_area * cos(!DPI * field_angle/180.) *  exptime * npix_aper
 
   if (v) then print, 'vmag_zodi = ', median(vmag_zodi)

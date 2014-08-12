@@ -40,8 +40,8 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, $
   neclipses = n_elements(eclipse)
   print, 'Observing ', neclipses, ' eclipses around ', nstars,' stars.'
   dx = floor(10*randomu(seed, neclipses))
-  dy = floor(10*randomu(seed, neclipses))
-  crind = dx*10 + dy
+  dy = floor(20*randomu(seed, neclipses))
+  crind = dy*5 + dx
   
   ecid = eclipse.hostid
   print, 'Calculating number of eclipses'
@@ -167,21 +167,13 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, $
       minnoise[bebdil] = minnoise[bebdil]*beb_starph/beb_pixph
     end  
     ; Calculate SNR in phase-folded lightcurve
-    et1_folded = double(eclipse[obs].neclip_obs1) * $
-      eclipse[obs].dur1_eff * 24.0 * 3600
-    et2_folded = double(eclipse[obs].neclip_obs2) * $
-      eclipse[obs].dur2_eff * 24.0 * 3600
-    et1_eclp = eclipse[obs].dur1_eff * 24.0 * 3600
-    et2_eclp = eclipse[obs].dur2_eff * 24.0 * 3600
-    eclipse[obs].snr1 = eclipse[obs].dep1_eff / (minnoise) * sqrt(et1_folded/3600.)
-    eclipse[obs].snr2 = eclipse[obs].dep2_eff / (minnoise) * sqrt(et2_folded/3600.)
+    et1_eclp = eclipse[obs].dur1_eff * 24.0
+    et2_eclp = eclipse[obs].dur2_eff * 24.0
+    eclipse[obs].snreclp1 = eclipse[obs].dep1_eff / sqrt(minnoise^2./et1_eclp + (1D-3*star[obsid].var/sqrt(3.))^2.)
+    eclipse[obs].snreclp2 = eclipse[obs].dep2_eff / sqrt(minnoise^2./et2_eclp + (1D-3*star[obsid].var/sqrt(3.))^2.)
+    eclipse[obs].snr1 = eclipse[obs].snreclp1 * sqrt(double(eclipse[obs].neclip_obs1))
+    eclipse[obs].snr2 = eclipse[obs].snreclp2 * sqrt(double(eclipse[obs].neclip_obs2))
     eclipse[obs].snr  = sqrt(eclipse[obs].snr1^2. + eclipse[obs].snr2^2.)
-    eclipse[obs].snreclp1 = eclipse[obs].dep1_eff / (minnoise) * sqrt(et1_eclp/3600.)
-    eclipse[obs].snreclp2 = eclipse[obs].dep2_eff / (minnoise) * sqrt(et2_eclp/3600.)
-;  eclipse[obs].snrgress1 = eclipse[obs].snreclp1 * $
-; 		sqrt(2. * eclipse[obs].neclp_obs1 * $
-;		     REARTH_IN_RSUN * eclipse[obs].r / $
-;		    (6.0*star[obsid].r*(1.0+eclipse[obs].b^2.)))
 ;   decide if it is 'detected'.
   
     ; Dilute
@@ -363,7 +355,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, $
       minnoise = min(noises, ind, dimension=2)
       eclipse[det].npix = ind / n_elements(det) + npix_min
       eclipse[det].dil = dilution[ind]
-      eclipse[det].snrhr = minnoise
+      eclipse[det].snrhr = 1. / minnoise
       for ss=0,ndet-1 do eclipse[det[ss]].star_ph = star_ph[eclipse[det[ss]].npix-1,ss]
       ;eclipse[obs].star_ph = reform(star_ph[eclipse[obs].npix-1, *])
       
@@ -373,23 +365,24 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, $
         for tt=0,nbeb-1 do beb_pixph[tt] = beb_ph[eclipse[det[bebdil[tt]]].npix-1,bebdil[tt]]
         beb_starph = eclipse[det[bebdil]].star_ph
         minnoise[bebdil] = minnoise[bebdil]*beb_starph/beb_pixph
-        eclipse[det[bebdil]].snrhr = minnoise[bebdil]
+        eclipse[det[bebdil]].snrhr = 1. / minnoise[bebdil]
         eclipse[det[bebdil]].dil = eclipse[det[bebdil]].dil*beb_starph/beb_pixph
         ;eclipse[det[bebdil]].dep1_eff =  eclipse[det[bebdil]].dep1_eff*beb_pixph/beb_starph
         ;eclipse[det[bebdil]].dep2_eff =  eclipse[det[bebdil]].dep2_eff*beb_pixph/beb_starph
       end  
       ; Calculate SNR in phase-folded lightcurve
-      et1_folded = double(eclipse[det].neclip_obs1) * $
-      eclipse[det].dur1_eff * 24.0 * 3600
-      et2_folded = double(eclipse[det].neclip_obs2) * $
-      eclipse[det].dur2_eff * 24.0 * 3600
-      et1_eclp = eclipse[det].dur1_eff * 24.0 * 3600
-      et2_eclp = eclipse[det].dur2_eff * 24.0 * 3600
-      eclipse[det].snr1 = eclipse[det].dep1_eff / (minnoise) * sqrt(et1_folded/3600.)
-      eclipse[det].snr2 = eclipse[det].dep2_eff / (minnoise) * sqrt(et2_folded/3600.)
+      et1_eclp = eclipse[det].dur1_eff * 24.0
+      et2_eclp = eclipse[det].dur2_eff * 24.0 
+      eclipse[det].snreclp1 = eclipse[det].dep1_eff / sqrt(minnoise^2./et1_eclp + (1D-3*star[detid].var/sqrt(3.))^2.)
+      eclipse[det].snreclp2 = eclipse[det].dep2_eff / sqrt(minnoise^2./et2_eclp + (1D-3*star[detid].var/sqrt(3.))^2.)
+      eclipse[det].snr1 = eclipse[det].snreclp1 * sqrt(double(eclipse[det].neclip_obs1))
+      eclipse[det].snr2 = eclipse[det].snreclp2 * sqrt(double(eclipse[det].neclip_obs2))
       eclipse[det].snr  = sqrt(eclipse[det].snr1^2. + eclipse[det].snr2^2.)
-      eclipse[det].snreclp1 = eclipse[det].dep1_eff / (minnoise) * sqrt(et1_eclp/3600.)
-      eclipse[det].snreclp2 = eclipse[det].dep2_eff / (minnoise) * sqrt(et2_eclp/3600.)
+     
+      ;eclipse[det].snrgress1 = eclipse[det].snreclp1 * $
+      ;		sqrt(2. * eclipse[det].neclp_obs1 * $
+ ;		     REARTH_IN_RSUN * eclipse[obs].r2 / $
+;		    (6.0*eclipse[obs].r1*(1.0+eclipse[obs].b^2.)))
 
       det1 = where((eclipse.neclip_obs1 ge NTRA_OBS_MIN) and $
 	      (eclipse.snr1 ge SNR_MIN))
