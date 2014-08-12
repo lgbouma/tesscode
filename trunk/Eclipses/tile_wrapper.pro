@@ -2,7 +2,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   numfil = n_elements(fnums)
 
   ; User-adjustable settings (yes, that's you!)
-  frac_file = 'bigfrac24_105_f3p33.fits' ; prf file 
+  frac_file = 'psfs/dfrac24_105_f3p33.fits' ; prf file 
 ;  rad_file = 'bigrad24_105_f3p33.fits' ; radius file 
   ph_file = 'ph_T_filt.fits' ; photon fluxes for T=10 vs Teff
   cr_file = 'crnoise.fits' ; photon fluxes for T=10 vs Teff
@@ -11,33 +11,35 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   fov = 24.
   seg = 13
   skirt=6.
-  effarea = 69.1 ; in cm^2. 
-  aspix = 21.1 ; arcseconds per pixel
-  readnoise= 10.0 ; in e- per subexposure
+  effarea = 54.9 ; 69.1 ;100. ;54.9 ;69.1 ; in cm^2. 
+  readnoise = 10. ;10.0 ; in e- per subexposure
   subexptime = 2.0 ; sec in subexposure
   thresh = 7.0 ; detection threshold in phase-folded lightcurve
   tranmin = 2.0 ; minimum number of eclipses for detection
   min_depth=1D-6 ; minimum transit depth to retain from eclipses
-  sys_limit=60. ; in ppm/hr
+  max_depth=1D-1 ; maximum transit depth to retain from EBs
+  sys_limit=60. ;60. in ppm/hr
   if (keyword_set(n_trial)) then n_trial=n_trial else n_trial = 10 ; number of trials in this run
   ffi_len=30. ; in minutes
-  ps_len=30. ; in minutes
-  duty_cycle=100.+fltarr(numfil)
-  nps = 100000
-  saturation=150000.
-  CCD_PIX = 4096.
+  ps_len=2. ; in minutes
+  duty_cycle=100.+fltarr(numfil) ; Time blanked around apogee
+  ps_only = 1 ; Only run postage stamps?
+  saturation=150000. ; e-
+  CCD_PIX = 4096. ; entire camera
+  GAP_PIX = 2.0/0.015 ; for 2 mm gap
   orbit_period = 13.66d0 ; days per orbit
-  downlink = 16.0d0/24.0d0 ; downlink time in days
+  downlink = 3.66 ;16.0d0/24.0d0 ;3.66 for level1 ; downlink time in days
+  aspix = fov*3600/(CCD_PIX+GAP_PIX) ;20.43 ; arcseconds per pixel
   if (keyword_set(eclass)) then eclass = eclass else $
-  eclass = [	0, $ ; Planets
+  eclass = [	1, $ ; Planets
 	    	0, $ ; EBs
-		1, $ ; BEBs
+		0, $ ; BEBs
 		0  ] ; HEBs
 
   ; Don't phuck with physics, though
   REARTH_IN_RSUN = 0.0091705248
   AU_IN_RSUN = 215.093990942
-  nparam = 55 ; output table width
+  nparam = 56 ; output table width
 
   ; Here we go!
   numtargets = lonarr(numfil)
@@ -61,7 +63,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   ang2pix_ring, 16, theta, phi, ipring
    
   totdet = 0L
-  star_out = dblarr(1E7*n_trial,nparam)
+  star_out = dblarr(1E7+1E6*n_trial,nparam)
   for ii=0, numfil-1 do begin
     ; Gather the .sav files
     print, 'Restoring files for tile ', fnums[ii]
@@ -69,20 +71,21 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
     restore, fname
     targets = star
     numtargets[ii] = n_elements(targets)
-    fname = fpath+'bk'+string(fnums[ii], format='(I04)')+'.sav'
-    restore, fname
-    bkgnds = star[where(star.mag.k gt 15)]
-    numbkgnd[ii] = n_elements(bkgnds)
     fname = fpath+'dp'+string(fnums[ii], format='(I04)')+'.sav'
     restore, fname
-    deeps = star[where(star.mag.t gt 21)]
+    bkgnds = star ;[where(star.mag.ksys gt 15)]
+    numbkgnd[ii] = n_elements(bkgnds)
+    fname = fpath+'bk'+string(fnums[ii], format='(I04)')+'.sav'
+    restore, fname
+    deeps = star ;[where(star.mag.tsys gt 21)]
     numdeeps[ii] = n_elements(deeps)
     delvar, star
-   
+    
     ; Choose which stars are postage stamps vs ffis
     targets.ffi = 1
     pri = where(targets.pri eq 1)
-    selpri = ps_sel(targets[pri].mag.t, targets[pri].teff, targets[pri].m, targets[pri].r, ph_fits)
+    selpri = ps_sel(targets[pri].mag.t, targets[pri].teff, targets[pri].m, targets[pri].r, ph_fits, $
+			geom_area=effarea, rn_pix=10.)
     if (selpri[0] ne -1) then begin 
       targets[pri[selpri]].ffi=0
       secffi = targets[pri[selpri]].companion.ind
@@ -90,18 +93,22 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
       numps[ii] = numps[ii]+n_elements(selpri)
     end
     sing = where((targets.pri eq 0) and (targets.sec eq 0))
-    selsing = ps_sel(targets[sing].mag.t, targets[sing].teff, targets[sing].m, targets[sing].r, ph_fits)
+    selsing = ps_sel(targets[sing].mag.t, targets[sing].teff, targets[sing].m, targets[sing].r, ph_fits, $
+			geom_area=effarea, rn_pix=10.)
     if (selsing[0] ne -1) then begin 
       targets[sing[selsing]].ffi=0
       numps[ii] = numps[ii]+n_elements(selsing)
     end
+   
+    ;if (ps_only) then targets = targets[where(targets.ffi ne 1)]
+   
     ecliplen_tot = 0L
     for jj=0,n_trial-1 do begin
       ; re-radomize the inclination
       targets.cosi = -1 + 2.0*randomu(seed, n_elements(targets))
       ; Add eclipses
       ecliplen =  make_eclipse(targets, bkgnds, eclip_trial, frac_fits, $
-	 ph_fits, dartstruct, tic_fits, eclass, min_depth=min_depth)
+	 ph_fits, dartstruct, tic_fits, eclass, min_depth=min_depth, max_depth=max_depth, ps_only=ps_only)
       if (ecliplen gt 0) then begin
         eclip_trial.trial = jj + 1
         ; Add coordinates to the eclipses
@@ -133,14 +140,14 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
       ; Survey: figure out npointings and field angles
       eclip_survey, seg, fov, eclip, offset=skirt
       ; Determine FOV index
-      fov_ind = intarr(n_elements(eclip))
-      fov_ind[where((eclip.coord.fov_r ge 0.104*CCD_PIX) and $ ; was 104
-                (eclip.coord.fov_r lt 0.365*CCD_PIX))] = 1   ; was 391
-      fov_ind[where((eclip.coord.fov_r ge 0.365*CCD_PIX) and $
-                (eclip.coord.fov_r lt 0.592*CCD_PIX))] = 2
-      fov_ind[where(eclip.coord.fov_r  ge 0.592*CCD_PIX)] = 3
-      eclip.coord.field_angle = eclip.coord.fov_r / CCD_PIX * fov
-      eclip.coord.fov_ind=fov_ind
+;      fov_ind = intarr(n_elements(eclip))
+;      fov_ind[where((eclip.coord.fov_r ge 0.104*CCD_PIX) and $ ; was 104
+;                (eclip.coord.fov_r lt 0.365*CCD_PIX))] = 1   ; was 391
+;      fov_ind[where((eclip.coord.fov_r ge 0.365*CCD_PIX) and $
+;                (eclip.coord.fov_r lt 0.592*CCD_PIX))] = 2
+;      fov_ind[where(eclip.coord.fov_r  ge 0.592*CCD_PIX)] = 3
+;      eclip.coord.field_angle = eclip.coord.fov_r / CCD_PIX * fov
+;      eclip.coord.fov_ind=fov_ind
 
     ; Dilute
     ;print, "Diluting with binary companions"
@@ -177,8 +184,8 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
                 [eclip[det].dep1_eff], [eclip[det].dur1], [eclip[det].neclip_obs1], $
                 [eclip[det].teff1], [eclip[det].m1], [eclip[det].r1], $ 
                 [eclip[det].dep2_eff], [eclip[det].dur2], [eclip[det].neclip_obs2], $
-                [eclip[det].snreclp1], [eclip[det].snrgress1], $
-                [eclip[det].snreclp2], [eclip[det].snrgress2], $
+                [eclip[det].snreclp1], [eclip[det].gress1], $
+                [eclip[det].snreclp2], [eclip[det].gress2], $
                 [eclip[det].k], [eclip[det].snrhr], $
 	        [eclip[det].star_ph], [eclip[det].bk_ph], [eclip[det].zodi_ph], $
                 [eclip[det].npix], [eclip[det].dil], [targets[detid].ffi], [eclip[det].npointings] ,$
@@ -187,6 +194,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
                 [eclip[det].icsys],  [eclip[det].tsys],  [eclip[det].jsys], $ 
                 [eclip[det].censhift1], [eclip[det].censhift2], $
                 [eclip[det].cenerr1], [eclip[det].cenerr2], $
+                [targets[detid].var], $
                 [bins], [targets[detid].companion.sep], [targets[targets[detid].companion.ind].mag.t]]
         idx = lindgen(ndet) + totdet
         star_out[idx,*] = tmp_star

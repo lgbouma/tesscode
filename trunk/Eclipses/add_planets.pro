@@ -32,8 +32,8 @@ function add_planets, star, pstruct, frac, ph_p, $
 
   if (keyword_set(verbose)) then verbose=1 else verbose=0     
  
-     period_boundary = [0.8, 2.0, 3.4, 5.9, 10.0, 17.0, 29.0, 50.0, 85.0, 145.0, 245.0, 418.0]
-     radius_boundary = [0.8, 1.25, 2.0, 4.0, 6.0, 22.0]
+     fressin_period = [0.8, 2.0, 3.4, 5.9, 10.0, 17.0, 29.0, 50.0, 85.0, 145.0, 245.0, 418.0]
+     fressin_radius = [0.8, 1.25, 2.0, 4.0, 6.0, 22.0]
      planet_type = ['Earths', 'Super-Earths', 'Small Neptunes', 'Large Neptunes', 'Giants']
 
      rate_fressin = dblarr(11,5) ; period bin, radius bin
@@ -50,7 +50,17 @@ function add_planets, star, pstruct, frac, ph_p, $
      rate_fressin[10,*] =[0.0,  0.0,  0.0,   0.24,  1.05]
      rate_fressin = rate_fressin/100.
 
-     rate_dressing = rate_fressin ;just for now
+     dressing_period = [0.68, 1.2, 2.0, 3.4, 5.9, 10., 17., 29., 50.]
+     dressing_radius = [0.5, 0.7, 1.0, 1.4, 2.0, 2.8]
+     rate_dressing = dblarr(8,5)
+     rate_dressing[0,*] = [0.0026, 0.0020, 0.0039, 0.0, 0.0]
+     rate_dressing[1,*] = [0.0, 0.0068, 0.011, 0.0019, 0.0023]
+     rate_dressing[2,*] = [0.011, 0.013, 0.015, 0.011, 0.0]
+     rate_dressing[3,*] = [0.0, 0.037, 0.028, 0.016, 0.0046]
+     rate_dressing[4,*] = [0.0, 0.051, 0.050, 0.051, 0.031]
+     rate_dressing[5,*] = [0.0, 0.038, 0.045, 0.030, 0.039]
+     rate_dressing[6,*] = [0.0, 0.065, 0.048, 0.066, 0.11]
+     rate_dressing[7,*] = [0.0, 0.0, 0.084, 0.027, 0.0]
 
      nplanets = total(round(rate_fressin * nhotstars)) + $
                 total(round(rate_dressing * ncoolstars))
@@ -60,15 +70,15 @@ function add_planets, star, pstruct, frac, ph_p, $
      planet_per = dblarr(nplanets)
      planet_hid = lonarr(nplanets)
      idx0 = 0L
-     for i=10,0,-1 do begin
-        for j=4,0,-1 do begin
+     for i=(n_elements(fressin_period)-2),0,-1 do begin
+        for j=(n_elements(fressin_radius)-2),0,-1 do begin
            binplanets = round(rate_fressin[i,j] * nhotstars)
            if (binplanets gt 0) then begin              
 	      ;tmp_planet = replicate(template_planet, binplanets)
               hostids = hotstars[floor(double(nhotstars)*randomu(seed, binplanets))]
               if(j eq 0) then radpow = 0.0 else radpow = -1.7
-              randomp, periods, -1.0, binplanets, range_x = [period_boundary[i], period_boundary[i+1]], seed=seed
-              randomp, radii, radpow, binplanets, range_x = [radius_boundary[j], radius_boundary[j+1]], seed=seed
+              randomp, periods, -1.0, binplanets, range_x = [fressin_period[i], fressin_period[i+1]], seed=seed
+              randomp, radii, radpow, binplanets, range_x = [fressin_radius[j], fressin_radius[j+1]], seed=seed
               ;tmp_planet.r = radii
               ;tmp_planet.p = periods
               idx = lindgen(binplanets) + idx0
@@ -82,15 +92,15 @@ function add_planets, star, pstruct, frac, ph_p, $
         endfor
      endfor
      if (keyword_set(dressing)) then begin
-       for i=10,0,-1 do begin
-        for j=4,0,-1 do begin
+       for i=(n_elements(dressing_period)-2),0,-1 do begin
+        for j=(n_elements(dressing_radius)-2),0,-1 do begin
            binplanets = round(rate_dressing[i,j] * ncoolstars)
            if (binplanets gt 0) then begin
               ;tmp_planet = replicate(template_planet, binplanets)
               hostids = coolstars[floor(double(ncoolstars)*randomu(seed, binplanets))]
-              if(j eq 0) then radpow = 0.0 else radpow = -1.7
-              randomp, periods, -1.0, binplanets, range_x = [period_boundary[i], period_boundary[i+1]], seed=seed
-              randomp, radii, radpow, binplanets, range_x = [radius_boundary[j], radius_boundary[j+1]], seed=seed
+              ;if(j eq 0) then radpow = 0.0 else radpow = -1.7
+              randomp, periods, -1.0, binplanets, range_x = [dressing_period[i], dressing_period[i+1]], seed=seed
+              randomp, radii, -1.0, binplanets, range_x = [dressing_radius[j], dressing_radius[j+1]], seed=seed
               ;tmp_planet.r = radii
               ;tmp_planet.p = periods
               idx = lindgen(binplanets) + idx0
@@ -165,6 +175,11 @@ function add_planets, star, pstruct, frac, ph_p, $
     planet_eclip.dep2 = (planet_eclip.teff2/planet_eclip.teff1)*(planet_eclip.r2/planet_eclip.r1 )^2.0
     planet_eclip.dur1 = planet_eclip.r1 * planet_eclip.p * sqrt(1.-(planet_eclip.b)^2.) / (!PI*planet_eclip.a*AU_IN_RSUN)
     planet_eclip.dur2 = planet_eclip.r1 * planet_eclip.p * sqrt(1.-(planet_eclip.b)^2.) / (!PI*planet_eclip.a*AU_IN_RSUN)
+    planet_eclip.gress1 = planet_eclip.r2 * planet_eclip.p / $
+	(!PI*planet_eclip.a*AU_IN_RSUN*sqrt(1.-(planet_eclip.b)^2.))
+    planet_eclip.gress2 = planet_eclip.r2 * planet_eclip.p / $
+	(!PI*planet_eclip.a*AU_IN_RSUN*sqrt(1.-(planet_eclip.b)^2.))
+
 ;  planet_eclip.durpar = planet[tra].r * $
 ;	REARTH_IN_RSUN * planet_eclip[tra].p / $
 ;        sqrt(1.-(planet_eclip[tra].b)^2.) / $

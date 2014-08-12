@@ -140,10 +140,10 @@ pro calc_noise_cen, $
     this_estartot = total(this_estar0_sind)          ; total electrons
     this_etot1 = total(this_epix1_sind)          ; total electrons
     this_etot2 = total(this_epix2_sind)          ; total electrons
-    this_ntot = sqrt(this_etot_all + npix_aper*rn_pix^2.)/this_estartot      ; total noise 
+    this_ntot = sqrt(this_etot_all + npix_aper*rn_pix^2. + cr_noise[ii]^2.)/this_estartot      ; total noise 
     ;this_ntot1 = sqrt(this_etot1 + npix_aper*rn_pix^2.)/this_etot1      ; total noise 
     ;this_ntot2 = sqrt(this_etot2 + npix_aper*rn_pix^2.)/this_etot2      ; total noise 
-    this_epix_noise = sqrt(this_epix_all_sind + rn_pix^2.)/this_estartot ; noise per pixel
+    this_epix_noise = sqrt(this_epix_all_sind + rn_pix^2. + cr_noise[ii]^2.)/this_estartot ; noise per pixel
 
     ; calculate centroid
     xc0 = this_epix0_sind*xx[this_sind]

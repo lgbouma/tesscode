@@ -1,5 +1,5 @@
 PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
-	icmax=icmax, dmax=dmax, homies=homies, dbl=dbl
+	icmax=icmax, dmax=dmax, homies=homies, dbl=dbl, kmin=kmin, tmin=tmin
   dat = mrdfits(fname, 0, h, /SILENT)
   print, fname
 
@@ -19,6 +19,8 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
   mp_max = [     0.1, 0.6, 0.8, 1.0, 1.4, 99.]  
   nmp = n_elements(mp_min)
   mf = [0.22, 0.26, 0.34, 0.41, 0.50, 0.75]
+  vtf = [100., 4500., 5000., 5500., 6000., 1D6]
+  var = [0.03, 0.02, 0.01, 0.01, 0.01] ; Basri 2013
   abar = [4.5, 5.3, 20.,  45.,  45., 350]
   psig = [0.5, 1.3, 2.0,  2.3,  2.3, 3.0]
   qgam = [4.0, 0.4, 0.35, 0.3, 0.3, -0.5]
@@ -27,28 +29,36 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
 ;  print, qnorm
 ;  readcol, fname, gc, logA, z, mini, logL, logT, logG, dm, av, $
 ;	comp, bol, t, j, h, ks, kp, g, r, i, z, dd, mnow 
-  gc   = dat[*,0]
-  age  = 10.^(dat[*,1]-9.0)
-  feh  = alog10(dat[*,2]/19.0)
-  mini = dat[*,3] 
-  logL = dat[*,4] 
-  teff = 10.^(dat[*,5])
-  logG = dat[*,6] 
-  dm   = dat[*,7] 
-  av   = dat[*,8]
   comp = dat[*,9]
-  bol  = dat[*,10]
   t    = dat[*,11] 
-  j    = dat[*,12] 
-  h    = dat[*,13] 
   ks   = dat[*,14] 
-  kp   = dat[*,15] 
-  g    = dat[*,16] 
-  r    = dat[*,17] 
-  i    = dat[*,18] 
-  z    = dat[*,19] 
-  dd   = dat[*,20] 
-  mnow = dat[*,21] 
+  if (keyword_set(kmin)) then gd = where(ks gt kmin and comp eq 1) $
+  else if (keyword_set(tmin)) then gd = where(t gt tmin and comp eq 1) $
+  else gd = where(comp eq 1)
+  gd = [gd, gd+1] ; get the secondaries
+
+  gc   = dat[gd,0]
+  age  = 10.^(dat[gd,1]-9.0)
+  feh  = alog10(dat[gd,2]/19.0)
+  mini = dat[gd,3] 
+  logL = dat[gd,4] 
+  teff = 10.^(dat[gd,5])
+  logG = dat[gd,6] 
+  dm   = dat[gd,7] 
+  av   = dat[gd,8]
+  comp = dat[gd,9]
+  bol  = dat[gd,10]
+  t    = dat[gd,11] 
+  j    = dat[gd,12] 
+  h    = dat[gd,13] 
+  ks   = dat[gd,14] 
+  kp   = dat[gd,15] 
+  g    = dat[gd,16] 
+  r    = dat[gd,17] 
+  i    = dat[gd,18] 
+  z    = dat[gd,19] 
+  dd   = dat[gd,20] 
+  mnow = dat[gd,21] 
 
   ndat = n_elements(mini)
   
@@ -57,9 +67,10 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
   rad = sqrt(m)/sqrt(10.^logG/27542.3)
   v = g - 0.5784*(g - r) - 0.0038 ;Lupton 2005
   ic = i - 0.3780*(i - z) - 0.3974 ; Lupton 2005
-  icsys = ic
-  jsys = j
-  tsys = t
+  ;icsys = ic
+  ;jsys = j
+  ;ksys = ks
+  ;tsys = t
   mv = v - av - dm
   mic = ic - 0.479*av - dm
   mj = j - 0.282*av - dm
@@ -92,9 +103,10 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
     j[darts] = newj + newdm + 0.282*newav
     h[darts] = newh + newdm + 0.190*newav
     ks[darts] = newks + newdm + 0.114*newav
-    icsys[darts] = ic[darts]
-    jsys[darts] = j[darts]
-    tsys[darts] = t[darts]
+    ;icsys[darts] = ic[darts]
+    ;jsys[darts] = j[darts]
+    ;ksys[darts] = ks[darts]
+    ;tsys[darts] = t[darts]
   endif
 
   pris = where(comp eq 1)
@@ -169,6 +181,7 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
   star.mag.mj = mj[pris] ;star.mag.j - 0.282*star.mag.av - star.mag.dm
   star.mag.icsys = ic[pris] ; star.mag.ic
   star.mag.jsys = j[pris] ;star.mag.j
+  star.mag.ksys = ks[pris] ;star.mag.j
   star.mag.tsys = t[pris] ;star.mag.t
   star.mag.mvsys = mv[pris] ;bin_star.mag.v - bin_star.mag.av - bin_star.mag.dm
   star.mag.micsys = mic[pris] ; bin_star.mag.ic - 0.479*bin_star.mag.av - bin_star.mag.dm
@@ -283,6 +296,8 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
       bin_star.mag.icsys = star[sind].mag.icsys
       star[sind].mag.jsys =  -2.5*alog10(10.^(-0.4*bin_star.mag.j) + 10.^(-0.4*star[sind].mag.j))
       bin_star.mag.jsys = star[sind].mag.jsys
+      star[sind].mag.ksys =  -2.5*alog10(10.^(-0.4*bin_star.mag.k) + 10.^(-0.4*star[sind].mag.k))
+      bin_star.mag.ksys = star[sind].mag.ksys
       star[sind].mag.tsys =  -2.5*alog10(10.^(-0.4*bin_star.mag.t) + 10.^(-0.4*star[sind].mag.t))
       bin_star.mag.tsys = star[sind].mag.tsys
       
@@ -365,6 +380,14 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
       star = struct_append(star, bin_star)
       delvar, bin_star
     endif
+  end
+
+  for ii=0, n_elements(vtf)-2 do begin
+    thisteff = where(star.teff ge vtf[ii] and star.teff lt vtf[ii+1])
+    if (thisteff[0] ne -1) then begin
+      u = randomu(seed, n_elements(thisteff))
+      star[thisteff].var = var[ii]*10.^u
+    end
   end
   
   ; Output for making distance-limited or mag-limited catalogs

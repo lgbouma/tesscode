@@ -8,7 +8,8 @@ PRO starstruct__define
                   teff: 0.0, $  ; Effective T (Kelvin)
                   ;oldteff: 0.0, $  ; Effective T (Kelvin)
                   cosi: 0.0, $  ; cos inclination of planets
-		  age: 0.0, $   ; in Gyr
+                  var: 0.0, $   ; 3 hr. variability (ppt)
+   		  age: 0.0, $   ; in Gyr
 		  mini: 0.0, $
 		  feh: 0.0, $
  	          logg: 0.0, $
