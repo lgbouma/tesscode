@@ -98,9 +98,9 @@ function add_planets, star, pstruct, frac, ph_p, $
            if (binplanets gt 0) then begin
               ;tmp_planet = replicate(template_planet, binplanets)
               hostids = coolstars[floor(double(ncoolstars)*randomu(seed, binplanets))]
-              ;if(j eq 0) then radpow = 0.0 else radpow = -1.7
+              if(j lt 2) then radpow = 0.0 else radpow = -1.7
               randomp, periods, -1.0, binplanets, range_x = [dressing_period[i], dressing_period[i+1]], seed=seed
-              randomp, radii, -1.0, binplanets, range_x = [dressing_radius[j], dressing_radius[j+1]], seed=seed
+              randomp, radii, radpow, binplanets, range_x = [dressing_radius[j], dressing_radius[j+1]], seed=seed
               ;tmp_planet.r = radii
               ;tmp_planet.p = periods
               idx = lindgen(binplanets) + idx0
