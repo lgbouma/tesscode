@@ -1,4 +1,4 @@
-pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, $
+pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, var, $
 	aspix=aspix, effarea=effarea, readnoise=readnoise, $
         tranmin=tranmin, thresh=thresh, $
 	ps_len=ps_len, ffi_len=ffi_len, saturation=saturation, $
@@ -42,6 +42,10 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, $
   dx = floor(10*randomu(seed, neclipses))
   dy = floor(20*randomu(seed, neclipses))
   crind = dy*5 + dx
+
+  vtf = [0., 4500., 5000., 6000., 1D7]
+  ;starvar = fltarr(n_elements(eclipse))
+
   
   ecid = eclipse.hostid
   print, 'Calculating number of eclipses'
@@ -61,6 +65,15 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, $
   dr1 = (m1-mnow)/(2.*!dpi) + 4.0
   dr2 = (m2-mnow)/(2.*!dpi) + 4.0
   
+  ; Assign variability to eclipses
+  for ii=0, n_elements(vtf)-2 do begin
+    thisteff = where(star[ecid].teff ge vtf[ii] and star[ecid].teff lt vtf[ii+1])
+    if (thisteff[0] ne -1) then begin
+      thisvar = var[*,ii]
+      eclipse[thisteff].var = thisvar[crind[thisteff]]
+    end
+  end
+
 ;  toolow = where(m1 lt 0)
 ;  if (toolow[0] ne -1) then m1(toolow) + m1(toolow)+1.0
 ;  toolow = where(m2 lt 0)
@@ -169,8 +182,8 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, $
     ; Calculate SNR in phase-folded lightcurve
     et1_eclp = eclipse[obs].dur1_eff * 24.0
     et2_eclp = eclipse[obs].dur2_eff * 24.0
-    eclipse[obs].snreclp1 = eclipse[obs].dep1_eff / sqrt(minnoise^2./et1_eclp + (1D-3*star[obsid].var/sqrt(3.))^2.)
-    eclipse[obs].snreclp2 = eclipse[obs].dep2_eff / sqrt(minnoise^2./et2_eclp + (1D-3*star[obsid].var/sqrt(3.))^2.)
+    eclipse[obs].snreclp1 = eclipse[obs].dep1_eff / sqrt(minnoise^2./et1_eclp + eclipse[obs].var^2.)
+    eclipse[obs].snreclp2 = eclipse[obs].dep2_eff / sqrt(minnoise^2./et2_eclp + eclipse[obs].var^2.)
     eclipse[obs].snr1 = eclipse[obs].snreclp1 * sqrt(double(eclipse[obs].neclip_obs1))
     eclipse[obs].snr2 = eclipse[obs].snreclp2 * sqrt(double(eclipse[obs].neclip_obs2))
     eclipse[obs].snr  = sqrt(eclipse[obs].snr1^2. + eclipse[obs].snr2^2.)
@@ -373,8 +386,8 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, $
       ; Calculate SNR in phase-folded lightcurve
       et1_eclp = eclipse[det].dur1_eff * 24.0
       et2_eclp = eclipse[det].dur2_eff * 24.0 
-      eclipse[det].snreclp1 = eclipse[det].dep1_eff / sqrt(minnoise^2./et1_eclp + (1D-3*star[detid].var/sqrt(3.))^2.)
-      eclipse[det].snreclp2 = eclipse[det].dep2_eff / sqrt(minnoise^2./et2_eclp + (1D-3*star[detid].var/sqrt(3.))^2.)
+      eclipse[det].snreclp1 = eclipse[det].dep1_eff / sqrt(minnoise^2./et1_eclp + eclipse[det].var^2.)
+      eclipse[det].snreclp2 = eclipse[det].dep2_eff / sqrt(minnoise^2./et2_eclp + eclipse[det].var^2.)
       eclipse[det].snr1 = eclipse[det].snreclp1 * sqrt(double(eclipse[det].neclip_obs1))
       eclipse[det].snr2 = eclipse[det].snreclp2 * sqrt(double(eclipse[det].neclip_obs2))
       eclipse[det].snr  = sqrt(eclipse[det].snr1^2. + eclipse[det].snr2^2.)

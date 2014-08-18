@@ -8,6 +8,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   cr_file = 'crnoise.fits' ; photon fluxes for T=10 vs Teff
   tic_file = 'tic_teff.fits'
   dart_file = 'dartmouth_grid.sav'
+  var_filt = 'starvar.fits'
   fov = 24.
   seg = 13
   skirt=6.
@@ -50,6 +51,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   frac_fits = mrdfits(frac_file)
 ;  rad_fits = mrdfits(rad_file)/60. ; put into pixels
   ph_fits = mrdfits(ph_file)
+  var_fits = mrdfits(var_file)
   cr_fits = fltarr(100,64)
 ;  cr_fits = mrdfits(cr_file)
   restore, dart_file
@@ -164,7 +166,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
       ;dilute_eclipse, eclip, deeps, frac_fits, rad_fits, ph_fits, aspix=aspix, sq_deg=0.0134, radmax=2.0
       ; Observe
       eclip_observe, eclip, targets, bkgnds, deeps, $
-        frac_fits, ph_fits, cr_fits, $
+        frac_fits, ph_fits, cr_fits, var_fits, $
         aspix=aspix, effarea=effarea, sys_limit=sys_limit, $ ;infil=sp_name,outfile=spo_name
         readnoise=readnoise, thresh=thresh, tranmin=tranmin, ps_len=ps_len, $
         duty_cycle=duty_cycle[ii], ffi_len=ffi_len, saturation=saturation, $
@@ -194,7 +196,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
                 [eclip[det].icsys],  [eclip[det].tsys],  [eclip[det].jsys], $ 
                 [eclip[det].censhift1], [eclip[det].censhift2], $
                 [eclip[det].cenerr1], [eclip[det].cenerr2], $
-                [targets[detid].var], $
+                [eclipse[det].var], $
                 [bins], [targets[detid].companion.sep], [targets[targets[detid].companion.ind].mag.t]]
         idx = lindgen(ndet) + totdet
         star_out[idx,*] = tmp_star

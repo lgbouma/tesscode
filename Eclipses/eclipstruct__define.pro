@@ -58,6 +58,7 @@ PRO eclipstruct__define
                     sep: 0.0, $         ; separation (in pixels) of eclipse from host
                     sat: 0, $        ; saturation flag
                     dil: 0.0, $        ; dilution ratio
+                    var: 0.0, $        ; host star variability
                     hostid: 0L $
                     }
 end
