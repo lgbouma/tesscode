@@ -155,7 +155,7 @@ function add_planets, star, pstruct, frac, ph_p, $
     planet_eclip = replicate({eclipstruct}, ntra)
     planet_eclip.class=1
     planet_eclip.m1 = star[traid].m
-    planet_eclip.m2 = planet_m[tra]
+    planet_eclip.m2 = planet_m[tra]/MSUN_IN_MEARTH
     planet_eclip.k = planet_k[tra]
     planet_eclip.r1 = star[traid].r
     planet_eclip.r2 = planet_rad[tra]*REARTH_IN_RSUN

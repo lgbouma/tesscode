@@ -60,8 +60,9 @@ function add_bebs, star, bkgnd, estruct, frac, ph_p, mult, $ ;input
     b1 = ars*cosi/r1*(1.0-ecc^2.)/(1.0+ecc*sin(w))
     b2 = ars*cosi/r2*(1.0-ecc^2.)/(1.0-ecc*sin(w))
 
+    roche = (3.*m1/m2)^(1./3.)*r2
     ; Where are the (non-contact) eclipsing systems? 
-    bin_ecl = where((r1*abs(b1) lt (r1+r2)) and (ars gt (r1+r2)))
+    bin_ecl = where((r1*abs(b1) lt (r1+r2)) and (ars gt roche))
     
     if (bin_ecl[0] ne -1) then begin
       neb = n_elements(bin_ecl)
