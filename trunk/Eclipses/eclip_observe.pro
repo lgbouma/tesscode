@@ -43,7 +43,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, var, $
   dy = floor(20*randomu(seed, neclipses))
   crind = dy*5 + dx
 
-  vtf = [0., 4500., 5000., 6000., 1D7]
+  vtf = [1D7, 6000., 5000., 4500., 1D0]
   ;starvar = fltarr(n_elements(eclipse))
 
   
@@ -67,7 +67,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, var, $
   
   ; Assign variability to eclipses
   for ii=0, n_elements(vtf)-2 do begin
-    thisteff = where(star[ecid].teff ge vtf[ii] and star[ecid].teff lt vtf[ii+1])
+    thisteff = where(star[ecid].teff lt vtf[ii] and star[ecid].teff ge vtf[ii+1])
     if (thisteff[0] ne -1) then begin
       thisvar = var[*,ii]
       eclipse[thisteff].var = thisvar[crind[thisteff]]

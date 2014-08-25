@@ -2,17 +2,17 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   numfil = n_elements(fnums)
 
   ; User-adjustable settings (yes, that's you!)
-  frac_file = 'psfs/dfrac24_105_f3p33.fits' ; prf file 
+  frac_file = 'psfs/dfrac_t75_f3p31.fits' ; prf file 
 ;  rad_file = 'bigrad24_105_f3p33.fits' ; radius file 
   ph_file = 'ph_T_filt.fits' ; photon fluxes for T=10 vs Teff
   cr_file = 'crnoise.fits' ; photon fluxes for T=10 vs Teff
   tic_file = 'tic_teff.fits'
   dart_file = 'dartmouth_grid.sav'
-  var_filt = 'starvar.fits'
+  var_file = 'starvar.fits'
   fov = 24.
   seg = 13
   skirt=6.
-  effarea = 54.9 ; 69.1 ;100. ;54.9 ;69.1 ; in cm^2. 
+  effarea = 69.1 ;54.9 ; 69.1 ;100. ;54.9 ;69.1 ; in cm^2. 
   readnoise = 10. ;10.0 ; in e- per subexposure
   subexptime = 2.0 ; sec in subexposure
   thresh = 7.0 ; detection threshold in phase-folded lightcurve
@@ -24,12 +24,12 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   ffi_len=30. ; in minutes
   ps_len=2. ; in minutes
   duty_cycle=100.+fltarr(numfil) ; Time blanked around apogee
-  ps_only = 1 ; Only run postage stamps?
+  ps_only = 0 ; Only run postage stamps?
   saturation=150000. ; e-
   CCD_PIX = 4096. ; entire camera
   GAP_PIX = 2.0/0.015 ; for 2 mm gap
   orbit_period = 13.66d0 ; days per orbit
-  downlink = 3.66 ;16.0d0/24.0d0 ;3.66 for level1 ; downlink time in days
+  downlink = 16.0d0/24.0d0 ;3.66 for level1 ; downlink time in days
   aspix = fov*3600/(CCD_PIX+GAP_PIX) ;20.43 ; arcseconds per pixel
   if (keyword_set(eclass)) then eclass = eclass else $
   eclass = [	1, $ ; Planets
@@ -87,7 +87,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
     targets.ffi = 1
     pri = where(targets.pri eq 1)
     selpri = ps_sel(targets[pri].mag.t, targets[pri].teff, targets[pri].m, targets[pri].r, ph_fits, $
-			geom_area=effarea, rn_pix=10.)
+			geom_area=54.9, rn_pix=10.)
     if (selpri[0] ne -1) then begin 
       targets[pri[selpri]].ffi=0
       secffi = targets[pri[selpri]].companion.ind
@@ -96,7 +96,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
     end
     sing = where((targets.pri eq 0) and (targets.sec eq 0))
     selsing = ps_sel(targets[sing].mag.t, targets[sing].teff, targets[sing].m, targets[sing].r, ph_fits, $
-			geom_area=effarea, rn_pix=10.)
+			geom_area=54.9, rn_pix=10.)
     if (selsing[0] ne -1) then begin 
       targets[sing[selsing]].ffi=0
       numps[ii] = numps[ii]+n_elements(selsing)
@@ -196,7 +196,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
                 [eclip[det].icsys],  [eclip[det].tsys],  [eclip[det].jsys], $ 
                 [eclip[det].censhift1], [eclip[det].censhift2], $
                 [eclip[det].cenerr1], [eclip[det].cenerr2], $
-                [eclipse[det].var], $
+                [eclip[det].var], $
                 [bins], [targets[detid].companion.sep], [targets[targets[detid].companion.ind].mag.t]]
         idx = lindgen(ndet) + totdet
         star_out[idx,*] = tmp_star

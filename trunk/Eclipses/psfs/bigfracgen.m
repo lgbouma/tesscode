@@ -11,7 +11,10 @@ nrot = 2;
 nang = 4;
 pixsc = 60;
 
-dat = load('psf_f3p35.mat');
+dat = load('psf_TRACED_RAYS_T85_FOCUS_3P310S.TXT.mat');
+fout = 'dfrac_t85_f3p31.fits';
+dither = true;
+
 onedat = dat.psf_fields(1,1).psfimage;
 imsize = size(onedat);
 imlen = imsize(1);
@@ -37,10 +40,14 @@ for rr=1:nrot
       frac = zeros(10,10,npix);
       thisdat = dat.psf_fields(mm,nn).psfimage;
       shiftdat = zeros(size(thisdat));
-      for jj=1:njit
+      if dither
+        for jj=1:njit
          if (~mod(jj,100)) display(num2str(jj)); end
          shiftdat = shiftdat + ...
              interp2(xx, yy, thisdat, xx+adx(jj), yy+ady(jj), 'linear', 0);       
+        end
+      else
+        shiftdat = thisdat;
       end
       if (rr==2 || mm==4)
           shiftdat = imrotate(shiftdat, 45, 'bilinear', 'crop');
@@ -56,6 +63,8 @@ for rr=1:nrot
     end
   end
 end
+
+fitswrite(bigfrac, fout)
 
 break;
 
