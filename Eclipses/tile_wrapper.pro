@@ -9,9 +9,9 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   tic_file = 'tic_teff.fits'
   dart_file = 'dartmouth_grid.sav'
   var_file = 'starvar.fits'
-  fov = 24.
-  seg = 13
-  skirt=6.
+  fov = 24. ; degrees
+  seg = 13  ; number of segments per hemisphere
+  skirt=6.  ; offset from ecliptic
   effarea = 69.1 ;54.9 ; 69.1 ;100. ;54.9 ;69.1 ; in cm^2. 
   readnoise = 10. ;10.0 ; in e- per subexposure
   subexptime = 2.0 ; sec in subexposure
