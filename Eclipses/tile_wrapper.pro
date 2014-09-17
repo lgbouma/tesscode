@@ -1,4 +1,4 @@
-PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=eclass
+pRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=eclass
   numfil = n_elements(fnums)
 
   ; User-adjustable settings (yes, that's you!)
@@ -9,11 +9,12 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   tic_file = 'tic_teff.fits'
   dart_file = 'dartmouth_grid.sav'
   var_file = 'starvar.fits'
+  npnt_file = 'npnt.fits'
   fov = 24. ; degrees
   seg = 13  ; number of segments per hemisphere
   skirt=6.  ; offset from ecliptic
-  effarea = 69.1 ;54.9 ; 69.1 ;100. ;54.9 ;69.1 ; in cm^2. 
-  readnoise = 10. ;10.0 ; in e- per subexposure
+  effarea = 65.9 ;43.9 ;54.9 ;100. ;54.9 ;69.1 ; in cm^2. 
+  readnoise = 10. ;10. ;10.0 ; in e- per subexposure
   subexptime = 2.0 ; sec in subexposure
   thresh = 7.0 ; detection threshold in phase-folded lightcurve
   tranmin = 2.0 ; minimum number of eclipses for detection
@@ -24,7 +25,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   ffi_len=30. ; in minutes
   ps_len=2. ; in minutes
   duty_cycle=100.+fltarr(numfil) ; Time blanked around apogee
-  ps_only = 0 ; Only run postage stamps?
+  ps_only = 1 ; Only run postage stamps?
   saturation=150000. ; e-
   CCD_PIX = 4096. ; entire camera
   GAP_PIX = 2.0/0.015 ; for 2 mm gap
@@ -40,7 +41,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   ; Don't phuck with physics, though
   REARTH_IN_RSUN = 0.0091705248
   AU_IN_RSUN = 215.093990942
-  nparam = 56 ; output table width
+  nparam = 57 ; output table width
 
   ; Here we go!
   numtargets = lonarr(numfil)
@@ -52,6 +53,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
 ;  rad_fits = mrdfits(rad_file)/60. ; put into pixels
   ph_fits = mrdfits(ph_file)
   var_fits = mrdfits(var_file)
+  npnt_fits = mrdfits(npnt_file)
   cr_fits = fltarr(100,64)
 ;  cr_fits = mrdfits(cr_file)
   restore, dart_file
@@ -63,6 +65,8 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   phi = 2.*!dpi*u
   theta = acos(2.*v-1.)
   ang2pix_ring, 16, theta, phi, ipring
+
+  stop
    
   totdet = 0L
   star_out = dblarr(1E7+1E6*n_trial,nparam)
@@ -87,7 +91,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
     targets.ffi = 1
     pri = where(targets.pri eq 1)
     selpri = ps_sel(targets[pri].mag.t, targets[pri].teff, targets[pri].m, targets[pri].r, ph_fits, $
-			geom_area=54.9, rn_pix=10.)
+			geom_area=54.9, rn_pix=10., npnt=npnt_fits[ii])
     if (selpri[0] ne -1) then begin 
       targets[pri[selpri]].ffi=0
       secffi = targets[pri[selpri]].companion.ind
@@ -96,12 +100,12 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
     end
     sing = where((targets.pri eq 0) and (targets.sec eq 0))
     selsing = ps_sel(targets[sing].mag.t, targets[sing].teff, targets[sing].m, targets[sing].r, ph_fits, $
-			geom_area=54.9, rn_pix=10.)
+			geom_area=54.9, rn_pix=10., npnt=npnt_fits[ii])
     if (selsing[0] ne -1) then begin 
       targets[sing[selsing]].ffi=0
       numps[ii] = numps[ii]+n_elements(selsing)
     end
-   
+ 
     ;if (ps_only) then targets = targets[where(targets.ffi ne 1)]
    
     ecliplen_tot = 0L
@@ -196,7 +200,7 @@ PRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
                 [eclip[det].icsys],  [eclip[det].tsys],  [eclip[det].jsys], $ 
                 [eclip[det].censhift1], [eclip[det].censhift2], $
                 [eclip[det].cenerr1], [eclip[det].cenerr2], $
-                [eclip[det].var], $
+                [eclip[det].var], [eclip[det].coord.healpix_n], $
                 [bins], [targets[detid].companion.sep], [targets[targets[detid].companion.ind].mag.t]]
         idx = lindgen(ndet) + totdet
         star_out[idx,*] = tmp_star
