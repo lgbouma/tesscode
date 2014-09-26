@@ -40,10 +40,12 @@ PRO dilute_beb, eclip, frac, ph_p, dx, dy, dilvec, $
   ph_filt[where(ph_filt lt 0.0)] = 0.0
   dilpix = dblarr(imgsize/2, imgsize/2)
   for kk=0, nbin-1 do begin
+    dydbl = floor(dy[kk]/10.)
+    dyrem = dy[kk]-10*dydbl
     pixdx = floor(binx[kk] + dx[kk]/10. + 0.1)
-    pixdy = floor(biny[kk] + dy[kk]/10. + 0.1)
+    pixdy = floor(biny[kk] +  dyrem/10. + 0.1)
     indx  = round(10*(binx[kk] - pixdx + dx[kk]/10.))
-    indy  = round(10*(biny[kk] - pixdy + dy[kk]/10.))
+    indy  = round(10*(biny[kk] - pixdy +  dyrem/10.))+10*dydbl
     xsel = indgen(imgsize/2) + imgsize/4 + pixdx
     ysel = indgen(imgsize/2) + imgsize/4 + pixdy
     thisprf = reform(frac[indx,indy,binfov[kk],*,0:(nfilt-1)])

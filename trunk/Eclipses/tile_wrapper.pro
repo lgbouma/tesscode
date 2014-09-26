@@ -66,8 +66,6 @@ pRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   theta = acos(2.*v-1.)
   ang2pix_ring, 16, theta, phi, ipring
 
-  stop
-   
   totdet = 0L
   star_out = dblarr(1E7+1E6*n_trial,nparam)
   for ii=0, numfil-1 do begin
