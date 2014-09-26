@@ -51,10 +51,12 @@ PRO dilute_eclipse_img, eclip, bkgnds, frac, ph_p, dx, dy, dilvec, $
       ; Stack up the starz
       dilpix = dblarr(imgsize/2, imgsize/2)
       for kk=0, n_elements(gd)-1 do begin
+        dydbl = floor(dy[ii]/10.)
+        dyrem = dy[ii]-10*dydbl
         pixdx = floor(bkx[kk] + dx[ii]/10. + 0.1)
-        pixdy = floor(bky[kk] + dy[ii]/10. + 0.1)
+        pixdy = floor(bky[kk] +  dyrem/10. + 0.1)
         indx  = round(10*(bkx[kk] - pixdx + dx[ii]/10.))
-        indy  = round(10*(bky[kk] - pixdy + dy[ii]/10.))
+        indy  = round(10*(bky[kk] - pixdy +  dyrem/10.)) + 10*dydbl
         xsel = indgen(imgsize/2) + imgsize/4 + pixdx
         ysel = indgen(imgsize/2) + imgsize/4 + pixdy 
         thisprf = reform(frac[indx,indy,fov[ii],*,0:(nfilt-1)])

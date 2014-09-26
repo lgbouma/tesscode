@@ -5,6 +5,7 @@ pro calc_noise_cen, $
    ph_star, $                       ; ph/s/cm^2 from (npixels x nstars)
    ph_dil, $                        ; ph/s/cm^2 per pixel
    ph_beb, $                        ; ph/s/cm^2 per pixel from beb
+   ph_tgt, $                        ; ph/s/cm^2 from other target stars (subtracted)
    bebind, $
    dur1, $                      ; BEB/HEB dur 
    dur2, $                      ; BEB/HEB dur
@@ -98,10 +99,7 @@ pro calc_noise_cen, $
   if (v) then print, 'e_pix_zodi = ', median(e_pix_zodi)
 
 
-  ; compute noise sources
-  ;e_pix = e_pix_dil + e_pix_star
-  
-  xcenshift1 = fltarr(nstar)
+  xcenshift1 = fltarr(nstar) ; output vectors
   xcenshift2 = fltarr(nstar)
   ycenshift1 = fltarr(nstar)
   ycenshift2 = fltarr(nstar)
@@ -118,8 +116,9 @@ pro calc_noise_cen, $
     this_ebeb0 = ph_beb[*,ii]  * geom_area * cos(!DPI * field_angle[ii]/180.) * exptime
     this_ebeb1 = this_ebeb0*(1.0-dep1[ii])
     this_ebeb2 = this_ebeb0*(1.0-dep2[ii])
+    this_etgt  = ph_tgt[*,ii] * geom_area * cos(!DPI * field_angle[ii]/180.) * exptime
     this_sind = npix_sind[*,ii]                ; sorting indices
-    this_epix_all = this_estar0 + this_edil + this_ebeb0 + e_pix_zodi[ii]   ; electrons per pixel, unsorted
+    this_epix_all = this_estar0 + this_edil + this_ebeb0 + e_pix_zodi[ii] + ph_tgt  ; electrons per pixel, unsorted
     if total(ii eq bebind) then begin
       this_epix0 = this_estar0 + this_edil + this_ebeb0    ; electrons per pixel, unsorted
       this_epix1 = this_estar0 + this_edil + this_ebeb1    ; electrons per pixel, unsorted
