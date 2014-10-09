@@ -26,6 +26,7 @@ pRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   ps_len=2. ; in minutes
   duty_cycle=100.+fltarr(numfil) ; Time blanked around apogee
   ps_only = 1 ; Only run postage stamps?
+  detmag = 10. ;
   saturation=150000. ; e-
   CCD_PIX = 4096. ; entire camera
   GAP_PIX = 2.0/0.015 ; for 2 mm gap
@@ -143,37 +144,17 @@ pRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
     if (ecliplen_tot gt 0) then begin
       ; Survey: figure out npointings and field angles
       eclip_survey, seg, fov, eclip, offset=skirt
-      ; Determine FOV index
-;      fov_ind = intarr(n_elements(eclip))
-;      fov_ind[where((eclip.coord.fov_r ge 0.104*CCD_PIX) and $ ; was 104
-;                (eclip.coord.fov_r lt 0.365*CCD_PIX))] = 1   ; was 391
-;      fov_ind[where((eclip.coord.fov_r ge 0.365*CCD_PIX) and $
-;                (eclip.coord.fov_r lt 0.592*CCD_PIX))] = 2
-;      fov_ind[where(eclip.coord.fov_r  ge 0.592*CCD_PIX)] = 3
-;      eclip.coord.field_angle = eclip.coord.fov_r / CCD_PIX * fov
-;      eclip.coord.fov_ind=fov_ind
-
-    ; Dilute
-    ;print, "Diluting with binary companions"
-    ;bindil = where(eclip.class eq 1)
-    ;if (bindil[0] ne -1) then $
-    ;  dilute_binary, eclip[bindil], targets, frac_fits, rad_fits, ph_fits, aspix=aspix, radmax=4.0
-    ;print, "Diluting with other target stars"
-    ;targdil = where(eclip.class eq 1 or eclip.class eq 2)
-    ;if (targdil[0] ne -1) then $
-    ;  dilute_eclipse, eclip, targets, frac_fits, rad_fits, ph_fits, aspix=aspix, sq_deg=13.4, radmax=4.0
-    ;print, "Diluting with background stars"
-    ;dilute_eclipse, eclip, bkgnds, frac_fits, rad_fits, ph_fits, aspix=aspix, sq_deg=0.134, radmax=4.0
-    ;print, "Diluting with deep stars"
-      ;dilute_eclipse, eclip, deeps, frac_fits, rad_fits, ph_fits, aspix=aspix, sq_deg=0.0134, radmax=2.0
-      ; Observe
-      eclip_observe, eclip, targets, bkgnds, deeps, $
-        frac_fits, ph_fits, cr_fits, var_fits, $
-        aspix=aspix, effarea=effarea, sys_limit=sys_limit, $ ;infil=sp_name,outfile=spo_name
-        readnoise=readnoise, thresh=thresh, tranmin=tranmin, ps_len=ps_len, $
-        duty_cycle=duty_cycle[ii], ffi_len=ffi_len, saturation=saturation, $
-        subexptime=subexptime, dwell_time=orbit_period, downlink=downlink
-      det = where(eclip.det1 or eclip.det2 or eclip.det)
+      
+      if (detmag eq 0) then begin
+        ; Observe      
+        eclip_observe, eclip, targets, bkgnds, deeps, $
+          frac_fits, ph_fits, cr_fits, var_fits, $
+          aspix=aspix, effarea=effarea, sys_limit=sys_limit, $ ;infil=sp_name,outfile=spo_name
+          readnoise=readnoise, thresh=thresh, tranmin=tranmin, ps_len=ps_len, $
+          duty_cycle=duty_cycle[ii], ffi_len=ffi_len, saturation=saturation, $
+          subexptime=subexptime, dwell_time=orbit_period, downlink=downlink
+        det = where(eclip.det1 or eclip.det2 or eclip.det)
+      endif else det = where(targets[eclip.hostid].mag.ic lt detmag)
       if (det[0] ne -1) then begin
         detid = eclip[det].hostid
         ndet = n_elements(det)
