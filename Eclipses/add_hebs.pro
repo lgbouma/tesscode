@@ -54,23 +54,54 @@ function add_hebs, star, eclip, $
     dm = star[spl].mag.dm
     av = star[spl].mag.av
     dartmouth_interpolate, dartstruct, m1, age, feh, $
-        rad=r1, ic=ic1, teff=teff1, v=v1, j=j1, h=h1, ks=ks1
+        rad=r1, ic=ic1, teff=teff1, v=v1, rc=rc1, j=j1, h=h1, ks=ks1
     dartmouth_interpolate, dartstruct, m2, age, feh, $
-        rad=r2, ic=ic2, teff=teff2, v=v2, j=j2, h=h2, ks=ks2
+        rad=r2, ic=ic2, teff=teff2, v=v2, rc=rc2, j=j2, h=h2, ks=ks2
     tmag1 = interpol(tefftic[*,1], tefftic[*,0], teff1) + ic1 + dm + 0.479*av
     tmag2 = interpol(tefftic[*,1], tefftic[*,0], teff2) + ic1 + dm + 0.479*av
     ;tmag2 = tmag1
     ;r2 = r1
     ;teff2 = teff1
-    
+    vr1 = v1-rc1
+    vr2 = v2-rc2
+    ; Jordi (2008)
+    newr1 = rc1
+    newr2 = rc2
+    ; Re-create Sloan r
+    vr11 = where(vr1 le 0.93)
+    vr21 = where(vr2 le 0.93)
+    if (vr11[0] ne -1) then newr1[vr11] = rc1[vr11] + 0.275*vr1[vr11] + 0.086
+    if (vr21[0] ne -1) then newr2[vr21] = rc2[vr21] + 0.275*vr2[vr21] + 0.086
+    vr12 = where(vr1 gt 0.93)
+    vr22 = where(vr2 gt 0.93)
+    if (vr12[0] ne -1) then newr1[vr12] = rc1[vr12] +  0.71*vr1[vr12] - 0.31
+    if (vr22[0] ne -1) then newr2[vr22] = rc2[vr22] +  0.71*vr2[vr22] - 0.31
+    ; Re-create Sloan i
+    newi1 = ic1 + 0.251*(rc1-ic1) + 0.325
+    ; Re-create Kp
+    kp1 = newi1
+    kp2 = newi2
+    ri1 = newr1-newi1
+    ri2 = newr2-newi2
+    ri11 = where(ri1 le 0.673)
+    ri21 = where(ri2 le 0.673)
+    if (ri11[0] ne -1) then kp1[ri11] = 0.65*newr1[ri11] + 0.36*newi1[ri11]
+    if (ri21[0] ne -1) then kp2[ri21] = 0.65*newr1[ri21] + 0.36*newi1[ri21]
+    ri12 = where(ri1 gt 0.673)
+    ri22 = where(ri2 gt 0.673)
+    if (ri12[0] ne -1) then kp1[ri12] = 1.2*newr1[ri12] + 0.2*newi1[ri12]
+    if (ri22[0] ne -1) then kp2[ri22] = 1.2*newr2[ri22] + 0.2*newi2[ri22]
+
     tsys = -2.5*alog10(10.^(-0.4*tmag1) + 10.^(-0.4*tmag2)) 
     icsys = -2.5*alog10(10.^(-0.4*ic1) + 10.^(-0.4*ic2)) + dm + 0.479*av
+    kpsys = -2.5*alog10(10.^(-0.4*kp1) + 10.^(-0.4*kp2)) + dm + 0.615*av
     jsys = -2.5*alog10(10.^(-0.4*j1) + 10.^(-0.4*j2)) + dm + 0.282*av
 
     ; over-write sys mags
     star[spl].mag.tsys = tsys
     star[spl].mag.jsys = jsys
     star[spl].mag.icsys = icsys
+    star[spl].mag.kpsys = kpsys
 
     ; Separation in Rsun
     ars = a*AU_IN_RSUN

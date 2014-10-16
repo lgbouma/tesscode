@@ -17,6 +17,8 @@ PRO eclipstruct__define
                     s: 0.0, $ ; Insolation of secondary
                     w: 0.0, $ ; Argument of perigee
                     f: 0.0, $ ; True anomaly
+                    mult: 0.0, $ ; Multi-planet system?
+                    pr: 0.0, $ ; Period ratio for multi
                     ecc: 0.0, $ ; Eccentricity
 		    cosi: 0.0, $ ; -1 to 1
                     b: 0.0, $ ; Impact parameter (0-1)

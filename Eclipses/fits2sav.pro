@@ -65,8 +65,15 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
  ; Derived quantities
   m = mnow
   rad = sqrt(m)/sqrt(10.^logG/27542.3)
-  v = g - 0.5784*(g - r) - 0.0038 ;Lupton 2005
-  ic = i - 0.3780*(i - z) - 0.3974 ; Lupton 2005
+  gr = g-r
+  gr1 = where(gr le 1.3811)
+  gr2 = where(gr gt 1.3811)
+  v = g
+  if (gr1[0] ne -1) then v[gr1] = 0.4534*g[gr1] + 0.5466*r[gr1] - 0.03794
+  if (gr2[0] ne -1) then v[gr2] = 0.1814*g[gr2] + 0.8186*r[gr2] - 0.32922
+  ;v = g - 0.5784*(g - r) - 0.0038 ;Lupton 2005
+  ic = i - 0.16*(r - z) - 0.3842 
+  ;ic = i - 0.3780*(i - z) - 0.3974 ; Lupton 2005
   ;icsys = ic
   ;jsys = j
   ;ksys = ks
@@ -93,13 +100,25 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
     teff[darts] = newteff
     v[darts] = newv + newdm + newav
     vr = newv-newrc
-    ; Jordi (2005)
+    ; Jordi (2008)
     newr = newrc
+    ; Re-create Sloan r
     vr1 = where(vr le 0.93)
-    if (vr1[0] ne -1) then newr[vr1] = newrc[vr1] + 0.267*vr[vr1] + 0.088
+    if (vr1[0] ne -1) then newr[vr1] = newrc[vr1] + 0.275*vr[vr1] + 0.086
     vr2 = where(vr gt 0.93)
-    if (vr2[0] ne -1) then newr[vr2] = newrc[vr2] +  0.77*vr[vr2] - 0.37
+    if (vr2[0] ne -1) then newr[vr2] = newrc[vr2] +  0.71*vr[vr2] - 0.31
+    ; Re-create Sloan i
+    newi = newic + 0.251*(newrc-newic) + 0.325
+    ; Re-create Kp
+    newkp = newi
+    ri = newr-newi
+    ri1 = where(ri le 0.673)
+    if (ri1[0] ne -1) then newkp[ri1] = 0.65*newr[ri1] + 0.36*newi[ri1]
+    ri2 = where(ri gt 0.673)
+    if (ri2[0] ne -1) then newkp[ri2] = 1.2*newr[ri2] + 0.2*newi[ri2]
     r[darts] = newr + newdm + 0.751*newav
+    i[darts] = newi + newdm + 0.479*newav
+    kp[darts] = newkp + newdm + 0.615*newav
     j[darts] = newj + newdm + 0.282*newav
     h[darts] = newh + newdm + 0.190*newav
     ks[darts] = newks + newdm + 0.114*newav
@@ -172,6 +191,7 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
   star.mag.i = i[pris]
   star.mag.ic = ic[pris]  
   star.mag.z = z[pris]
+  star.mag.kp = kp[pris]
   star.mag.j = j[pris]
   star.mag.h = h[pris]
   star.mag.k = ks[pris]
@@ -180,6 +200,7 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
   star.mag.mic = mic[pris] ;star.mag.ic - 0.479*star.mag.av - star.mag.dm
   star.mag.mj = mj[pris] ;star.mag.j - 0.282*star.mag.av - star.mag.dm
   star.mag.icsys = ic[pris] ; star.mag.ic
+  star.mag.kpsys = kp[pris] ; star.mag.ic
   star.mag.jsys = j[pris] ;star.mag.j
   star.mag.ksys = ks[pris] ;star.mag.j
   star.mag.tsys = t[pris] ;star.mag.t
@@ -236,6 +257,7 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
       bin_star.mag.i = i[secs[sind]]
       bin_star.mag.ic = ic[secs[sind]] ;i[secs[sind]] - 0.3780*(i[secs[sind]]-z[secs[sind]]) - 0.3974 ; Lupton 2005
       bin_star.mag.z = z[secs[sind]]
+      bin_star.mag.kp = kp[secs[sind]]
       bin_star.mag.j = j[secs[sind]]
       bin_star.mag.h = h[secs[sind]]
       bin_star.mag.k = ks[secs[sind]]
@@ -294,6 +316,8 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
       bin_star.mag.mjsys = star[sind].mag.mjsys
       star[sind].mag.icsys = -2.5*alog10(10.^(-0.4*bin_star.mag.ic) + 10.^(-0.4*star[sind].mag.ic))
       bin_star.mag.icsys = star[sind].mag.icsys
+      star[sind].mag.kpsys = -2.5*alog10(10.^(-0.4*bin_star.mag.kp) + 10.^(-0.4*star[sind].mag.kp))
+      bin_star.mag.kpsys = star[sind].mag.kpsys
       star[sind].mag.jsys =  -2.5*alog10(10.^(-0.4*bin_star.mag.j) + 10.^(-0.4*star[sind].mag.j))
       bin_star.mag.jsys = star[sind].mag.jsys
       star[sind].mag.ksys =  -2.5*alog10(10.^(-0.4*bin_star.mag.k) + 10.^(-0.4*star[sind].mag.k))
@@ -382,13 +406,13 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
     endif
   end
 
-  for ii=0, n_elements(vtf)-2 do begin
-    thisteff = where(star.teff ge vtf[ii] and star.teff lt vtf[ii+1])
-    if (thisteff[0] ne -1) then begin
-      u = randomu(seed, n_elements(thisteff))
-      star[thisteff].var = var[ii]*10.^u
-    end
-  end
+;  for ii=0, n_elements(vtf)-2 do begin
+;    thisteff = where(star.teff ge vtf[ii] and star.teff lt vtf[ii+1])
+;    if (thisteff[0] ne -1) then begin
+;      u = randomu(seed, n_elements(thisteff))
+;      star[thisteff].var = var[ii]*10.^u
+;    end
+;  end
   
   ; Output for making distance-limited or mag-limited catalogs
   if (keyword_set(dmax)) then begin
