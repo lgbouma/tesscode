@@ -28,7 +28,8 @@ function phot_ratio_planet, teff1, teff2, tmag1, dm, r2, ph_p
   dlam = lam_cm[1]-lam_cm[0]
   
   tones = fltarr(nstars)+1.
-  bph = 2.*c/((tones#(lam_cm^4.))*(exp(h*c/(kb*(teff2#lam_cm)))-1.))*!dpi*(r2/d)^2.*dlam
+  lones = fltarr(n_elements(lam_cm))+1.
+  bph = 2.*c/((tones#(lam_cm^4.))*(exp(h*c/(kb*(teff2#lam_cm)))-1.))*!dpi*((r2#lones)/d)^2.*dlam
   filt = tones#tband
   ph_2 = total(bph*filt, 2)
  
