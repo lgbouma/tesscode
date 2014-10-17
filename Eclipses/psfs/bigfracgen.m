@@ -1,8 +1,6 @@
-%att = load('atterr.dat');
-%gd = 200000:200599;
-%t = att(gd,1);
-%x = round(att(gd,2)*60);
-%y = round(att(gd,3)*60);
+dat = load('psf_TRACED_RAYS_T85_FOCUS_3P310S.TXT.mat');
+fout = 'dfrac_t85_f3p31.fits';
+dither = true;
 
 angs = [0 5 12.5 15.9];
 pixs = angs/24;
@@ -10,10 +8,6 @@ numfilt = 9;
 nrot = 2;
 nang = 4;
 pixsc = 60;
-
-dat = load('psf_TRACED_RAYS_T85_FOCUS_3P310S.TXT.mat');
-fout = 'dfrac_t85_f3p31.fits';
-dither = true;
 
 onedat = dat.psf_fields(1,1).psfimage;
 imsize = size(onedat);
@@ -24,11 +18,13 @@ imlen = imsize(1);
 % Time step is 0.2 s, so need 600 points for 2-minute stack
 njit = 600;
 % Errors are in pixels, so mult by pixsc for sub-pixel sampling
-err = load('atterr.dat');
-adx = err(5000:(5000+njit-1), 2)*pixsc;
-ady = err(5000:(5000+njit-1), 3)*pixsc;
-adx = adx-median(adx);
-ady = ady-median(ady);
+if dither
+    err = load('atterr.dat');
+    adx = err(5000:(5000+njit-1), 2)*pixsc;
+    ady = err(5000:(5000+njit-1), 3)*pixsc;
+    adx = adx-median(adx);
+    ady = ady-median(ady);
+end
 
 npix=256;
 %masterfrac = zeros(10,10,4,npix);
