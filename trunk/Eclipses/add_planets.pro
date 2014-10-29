@@ -1,4 +1,4 @@
-function add_planets, star, pstruct, frac, ph_p, $
+function add_planets, star, pstruct, frac, ph_p, tband, $
 	aspix=aspix, fov=fov, dressing=dressing, min_depth=min_depth
 
   sz_ph_p = size(ph_p)
@@ -71,73 +71,84 @@ function add_planets, star, pstruct, frac, ph_p, $
      planet_hid = lonarr(nplanets)
      idx0 = 0L
      for i=0,(n_elements(fressin_period)-2) do begin
-        for j=0,(n_elements(fressin_radius)-2) do begin
+        for j=(n_elements(fressin_radius)-2),0,-1 do begin
            binplanets = round(rate_fressin[i,j] * nhotstars)
            if (binplanets gt 0) then begin  
               ; planet_per is either 0 or a smaller number since period is increasing.
               ; 1. Find the bad periods
-              bd_hid = planet_hid(where(planet_per ge fressin_period[i]/1.2)) 
+              bd_ind = where(planet_per ge fressin_period[i]/1.2) 
               ; 2. Find the remaining periods
-              gd_hid = cgsetdifference(hotstars, bd_hid)   
-              ngdhot = n_elements(gd_hid)
-              hostids = gd_hid[floor(double(ngdhot)*randomu(seed, binplanets))]
-              if(j eq 0) then radpow = 0.0 else radpow = -1.7
-              randomp, periods, -1.0, binplanets, range_x = [fressin_period[i], fressin_period[i+1]], seed=seed
-              randomp, radii, radpow, binplanets, range_x = [fressin_radius[j], fressin_radius[j+1]], seed=seed
-              ; After generating periods, see if it conflicts with previously-assigned period
-              value_locate(hos
-              ;tmp_planet.r = radii
-              ;tmp_planet.p = periods
-              idx = lindgen(binplanets) + idx0
- 	      planet_per[idx] = periods
-  	      planet_rad[idx] = radii
-	      planet_hid[idx] = hostids
-              ;planet[idx] = tmp_planet
-              ;delvar, tmp_planet
-              idx0 = max(idx) + 1
+              gd_hid = hotstars
+              if (bd_ind[0] ne -1) then gd_hid = setdifference(hotstars, planet_hid[bd_ind])   
+              if (gd_hid[0] ne -1) then begin
+                ngdhot = n_elements(gd_hid)
+                if (binplanets lt ngdhot) then begin
+                  rand_inds = sort(randomu(seed, ngdhot))
+                  hostids = gd_hid[rand_inds[0:binplanets-1]]
+                endif else begin 
+                  hostids = gd_hid[rand_inds]
+                  binplanets = ngdhot
+                endelse
+                ;endif else hostids = gd_hid[floor(double(ngdhot)*randomu(seed, binplanets))]
+                if(j eq 0) then radpow = 0.0 else radpow = -1.7
+                randomp, periods, -1.0, binplanets, range_x = [fressin_period[i], fressin_period[i+1]], seed=seed
+                randomp, radii, radpow, binplanets, range_x = [fressin_radius[j], fressin_radius[j+1]], seed=seed
+                ;tmp_planet.r = radii
+                ;tmp_planet.p = periods
+                idx = lindgen(binplanets) + idx0
+ 	        planet_per[idx] = periods
+  	        planet_rad[idx] = radii
+	        planet_hid[idx] = hostids
+                ;planet[idx] = tmp_planet
+                ;delvar, tmp_planet
+                ;if (binplanets gt 3) then stop  
+
+                idx0 = max(idx) + 1
+              endif
            endif
         endfor
      endfor
      if (keyword_set(dressing)) then begin
-       for i=(n_elements(dressing_period)-2),0,-1 do begin
+       for i=0,(n_elements(dressing_period)-2) do begin
         for j=(n_elements(dressing_radius)-2),0,-1 do begin
            binplanets = round(rate_dressing[i,j] * ncoolstars)
            if (binplanets gt 0) then begin
-              bd_hid = planet_hid(where(planet_per ge fressin_period[i]/1.2)) 
-              gd_hid = cgsetdifference(coolstars, bd_hid)   
-              ngdcool = n_elements(gd_hid)
-              hostids = gd_hid[floor(double(ngdcool)*randomu(seed, binplanets))]
-              if(j lt 2) then radpow = 0.0 else radpow = -1.7
-              randomp, periods, -1.0, binplanets, range_x = [dressing_period[i], dressing_period[i+1]], seed=seed
-              randomp, radii, radpow, binplanets, range_x = [dressing_radius[j], dressing_radius[j+1]], seed=seed
-              ;tmp_planet.r = radii
-              ;tmp_planet.p = periods
-              idx = lindgen(binplanets) + idx0
-              planet_per[idx] = periods
-	      planet_rad[idx] = radii
-              planet_hid[idx] = hostids
-              ;print, i, j, binplanets, n_elements(tmp_planet), n_elements(idx), max(idx)/float(total(nplanets))
-              ;planet[idx] = tmp_planet
-              ;delvar, tmp_planet
-              idx0 = max(idx) + 1
+              bd_ind = where(planet_per ge dressing_period[i]/1.2) 
+              gd_hid = coolstars
+              if (bd_ind[0] ne -1) then gd_hid = setdifference(coolstars, planet_hid[bd_ind])   
+              if (gd_hid[0] ne -1) then begin
+                ngdcool = n_elements(gd_hid)
+                if (binplanets lt ngdcool) then begin
+                  rand_inds = sort(randomu(seed, ngdcool))
+                  hostids = gd_hid[rand_inds[0:binplanets-1]]
+                endif else begin 
+                  hostids = gd_hid[rand_inds]
+                  binplanets = ngcool
+                endelse
+                ;endif else hostids = gd_hid[floor(double(ngdcool)*randomu(seed, binplanets))]
+                if(j lt 2) then radpow = 0.0 else radpow = -1.7
+                randomp, periods, -1.0, binplanets, range_x = [dressing_period[i], dressing_period[i+1]], seed=seed
+                randomp, radii, radpow, binplanets, range_x = [dressing_radius[j], dressing_radius[j+1]], seed=seed
+                ;tmp_planet.r = radii
+                ;tmp_planet.p = periods
+                idx = lindgen(binplanets) + idx0
+                planet_per[idx] = periods
+	        planet_rad[idx] = radii
+                planet_hid[idx] = hostids
+                ;print, i, j, binplanets, n_elements(tmp_planet), n_elements(idx), max(idx)/float(total(nplanets))
+                ;planet[idx] = tmp_planet
+                ;delvar, tmp_planet
+                idx0 = max(idx) + 1
+             endif
            endif
         endfor
      endfor
    endif
-;   planet_per = planet_per[0:idx0-1]
-;   planet_rad = planet_rad[0:idx0-1]
-;   planet_hid = planet_hid[0:idx0-1]
+   planet_per = planet_per[0:idx0-1]
+   planet_rad = planet_rad[0:idx0-1]
+   planet_hid = planet_hid[0:idx0-1]
+   nplanets = idx0
 ; Tally multi-planet systems
-   planet_multi = intarr(nplanets)
-   planet_pr = fltarr(nplanets)
-   for p =0,idx0-1 do begin
-      pos = where(planet_hid eq planet_hid[p])
-      if (n_elements(pos) gt 1) then begin
-        opos = cgsetdifference(pos, p)
-        planet_multi[opos] = planet_multi[opos]+1
-        planet_pr[p] = min(planet_per[opos]/planet_per[p] > planet_per[opos]^(-1)*planet_per[p])
-      end
-   end
 ; Work out orbital distance and impact parameter
   allid = planet_hid
   planet_a = (star[allid].m)^(1./3.) * (planet_per/365.25)^(2./3.); in AU
@@ -147,10 +158,8 @@ function add_planets, star, pstruct, frac, ph_p, $
 ; Impact parameter
   planet_b = (planet_a*AU_IN_RSUN / star[allid].r) * star[allid].cosi; assumes circular orbit
 ; Stellar radius in AU
-  min_a = 2.*star[allid].r/AU_IN_RSUN
-
-; Check for period stability in multi-systems
-
+  min_a = star[allid].r/AU_IN_RSUN
+  
   ; Weiss & Marcy 2014:
   planet_m = dblarr(nplanets)
   lomass = where(planet_rad lt 1.5)
@@ -168,9 +177,25 @@ function add_planets, star, pstruct, frac, ph_p, $
   if (tra[0] ne -1)  then begin
     traid = planet_hid[tra]
     ntra = n_elements(tra)
+    planet_multi = intarr(ntra)
+    planet_tmulti = intarr(ntra)
+    planet_pr = fltarr(ntra)
+    for t=0,(ntra-1) do begin
+      pos = where(planet_hid eq traid[t])
+      tos = where(traid eq traid[t])
+      if (n_elements(pos) gt 1) then begin
+        planet_multi[t] = n_elements(pos) - 1  ; Number of other planets in the system
+        planet_tmulti[t] = n_elements(tos) - 1 ; Number of other transiting planets
+        pp = [tra[t]]
+        opos = setdifference(pos, pp)
+        if (opos[0] ne -1) then begin
+          planet_pr[t] = min(planet_per[opos]/planet_per[tra[t]] > planet_per[opos]^(-1)*planet_per[tra[t]])
+        endif 
+      end
+    end
     planet_eclip = replicate({eclipstruct}, ntra)
     r2 = planet_rad[tra]*REARTH_IN_RSUN
-    dep2 = phot_ratio_planet(star[traid].teff, planet_teq[tra], star[traid].mag.t, star[traid].mag.dm, r2, ph_p)
+    dep2 = phot_ratio_planet(star[traid].teff, planet_teq[tra], star[traid].mag.t, star[traid].mag.dm, r2, ph_p, tband)
     planet_eclip.class=1
     planet_eclip.m1 = star[traid].m
     planet_eclip.m2 = planet_m[tra]/MSUN_IN_MEARTH
@@ -184,15 +209,17 @@ function add_planets, star, pstruct, frac, ph_p, $
     planet_eclip.p = planet_per[tra]
     planet_eclip.b = planet_b[tra]
     planet_eclip.tsys = star[traid].mag.tsys
+    planet_eclip.kpsys = star[traid].mag.kpsys
     planet_eclip.icsys = star[traid].mag.icsys
     planet_eclip.jsys = star[traid].mag.jsys
     planet_eclip.hostid = planet_hid[tra]
-    planet_eclip.multi = planet_multi[tra]
-    planet_eclip.rp = planet_rp[tra]
     planet_eclip.dep1 = (planet_eclip.r2 / planet_eclip.r1 )^2.0
     toodeep = where(planet_eclip.dep1 gt 1.0)
     if (toodeep[0] ne -1) then planet_eclip[toodeep].dep1 = 1.0
     planet_eclip.dep2 = dep2 
+    planet_eclip.mult = planet_multi
+    planet_eclip.tmult = planet_tmulti
+    planet_eclip.pr   = planet_pr
     planet_eclip.dur1 = planet_eclip.r1 * planet_eclip.p * sqrt(1.-(planet_eclip.b)^2.) / (!PI*planet_eclip.a*AU_IN_RSUN)
     planet_eclip.dur2 = planet_eclip.r1 * planet_eclip.p * sqrt(1.-(planet_eclip.b)^2.) / (!PI*planet_eclip.a*AU_IN_RSUN)
     planet_eclip.gress1 = planet_eclip.r2 * planet_eclip.p / $
@@ -205,8 +232,9 @@ function add_planets, star, pstruct, frac, ph_p, $
 ;        sqrt(1.-(planet_eclip[tra].b)^2.) / $
 ;        (!PI*planet_eclip[tra].a*AU_IN_RSUN)
   
-    print, 'Created ', ntra, ' transiting planets out of ', nplanets, ' total.'
-  end
-  pstruct=planet_eclip
+    print, 'Created ', ntra, ' transiting planets out of ', nplanets, ' total, ', $
+      total(planet_multi gt 0), ' in multi systems'
+    pstruct=planet_eclip
+  endif
   return, ntra
 end

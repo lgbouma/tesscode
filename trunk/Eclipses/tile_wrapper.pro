@@ -10,23 +10,24 @@ pRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   dart_file = 'dartmouth_grid.sav'
   var_file = 'starvar.fits'
   npnt_file = 'npnt.fits'
+  tband_file = 'tband.csv'
   fov = 24. ; degrees
   seg = 13  ; number of segments per hemisphere
   skirt=6.  ; offset from ecliptic
   effarea = 65.9 ;43.9 ;54.9 ;100. ;54.9 ;69.1 ; in cm^2. 
   readnoise = 10. ;10. ;10.0 ; in e- per subexposure
   subexptime = 2.0 ; sec in subexposure
-  thresh = 7.0 ; detection threshold in phase-folded lightcurve
-  tranmin = 2.0 ; minimum number of eclipses for detection
-  min_depth=1D-6 ; minimum transit depth to retain from eclipses
-  max_depth=1D-1 ; maximum transit depth to retain from EBs
+  thresh = 5.0 ; detection threshold in phase-folded lightcurve
+  tranmin = 1.0 ; minimum number of eclipses for detection
   sys_limit=60. ;60. in ppm/hr
   if (keyword_set(n_trial)) then n_trial=n_trial else n_trial = 10 ; number of trials in this run
   ffi_len=30. ; in minutes
   ps_len=2. ; in minutes
   duty_cycle=100.+fltarr(numfil) ; Time blanked around apogee
-  ps_only = 1 ; Only run postage stamps?
-  detmag = 10. ;
+  min_depth=1D-6 ; minimum transit depth to retain from eclipses
+  max_depth=0.1 ; maximum transit depth to retain from EBs
+  ps_only = 0 ; Only run postage stamps?
+  detmag = 0;
   saturation=150000. ; e-
   CCD_PIX = 4096. ; entire camera
   GAP_PIX = 2.0/0.015 ; for 2 mm gap
@@ -42,7 +43,7 @@ pRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   ; Don't phuck with physics, though
   REARTH_IN_RSUN = 0.0091705248
   AU_IN_RSUN = 215.093990942
-  nparam = 57 ; output table width
+  nparam = 63 ; output table width
 
   ; Here we go!
   numtargets = lonarr(numfil)
@@ -55,6 +56,8 @@ pRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   ph_fits = mrdfits(ph_file)
   var_fits = mrdfits(var_file)
   npnt_fits = mrdfits(npnt_file)
+  readcol, 'tband.csv', lam, t
+  tband = [[lam],[t]]
   cr_fits = fltarr(100,64)
 ;  cr_fits = mrdfits(cr_file)
   restore, dart_file
@@ -113,7 +116,7 @@ pRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
       targets.cosi = -1 + 2.0*randomu(seed, n_elements(targets))
       ; Add eclipses
       ecliplen =  make_eclipse(targets, bkgnds, eclip_trial, frac_fits, $
-	 ph_fits, dartstruct, tic_fits, eclass, min_depth=min_depth, max_depth=max_depth, ps_only=ps_only)
+	 ph_fits, dartstruct, tic_fits, eclass, tband, min_depth=min_depth, max_depth=max_depth, ps_only=ps_only)
       if (ecliplen gt 0) then begin
         eclip_trial.trial = jj + 1
         ; Add coordinates to the eclipses
@@ -142,10 +145,10 @@ pRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
       endif
     endfor
     if (ecliplen_tot gt 0) then begin
-      ; Survey: figure out npointings and field angles
-      eclip_survey, seg, fov, eclip, offset=skirt
-      
       if (detmag eq 0) then begin
+        ; Survey: figure out npointings and field angles
+        eclip_survey, seg, fov, eclip, offset=skirt
+      
         ; Observe      
         eclip_observe, eclip, targets, bkgnds, deeps, $
           frac_fits, ph_fits, cr_fits, var_fits, $
@@ -154,7 +157,8 @@ pRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
           duty_cycle=duty_cycle[ii], ffi_len=ffi_len, saturation=saturation, $
           subexptime=subexptime, dwell_time=orbit_period, downlink=downlink
         det = where(eclip.det1 or eclip.det2 or eclip.det)
-      endif else det = where(targets[eclip.hostid].mag.ic lt detmag)
+      endif else det = where((targets[eclip.hostid].mag.ic lt detmag) or (targets[eclip.hostid].mag.k lt detmag) or $
+                             (targets[eclip.hostid].mag.v lt detmag) or (eclip.icsys lt detmag) or (eclip.kpsys lt detmag))
       if (det[0] ne -1) then begin
         detid = eclip[det].hostid
         ndet = n_elements(det)
@@ -163,8 +167,9 @@ pRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
                 [targets[detid].mag.t], [targets[detid].mag.j], $
                 [targets[detid].mag.h], [targets[detid].mag.k], [targets[detid].teff], $
                 [eclip[det].coord.elon], [eclip[det].coord.elat], $
+                [eclip[det].coord.glon], [eclip[det].coord.glat], $
                 [eclip[det].coord.ra], [eclip[det].coord.dec], $
-                [eclip[det].p], [eclip[det].a], [eclip[det].s], [eclip[det].b], $
+                [eclip[det].p], [eclip[det].a], [eclip[det].s], [eclip[det].cosi], $
                 [eclip[det].teff2], [eclip[det].m2], [eclip[det].r2], $
                 [eclip[det].dep1_eff], [eclip[det].dur1], [eclip[det].neclip_obs1], $
                 [eclip[det].teff1], [eclip[det].m1], [eclip[det].r1], $ 
@@ -176,10 +181,11 @@ pRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
                 [eclip[det].npix], [eclip[det].dil], [targets[detid].ffi], [eclip[det].npointings] ,$
                 [eclip[det].sat], [eclip[det].coord.fov_r], $
                 [eclip[det].class], [eclip[det].sep], $
-                [eclip[det].icsys],  [eclip[det].tsys],  [eclip[det].jsys], $ 
+                [eclip[det].icsys],  [eclip[det].tsys],  [eclip[det].jsys], [eclip[det].kpsys], $ 
                 [eclip[det].censhift1], [eclip[det].censhift2], $
                 [eclip[det].cenerr1], [eclip[det].cenerr2], $
                 [eclip[det].var], [eclip[det].coord.healpix_n], $
+                [eclip[det].mult], [eclip[det].tmult], [eclip[det].pr], $
                 [bins], [targets[detid].companion.sep], [targets[targets[detid].companion.ind].mag.t]]
         idx = lindgen(ndet) + totdet
         star_out[idx,*] = tmp_star

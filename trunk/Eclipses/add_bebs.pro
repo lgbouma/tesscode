@@ -45,6 +45,7 @@ function add_bebs, star, bkgnd, estruct, frac, ph_p, mult, $ ;input
     teff2 = bkgnd[bkgnd[pris].companion.ind].teff
     tmag1 = bkgnd[pris].mag.t
     tsys = bkgnd[pris].mag.tsys
+    kpsys = bkgnd[pris].mag.kpsys
     icsys = bkgnd[pris].mag.icsys
     jsys = bkgnd[pris].mag.jsys
     tmag2 = bkgnd[bkgnd[pris].companion.ind].mag.t
@@ -60,10 +61,13 @@ function add_bebs, star, bkgnd, estruct, frac, ph_p, mult, $ ;input
     b1 = ars*cosi/r1*(1.0-ecc^2.)/(1.0+ecc*sin(w))
     b2 = ars*cosi/r2*(1.0-ecc^2.)/(1.0-ecc*sin(w))
 
-    roche = (3.*m1/m2)^(1./3.)*r2
+    roche1 = (3.*m1/m2)^(1./3.)*r2
+    roche2 = (3.*m2/m1)^(1./3.)*r1
     ; Where are the (non-contact) eclipsing systems? 
-    bin_ecl = where((r1*abs(b1) lt (r1+r2)) and (ars gt roche))
-    
+;    bin_ecl = where((r1*abs(b1) lt (r1+r2)) and (ars gt roche))
+    bin_ecl = where(((r1*abs(b1) lt (r1+r2)) or (r2*abs(b2) lt (r1+r2))) and $
+                    (ars gt (r1 > r2)) and (ars gt (roche1 > roche2)))
+ 
     if (bin_ecl[0] ne -1) then begin
       neb = n_elements(bin_ecl)
       pdur14 = dblarr(neb)
@@ -87,6 +91,7 @@ function add_bebs, star, bkgnd, estruct, frac, ph_p, mult, $ ;input
       teff2 = teff2[bin_ecl]
       tmag2 = tmag2[bin_ecl]
       tsys = tsys[bin_ecl]
+      kpsys = kpsys[bin_ecl]
       icsys = icsys[bin_ecl]
       jsys = jsys[bin_ecl]
       a = a[bin_ecl]
@@ -192,6 +197,7 @@ function add_bebs, star, bkgnd, estruct, frac, ph_p, mult, $ ;input
       eclip.gress1 = gress1
       eclip.gress2 = gress2
       eclip.tsys = tsys
+      eclip.kpsys = kpsys
       eclip.icsys = icsys
       eclip.jsys = jsys
       ;print, 'Created ', neb, ' eclipsing binaries out of ', n_elements(pris), ' primaries.'

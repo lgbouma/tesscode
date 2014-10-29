@@ -25,7 +25,7 @@ function ps_sel, tmag, teff, mass, rad, ph_p, $
   dep = (REARTH_IN_RSUN * float(minrad) / rad)^2.0
   sig = dep/7.0
   rn = rn_pix*sqrt(4.0*exptime/2.0)
-  minphot = 1.5*(1.+sqrt(1.+4.*sig^2.*rn^2.))/(2.*sig^2.)
+  minphot = 1.667*(1.+sqrt(1.+4.*sig^2.*rn^2.))/(2.*sig^2.)
   sel = where(ph_star gt (minphot/(exptime*geom_area)))
  
 
