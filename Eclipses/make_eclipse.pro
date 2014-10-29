@@ -1,5 +1,5 @@
 function make_eclipse, sstruct, bkstruct, estruct, frac, ph_p, dartstruct, tefftic, $
-  eclass, min_depth=min_depth, max_depth=max_depth, ps_only=ps_only
+  eclass, tband, min_depth=min_depth, max_depth=max_depth, ps_only=ps_only
   ecliplen = 0L
   if (keyword_set(min_depth)) then min_depth=min_depth else min_depth = 1D-5
   if (keyword_set(max_depth)) then max_depth=max_depth else max_depth = 1D-1
@@ -16,7 +16,7 @@ function make_eclipse, sstruct, bkstruct, estruct, frac, ph_p, dartstruct, tefft
   
   ; Add Planets to all target stars
   if (eclass[0]) then begin
-    gd = add_planets(sstruct, p_eclip, frac, ph_p, min_depth=min_depth, dressing=1)
+    gd = add_planets(sstruct, p_eclip, frac, ph_p, tband, min_depth=min_depth, dressing=1)
     if (gd gt 0) then begin
       if (ecliplen gt 0) then estruct = struct_append(estruct, p_eclip) $
       else estruct = p_eclip

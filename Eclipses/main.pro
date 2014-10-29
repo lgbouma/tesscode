@@ -5,5 +5,5 @@ PRO main
                 1, $ ; EBs
                 1, $ ; BEBs
                 1  ] ; HEBs
-  tile_wrapper, '../../trilegal/', fnums, 'alldiag.fits', n_trial=10, eclass=eclass
+  tile_wrapper, '../../trilegal/', fnums, 'all1.fits', n_trial=1, eclass=eclass
 END

@@ -29,6 +29,7 @@ function add_ebs, star, estruct, frac, ph_p, $
   tmag1 = star[pris].mag.t
   tmag2 = star[star[pris].companion.ind].mag.t
   tsys = star[pris].mag.tsys
+  kpsys = star[pris].mag.kpsys
   icsys = star[pris].mag.icsys
   jsys = star[pris].mag.jsys
   ars = star[pris].companion.a*AU_IN_RSUN
@@ -43,9 +44,11 @@ function add_ebs, star, estruct, frac, ph_p, $
   b1 = ars*cosi/r1*(1.0-ecc^2.)/(1.0+ecc*sin(w))
   b2 = ars*cosi/r2*(1.0-ecc^2.)/(1.0-ecc*sin(w))
  
-  roche = (3.*m1/m2)^(1./3.)*r2
+  roche1 = (3.*m1/m2)^(1./3.)*r2
+  roche2 = (3.*m2/m1)^(1./3.)*r1
   ; Where are the (non-contact) eclipsing systems? 
-  bin_ecl = where((r1*abs(b1) lt (r1+r2)) and (ars gt roche))
+  bin_ecl = where(((r1*abs(b1) lt (r1+r2)) or (r2*abs(b2) lt (r1+r2))) and $
+		  (ars gt (r1 > r2)) and (ars gt (roche1 > roche2)))
     
   if (bin_ecl[0] ne -1) then begin
     neb = n_elements(bin_ecl)
@@ -71,6 +74,7 @@ function add_ebs, star, estruct, frac, ph_p, $
     teff2 = teff2[bin_ecl]
     tmag2 = tmag2[bin_ecl]
     tsys = tsys[bin_ecl]
+    kpsys = kpsys[bin_ecl]
     icsys = icsys[bin_ecl]
     jsys = jsys[bin_ecl]
     a = a[bin_ecl]
@@ -174,6 +178,7 @@ function add_ebs, star, estruct, frac, ph_p, $
     eclip.gress1=gress1
     eclip.gress2=gress2
     eclip.tsys = tsys
+    eclip.kpsys = kpsys
     eclip.icsys = icsys
     eclip.jsys = jsys
     if (keyword_set(max_depth)) then begin

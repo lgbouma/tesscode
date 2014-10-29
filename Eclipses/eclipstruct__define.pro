@@ -18,6 +18,7 @@ PRO eclipstruct__define
                     w: 0.0, $ ; Argument of perigee
                     f: 0.0, $ ; True anomaly
                     mult: 0.0, $ ; Multi-planet system?
+                    tmult: 0.0, $ ; Multi-planet system?
                     pr: 0.0, $ ; Period ratio for multi
                     ecc: 0.0, $ ; Eccentricity
 		    cosi: 0.0, $ ; -1 to 1
@@ -51,6 +52,7 @@ PRO eclipstruct__define
                     det2: 0, $  ; Detected secondary?
                     npix: 0, $       ; Optimal number of pix in aperture
                     tsys: 0.0, $      ; system tmag (for binaries)
+                    kpsys: 0.0, $      ; system tmag (for binaries)
                     icsys: 0.0, $      ; system tmag (for binaries)
                     jsys: 0.0, $      ; system tmag (for binaries)
                     star_ph: 0.0, $      ; photons/s/cm^2 from star

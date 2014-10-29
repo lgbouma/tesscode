@@ -78,6 +78,7 @@ function add_hebs, star, eclip, $
     if (vr22[0] ne -1) then newr2[vr22] = rc2[vr22] +  0.71*vr2[vr22] - 0.31
     ; Re-create Sloan i
     newi1 = ic1 + 0.251*(rc1-ic1) + 0.325
+    newi2 = ic2 + 0.251*(rc2-ic2) + 0.325
     ; Re-create Kp
     kp1 = newi1
     kp2 = newi2
@@ -130,9 +131,12 @@ function add_hebs, star, eclip, $
     b1 = ars*cosi/r1*(1.0-ecc^2.)/(1.0+ecc*sin(w))
     b2 = ars*cosi/r2*(1.0-ecc^2.)/(1.0-ecc*sin(w))
 
-    roche = (3.*m1/m2)^(1./3.)*r2
+    roche1 = (3.*m1/m2)^(1./3.)*r2
+    roche2 = (3.*m2/m1)^(1./3.)*r1
     ; Where are the (non-contact) eclipsing systems? 
-    bin_ecl = where((r1*abs(b1) lt (r1+r2)) and (ars gt roche))
+;    bin_ecl = where((r1*abs(b1) lt (r1+r2)) and (ars gt roche))
+    bin_ecl = where(((r1*abs(b1) lt (r1+r2)) or (r2*abs(b2) lt (r1+r2))) and $
+                        (ars gt (r1 > r2)) and (ars gt (roche1 > roche2)))
     
     if (bin_ecl[0] ne -1) then begin
       neb = n_elements(bin_ecl)
@@ -157,6 +161,7 @@ function add_hebs, star, eclip, $
       teff2 = teff2[bin_ecl]
       tmag2 = tmag2[bin_ecl]
       tsys = tsys[bin_ecl]
+      kpsys = kpsys[bin_ecl]
       icsys = icsys[bin_ecl]
       jsys = jsys[bin_ecl]
       a = a[bin_ecl]
@@ -264,11 +269,12 @@ function add_hebs, star, eclip, $
       eclip.gress1 = gress1
       eclip.gress2 = gress2
       eclip.tsys = tsys
+      eclip.kpsys = kpsys
       eclip.icsys = icsys
       eclip.jsys = jsys
       eclip.hostid = hostid
       eclip.sep = hostsep ; in pixels
-      print, 'Created ', neb, ' hierarchical eclipsing binaries out of ', n_elements(nspl)
+      print, 'Created ', neb, ' hierarchical eclipsing binaries out of ', nspl
     end ; if ebs
   end ; spl loop
   return, neb
