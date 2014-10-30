@@ -39,42 +39,48 @@ PRO dartmouth_combine, fpath, starstruct=starstruct, maxm=maxm, minm=minm
  ;      starstruct[*,fi,ai].h  = H[0:nmass-1]
  ;      starstruct[*,fi,ai].ks = Ks[0:nmass-1]
        rad = sqrt(mass)/sqrt((10.^logG)/27542.3)      
- 
+;       print, 'FE=', feh[fi], ' A= ', ages[ai], ' Min R=', min(rad), ' Max R=', max(rad) 
+;       if (min(rad) gt 0.35) then stop
        starstruct[*,fi,ai].age = ages[ai]
        starstruct[*,fi,ai].feh = feh[fi]
        starstruct[*,fi,ai].m = masses
-       starstruct[*,fi,ai].teff = 10.^(interpol(logT, mass, masses))
-       starstruct[*,fi,ai].teff = starstruct[*,fi,ai].teff < 10.^(max(logT))
-       starstruct[*,fi,ai].teff = starstruct[*,fi,ai].teff > 10.^(min(logT))
        starstruct[*,fi,ai].rad = interpol(rad, mass, masses)
        starstruct[*,fi,ai].rad = starstruct[*,fi,ai].rad < max(rad)
-       starstruct[*,fi,ai].rad = starstruct[*,fi,ai].rad > min(rad)
+       starstruct[*,fi,ai].rad = starstruct[*,fi,ai].rad > 0.08
        starstruct[*,fi,ai].logL = interpol(logL, mass, masses)
        starstruct[*,fi,ai].logL = starstruct[*,fi,ai].logL < max(logL)
-       starstruct[*,fi,ai].logL = starstruct[*,fi,ai].logL > min(logL)
+;       starstruct[*,fi,ai].logL = starstruct[*,fi,ai].logL > min(logL)
+       starstruct[*,fi,ai].teff = 10.^(interpol(logT, mass, masses))
+       starstruct[*,fi,ai].teff = starstruct[*,fi,ai].teff < 10.^(max(logT))
+;       starstruct[*,fi,ai].teff = starstruct[*,fi,ai].teff > 10.^(min(logT))
+       tc = where(starstruct[*,fi,ai].teff lt 2000.)
+       minT = 5777.*10.^(0.25*starstruct[tc,fi,ai].logL - $
+			0.5*alog10(starstruct[tc,fi,ai].rad))
+       starstruct[tc, fi, ai].teff = minT
+
        starstruct[*,fi,ai].u  = interpol(U, mass, masses)
-       starstruct[*,fi,ai].u = starstruct[*,fi,ai].u < max(U)
+       starstruct[*,fi,ai].u = starstruct[*,fi,ai].u < 30. ;max(U)
        starstruct[*,fi,ai].u = starstruct[*,fi,ai].u > min(U)
        starstruct[*,fi,ai].b  = interpol(B, mass, masses)
-       starstruct[*,fi,ai].b = starstruct[*,fi,ai].b < max(B)
+       starstruct[*,fi,ai].b = starstruct[*,fi,ai].b < 30. ;max(B)
        starstruct[*,fi,ai].b = starstruct[*,fi,ai].b > min(B)
        starstruct[*,fi,ai].v  = interpol(V, mass, masses)
-       starstruct[*,fi,ai].v = starstruct[*,fi,ai].v < max(V)
+       starstruct[*,fi,ai].v = starstruct[*,fi,ai].v < 30. ;max(V)
        starstruct[*,fi,ai].v = starstruct[*,fi,ai].v > min(V)
        starstruct[*,fi,ai].r  = interpol(R, mass, masses)
-       starstruct[*,fi,ai].r = starstruct[*,fi,ai].r < max(R)
+       starstruct[*,fi,ai].r = starstruct[*,fi,ai].r < 30. ;max(R)
        starstruct[*,fi,ai].r = starstruct[*,fi,ai].r > min(R)
        starstruct[*,fi,ai].ic = interpol(Ic, mass, masses)
-       starstruct[*,fi,ai].ic = starstruct[*,fi,ai].ic < max(Ic)
+       starstruct[*,fi,ai].ic = starstruct[*,fi,ai].ic < 30. ;max(Ic)
        starstruct[*,fi,ai].ic = starstruct[*,fi,ai].ic > min(Ic)
        starstruct[*,fi,ai].j  = interpol(J, mass, masses)
-       starstruct[*,fi,ai].j = starstruct[*,fi,ai].j < max(J)
+       starstruct[*,fi,ai].j = starstruct[*,fi,ai].j < 30. ;max(J)
        starstruct[*,fi,ai].j = starstruct[*,fi,ai].j > min(J)
        starstruct[*,fi,ai].h = interpol(H, mass, masses)
-       starstruct[*,fi,ai].h = starstruct[*,fi,ai].h < max(H)
+       starstruct[*,fi,ai].h = starstruct[*,fi,ai].h < 30. ;max(H)
        starstruct[*,fi,ai].h = starstruct[*,fi,ai].h > min(H)
        starstruct[*,fi,ai].ks = interpol(Ks, mass, masses)
-       starstruct[*,fi,ai].ks = starstruct[*,fi,ai].ks < max(Ks)
+       starstruct[*,fi,ai].ks = starstruct[*,fi,ai].ks < 30. ;max(Ks)
        starstruct[*,fi,ai].ks = starstruct[*,fi,ai].ks > min(Ks)
       
        maxm[fi,ai] = max(mass)
