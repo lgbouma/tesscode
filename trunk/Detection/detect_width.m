@@ -59,6 +59,8 @@ for p=1:25
         % Take mean over each possible transit
         TSW = mean(reshape(TST,NW(ii),W(ii)),2);
         cts = ones(size(TSW));
+        
+        break;
       
         % Zero-pad
         TSWmin = [TSW; zeros(NTmin(ii)*Pwmin(ii)-length(TSW),1)];
@@ -96,5 +98,5 @@ for p=1:25
     end
   end
   fname = ['sighist' num2str(num(p)) '.mat'];
-  parsave(fname, 'hisighist');
+  save(fname, 'hisighist');
 end
