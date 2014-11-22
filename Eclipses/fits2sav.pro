@@ -1,5 +1,6 @@
 PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
-	icmax=icmax, dmax=dmax, homies=homies, dbl=dbl, kmin=kmin, tmin=tmin
+	icmax=icmax, dmax=dmax, homies=homies, dbl=dbl, kmin=kmin, tmin=tmin, $
+        dartcor=dartcor, suffix=suffix
   dat = mrdfits(fname, 0, h, /SILENT)
   print, fname
 
@@ -84,7 +85,7 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
   
   dart = intarr(ndat)
   darts = where(m gt dartmin and m lt dartmax)
-  if (darts[0] ne -1) then begin
+  if ((darts[0] ne -1) and keyword_set(dartcor)) then begin
     newdm = dm[darts]
     newav = av[darts]
     dartmouth_interpolate, dartmouth, m[darts], age[darts], feh[darts], $
@@ -209,6 +210,7 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
   star.mag.mjsys = mj[pris] ; bin_star.mag.j - 0.282*bin_star.mag.av - bin_star.mag.dm
   star.m = m[pris]
   star.r = rad[pris]
+  star.gc = gc[pris]
 
  ;  darts = where(star.m gt dartmin and star.m lt dartmax)
  ;  if (darts[0] ne -1) then begin
@@ -267,6 +269,7 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
       bin_star.mag.mj = mj[secs[sind]] ; bin_star.mag.j - 0.282*bin_star.mag.av - bin_star.mag.dm
       bin_star.m = m[secs[sind]]
       bin_star.r = rad[secs[sind]] ;sqrt(bin_star.m)/sqrt(10.^bin_star.logg/27542.3)
+      bin_star.gc = gc[secs[sind]] ;sqrt(bin_star.m)/sqrt(10.^bin_star.logg/27542.3)
    
 ;      darts = where(bin_star.m gt dartmin and bin_star.m lt dartmax)
 ;      if (darts[0] ne -1) then begin
@@ -425,7 +428,8 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
 	near = where(star.spl)
         if (near[0] eq -1) then nstar = 0 else nstar = n_elements(near)
   end else nstar = n_elements(star)
-  newfname = repstr(fname, 'fits', 'sav')
+  if (keyword_set(suffix)) then newfname = repstr(fname, '.fits', '_'+suffix+'.sav') else $
+  	newfname = repstr(fname, 'fits', 'sav')
   save, star, filen=newfname
 
 END
