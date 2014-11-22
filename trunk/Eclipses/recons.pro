@@ -6,7 +6,7 @@ PRO recons, fstub, fname, dmax=dmax, icmax=icmax, homies=homies
   numfil = n_elements(fnames)
   numstar = lonarr(numfil)
   for ii=0, numfil-1 do begin
-    fits2sav, fnames[ii], ss, tt, jlfr=lfr, nstar=nstar, dmax=dmax, icmax=icmax, homies=homies, dbl=1
+    fits2sav, fnames[ii], ss, tt, nstar=nstar, dmax=dmax, icmax=icmax, homies=homies, dbl=1, dartcor=0, jlfr=0
     numstar[ii] = nstar
   end
 ;  print, numfil, ' files contain ', total(numstar), ' stars within ', 10.^(dmax/5.+1.), ' pc.'

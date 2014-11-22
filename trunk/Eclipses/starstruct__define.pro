@@ -18,7 +18,8 @@ PRO starstruct__define
                   pri: 0, $        ; Primary of binary?
                   sec: 0, $        ; Secondary of binary? 
                   spl: 0, $        ; Split (for triples and quadruples)
-                  ffi: 0 $         ; Full-frame only (default is postage stamp)
+                  ffi: 0, $         ; Full-frame only (default is postage stamp)
+                  gc: 0 $	 ; galactic component (1=thin, 2=thick, 3=halo, 4=bulge)
                 }
 
 end

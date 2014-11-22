@@ -25,9 +25,9 @@ pRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   ps_len=2. ; in minutes
   duty_cycle=100.+fltarr(numfil) ; Time blanked around apogee
   min_depth=1D-6 ; minimum transit depth to retain from eclipses
-  max_depth=0.1 ; maximum transit depth to retain from EBs
+  max_depth=1.0; maximum transit depth to retain from EBs
   ps_only = 0 ; Only run postage stamps?
-  detmag = 0;
+  detmag = 15;
   saturation=150000. ; e-
   CCD_PIX = 4096. ; entire camera
   GAP_PIX = 2.0/0.015 ; for 2 mm gap

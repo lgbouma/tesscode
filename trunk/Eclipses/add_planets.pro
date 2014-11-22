@@ -158,7 +158,7 @@ function add_planets, star, pstruct, frac, ph_p, tband, $
 ; Impact parameter
   planet_b = (planet_a*AU_IN_RSUN / star[allid].r) * star[allid].cosi; assumes circular orbit
 ; Stellar radius in AU
-  min_a = star[allid].r/AU_IN_RSUN
+  min_a = 2.*star[allid].r/AU_IN_RSUN
   
   ; Weiss & Marcy 2014:
   planet_m = dblarr(nplanets)

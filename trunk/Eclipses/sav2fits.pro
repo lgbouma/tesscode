@@ -1,6 +1,7 @@
 PRO sav2fits, fname, vmag=vmag, newfname=newfname
 
   restore, fname
+  star=allstar
   m = star.m
   rad = star.r
   teff = star.teff
@@ -22,8 +23,9 @@ PRO sav2fits, fname, vmag=vmag, newfname=newfname
   mvsys = star.mag.mvsys
   micsys = star.mag.micsys
   mjsys = star.mag.mjsys
+  gc = star.gc
 
-  poop = [[m],[rad],[teff],[v],[r],[ic],[z],[j],[h],[k],[dm],[av],[ps],[mv],[mic],[mj],[icsys],[jsys],[mvsys],[micsys],[mjsys]]
+  poop = [[m],[rad],[teff],[v],[r],[ic],[z],[j],[h],[k],[dm],[av],[ps],[mv],[mic],[mj],[icsys],[jsys],[mvsys],[micsys],[mjsys],[gc]]
   if (keyword_set(vmag)) then begin
     gd = where(v le vmag)
     poop = poop[gd,*]
