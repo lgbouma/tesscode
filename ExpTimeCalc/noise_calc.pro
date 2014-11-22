@@ -1,4 +1,4 @@
-PRO noise_calc 
+PRO noise_calc, sys=sys 
   imag = findgen(151)/10.+5.
   ;print, imag
   npix_min=1
@@ -10,6 +10,7 @@ PRO noise_calc
   frac = frac_2d[1,*]
   elon=110.
   elat=30.
+  if (keyword_set(sys)) then sys=sys else sys=60.
   noises = dblarr(n_elements(imag), npix_max-npix_min+1)
   dilution = dblarr(n_elements(imag), npix_max-npix_min+1)
   diln = dblarr(n_elements(imag))
@@ -19,11 +20,12 @@ PRO noise_calc
      calc_noise, imag, exptime, noise, $
                  npix_aper=(ii+1), $
                  frac_aper=frac[ii], $
+                 fov_ind=1, $
                  teff=4500., $
                  e_pix_ro = 10.,$
                  subexptime=2., $
                  geom_area = 61.2, $
-                 sys_lim = 120.0, $
+                 sys_lim = sys, $
                  pix_scale = 24.*3600./4096., $
                  elon=elon, $
                  elat=elat, $
@@ -42,11 +44,12 @@ PRO noise_calc
   calc_noise, imag, exptime, noise, $
                  npix_aper=npix, $
                  frac_aper=frac[npix-1], $
+                 fov_ind=1, $
                  teff=4500, $
                  e_pix_ro = 10.,$
                  subexptime=2., $
                  geom_area = 61.2, $
-                 sys_lim = 60.0, $
+                 sys_lim = sys, $
                  pix_scale = 24.*3600./4096., $
                  elon=elon, $
                  elat=elat, $
