@@ -142,7 +142,7 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
     rm = []
     ad = []
     for ii=0,nmj-1 do begin
-      thismj = where((mj[pris] gt lf_mj[ii]-lf_dm/2.) and (mj[pris] le lf_mj[ii]+lf_dm/2.))
+      thismj = where((mj[pris] gt lf_mj[ii]-lf_dm/2.) and (mj[pris] le lf_mj[ii]+lf_dm/2.) and (gc[pris] le 2))
       ; If there are no stars in this mag bin, then do nothing
       if (thismj[0] ne -1) then begin
         ; Select stars for removal if over-abundant
