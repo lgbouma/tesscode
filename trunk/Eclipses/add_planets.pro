@@ -78,7 +78,7 @@ function add_planets, star, pstruct, frac, ph_p, tband, $
            if (binplanets gt 0) then begin  
               ; planet_per is either 0 or a smaller number since period is increasing.
               ; 1. Find the bad periods
-              bd_ind = where((planet_per ge fressin_period[i]/1.2) or (companion_p gt 0 and companion_p le fressin_period[i]*5.0))  
+              bd_ind = where((planet_per ge fressin_period[i]/1.2) or ((companion_p lt fressin_period[i+1]*5.0) and (companion_p gt fressin_period[i]/5.0)))
               ; 2. Find the remaining periods
               gd_hid = hotstars
               if (bd_ind[0] ne -1) then gd_hid = setdifference(hotstars, planet_hid[bd_ind])   
@@ -115,7 +115,7 @@ function add_planets, star, pstruct, frac, ph_p, tband, $
         for j=(n_elements(dressing_radius)-2),0,-1 do begin
            binplanets = round(rate_dressing[i,j] * ncoolstars)
            if (binplanets gt 0) then begin
-              bd_ind = where((planet_per ge dressing_period[i]/1.2) or (companion_p gt 0 and companion_p le dressing_period[i]*5.0))  
+              bd_ind = where((planet_per ge dressing_period[i]/1.2) or ((companion_p lt dressing_period[i+1]*5.0) and (companion_p gt dressing_period[i]/5.0)))  
               gd_hid = coolstars
               if (bd_ind[0] ne -1) then gd_hid = setdifference(coolstars, planet_hid[bd_ind])   
               if (gd_hid[0] ne -1) then begin
