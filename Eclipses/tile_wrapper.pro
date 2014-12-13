@@ -1,4 +1,4 @@
-pRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=eclass
+pRO tile_wrapper, fpath, fnums, outname, ps_only=ps_only, detmag=detmag, eclip=eclip, n_trial=n_trial, eclass=eclass
   numfil = n_elements(fnums)
 
   ; User-adjustable settings (yes, that's you!)
@@ -14,7 +14,7 @@ pRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   fov = 24. ; degrees
   seg = 13  ; number of segments per hemisphere
   skirt=6.  ; offset from ecliptic
-  effarea = 65.9 ;43.9 ;54.9 ;100. ;54.9 ;69.1 ; in cm^2. 
+  effarea = 69.1 ;43.9 ;54.9 ;100. ;54.9 ;69.1 ; in cm^2. 
   readnoise = 10. ;10. ;10.0 ; in e- per subexposure
   subexptime = 2.0 ; sec in subexposure
   thresh = 5.0 ; detection threshold in phase-folded lightcurve
@@ -25,9 +25,9 @@ pRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
   ps_len=2. ; in minutes
   duty_cycle=100.+fltarr(numfil) ; Time blanked around apogee
   min_depth=1D-6 ; minimum transit depth to retain from eclipses
-  max_depth=1.0; maximum transit depth to retain from EBs
-  ps_only = 0 ; Only run postage stamps?
-  detmag = 15;
+  max_depth=1; maximum transit depth to retain from EBs
+  if (keyword_set(ps_only)) then ps_only = 1 else ps_only = 0 ; Only run postage stamps?
+  if (keyword_set(detmag)) then detmag=detmag else detmag = 0 ; Only run postage stamps?
   saturation=150000. ; e-
   CCD_PIX = 4096. ; entire camera
   GAP_PIX = 2.0/0.015 ; for 2 mm gap
@@ -79,11 +79,11 @@ pRO tile_wrapper, fpath, fnums, outname, eclip=eclip, n_trial=n_trial, eclass=ec
     restore, fname
     targets = star
     numtargets[ii] = n_elements(targets)
-    fname = fpath+'dp'+string(fnums[ii], format='(I04)')+'.sav'
+    fname = fpath+'bk'+string(fnums[ii], format='(I04)')+'.sav'
     restore, fname
     bkgnds = star ;[where(star.mag.ksys gt 15)]
     numbkgnd[ii] = n_elements(bkgnds)
-    fname = fpath+'bk'+string(fnums[ii], format='(I04)')+'.sav'
+    fname = fpath+'dp'+string(fnums[ii], format='(I04)')+'.sav'
     restore, fname
     deeps = star ;[where(star.mag.tsys gt 21)]
     numdeeps[ii] = n_elements(deeps)
