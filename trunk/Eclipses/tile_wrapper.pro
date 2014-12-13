@@ -1,4 +1,4 @@
-pRO tile_wrapper, fpath, fnums, outname, ps_only=ps_only, detmag=detmag, eclip=eclip, n_trial=n_trial, eclass=eclass
+PRO tile_wrapper, fpath, fnums, outname, ps_only=ps_only, detmag=detmag, eclip=eclip, n_trial=n_trial, eclass=eclass
   numfil = n_elements(fnums)
 
   ; User-adjustable settings (yes, that's you!)
@@ -93,7 +93,7 @@ pRO tile_wrapper, fpath, fnums, outname, ps_only=ps_only, detmag=detmag, eclip=e
     targets.ffi = 1
     pri = where(targets.pri eq 1)
     selpri = ps_sel(targets[pri].mag.t, targets[pri].teff, targets[pri].m, targets[pri].r, ph_fits, $
-			geom_area=54.9, rn_pix=10., npnt=npnt_fits[ii])
+			rn_pix=15., npnt=npnt_fits[ii])
     if (selpri[0] ne -1) then begin 
       targets[pri[selpri]].ffi=0
       secffi = targets[pri[selpri]].companion.ind
