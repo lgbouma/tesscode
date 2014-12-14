@@ -9,7 +9,7 @@ PRO fits2sav, fname, dartmouth, tefftic, jlfr=jlfr, nstar=nstar, $
     nmj = sz[1]
     lf_mj = jlfr[*,0]
     lf_dm = lf_mj[1]-lf_mj[0]
-    lf_r  = jlfr[*,1] < 2.0
+    lf_r  = jlfr[*,1]
     ;print, "Applying LF from J=",min(lf_mj)-lf_dm/2.," to J=",max(lf_mj)+lf_dm/2.," with a median change of ",median(lf_r)
   endif
        
