@@ -1,8 +1,8 @@
 function make_eclipse, sstruct, bkstruct, estruct, frac, ph_p, dartstruct, tefftic, $
   eclass, tband, min_depth=min_depth, max_depth=max_depth, ps_only=ps_only
   ecliplen = 0L
-  if (keyword_set(min_depth)) then min_depth=min_depth else min_depth = 1D-5
-  if (keyword_set(max_depth)) then max_depth=max_depth else max_depth = 1D-1
+  if (keyword_set(min_depth)) then min_depth=min_depth else min_depth = 0.0
+  if (keyword_set(max_depth)) then max_depth=max_depth else max_depth = 1.0
   
   ; Add HEBs
   if (eclass[3]) then begin
