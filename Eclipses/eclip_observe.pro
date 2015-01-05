@@ -108,7 +108,8 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, var, $
     eclipse[tra_ffi].dep2_eff = eclipse[tra_ffi].dep2*dil_ffi_eclip(dur2_min, float(ffi_len), ffis=ffis)
     eclipse[tra_ffi].dur2_eff = (ffis*ffi_len)/(24.0*60.0)
   endif
-; for each observed transiting eclipse, calculate snr
+
+; for each observed transiting eclipse, calculate preliminary snr
  
   obs = where((eclipse.neclip_obs1 + eclipse.neclip_obs2) gt NTRA_OBS_MIN)
   if (obs[0] ne -1) then begin

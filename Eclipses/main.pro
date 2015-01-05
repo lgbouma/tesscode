@@ -9,6 +9,7 @@ PRO main
   	n_trial=1, $		; number of trials (don't exceed 10)
 	eclass=eclass, $	; from above
 	ps_only=0, $		; 1=only run postage stamps, 0=run ffis as well
-	detmag=12		; If you want the sim to return a magnitude-limited catalog, set this to the limit.
+	detmag=12, $		; If you want the sim to return a magnitude-limited catalog, set this to the limit.
 				;  0=run the TESS model for detection
+        prf_file='psfs/psfs/dfrac_t75_f3p31.fits' ; PRF file produced by MATLAB
 END

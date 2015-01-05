@@ -1,9 +1,7 @@
-PRO tile_wrapper, fpath, fnums, outname, ps_only=ps_only, detmag=detmag, eclip=eclip, n_trial=n_trial, eclass=eclass
+PRO tile_wrapper, fpath, fnums, outname, ps_only=ps_only, detmag=detmag, 
+	eclip=eclip, n_trial=n_trial, eclass=eclass, prf_file
   numfil = n_elements(fnums)
-
-  ; User-adjustable settings (yes, that's you!)
-  frac_file = 'psfs/dfrac_t75_f3p31.fits' ; prf file 
-;  rad_file = 'bigrad24_105_f3p33.fits' ; radius file 
+  ; Input files
   ph_file = 'ph_T_filt.fits' ; photon fluxes for T=10 vs Teff
   cr_file = 'crnoise.fits' ; photon fluxes for T=10 vs Teff
   tic_file = 'tic_teff.fits'
@@ -11,6 +9,7 @@ PRO tile_wrapper, fpath, fnums, outname, ps_only=ps_only, detmag=detmag, eclip=e
   var_file = 'starvar.fits'
   npnt_file = 'npnt.fits'
   tband_file = 'tband.csv'
+  ; User-adjustable settings (yes, that's you!)
   fov = 24. ; degrees
   seg = 13  ; number of segments per hemisphere
   skirt=6.  ; offset from ecliptic
@@ -20,12 +19,13 @@ PRO tile_wrapper, fpath, fnums, outname, ps_only=ps_only, detmag=detmag, eclip=e
   thresh = 5.0 ; detection threshold in phase-folded lightcurve
   tranmin = 1.0 ; minimum number of eclipses for detection
   sys_limit=60. ;60. in ppm/hr
-  if (keyword_set(n_trial)) then n_trial=n_trial else n_trial = 10 ; number of trials in this run
   ffi_len=30. ; in minutes
   ps_len=2. ; in minutes
   duty_cycle=100.+fltarr(numfil) ; Time blanked around apogee
   min_depth=1D-6 ; minimum transit depth to retain from eclipses
   max_depth=1; maximum transit depth to retain from EBs
+  if (keyword_set(n_trial)) then n_trial=n_trial else n_trial = 10 ; number of trials in this run
+  if (keyword_set(prf_file)) then frac_file=prf_file else frac_file = 'psfs/dfrac_t75_f3p31.fits' ; prf file 
   if (keyword_set(ps_only)) then ps_only = 1 else ps_only = 0 ; Only run postage stamps?
   if (keyword_set(detmag)) then detmag=detmag else detmag = 0 ; Only run postage stamps?
   saturation=150000. ; e-
