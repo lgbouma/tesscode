@@ -12,7 +12,7 @@ function add_planets, star, pstruct, frac, ph_p, tband, $
   G_CM_S2 = 98.1 ; cm/s^2
  
   if (keyword_set(fov)) then fov=fov else fov=24.0 
-  if (keyword_set(min_depth)) then min_depth=min_depth else min_depth=1E-5 
+  if (keyword_set(min_depth)) then min_depth=min_depth else min_depth=0.0
   ccd_pix = 4096.0
   if (keyword_set(aspix)) then aspix=aspix else aspix=21.1
 
@@ -174,7 +174,7 @@ function add_planets, star, pstruct, frac, ph_p, tband, $
 
 ; Work out transit properties
   dep1 = (planet_rad*REARTH_IN_RSUN / star[allid].r )^2.0
-  tra = where((abs(planet_b) lt 1.0) and (dep1 gt min_depth) and (planet_a gt min_a))
+  tra = where((abs(planet_b) lt 1.0) and (planet_a gt min_a) and (dep1 gt min_depth))
   ntra = 0
   if (tra[0] ne -1)  then begin
     traid = planet_hid[tra]

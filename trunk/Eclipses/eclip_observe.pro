@@ -189,7 +189,6 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, var, $
     eclipse[obs].snr2 = eclipse[obs].snreclp2 * sqrt(double(eclipse[obs].neclip_obs2))
     eclipse[obs].snr  = sqrt(eclipse[obs].snr1^2. + eclipse[obs].snr2^2.)
 ;   decide if it is 'detected'.
-  
     ; Dilute
     det = where(((eclipse.neclip_obs1 + eclipse.neclip_obs2) ge NTRA_OBS_MIN) and $
 	      (eclipse.snr ge SNR_MIN))
@@ -210,7 +209,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, var, $
 
       dil_ph = dblarr(total(mask1d), ndet)
       beb_ph = dblarr(total(mask1d), ndet)
-      tgt_ph = dblarr(total(mask1d), ndet)
+      ;tgt_ph = dblarr(total(mask1d), ndet)
       
 ;     print, "Diluting with binary companions"
       ; Binaries dilute planets, BEB targets. Not EBs or HEBs
@@ -283,7 +282,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, var, $
       ycenshift2s = fltarr(ndet, npix_max-npix_min+1)
       for ii=0,(npix_max-npix_min) do begin
         thiscr = cr[*,ii]
-        calc_noise_cen, star_ph, dil_ph, beb_ph, tgt_ph, bebdil, $
+        calc_noise_cen, star_ph, dil_ph, beb_ph, bebdil, $
 	         dur1, dur2, $
 	         dep1, dep2, $
 		 xx, yy, sind, $
@@ -314,6 +313,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, var, $
       ;ind = indgen(ndet)
       mincennoise = cennoises[ind]
       cenind = ind / ndet
+      cenpix = cenind + npix_min
       censhift1 = sqrt(xcenshift1s[ind]^2. + ycenshift1s[ind]^2.)
       censhift2 = sqrt(xcenshift2s[ind]^2. + ycenshift2s[ind]^2.)
       eclipse[det].censhift1 = censhift1
@@ -337,7 +337,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, var, $
       ; Sort into the same pixel order as target star flux
       for jj=0,ndet-1 do begin
         star_ph[*,jj] = total(star_ph[sind[*,jj],jj], /cumulative)
-        dil_ph[*,jj] = dil_ph[*,jj] + beb_ph[*,jj] + tgt_ph[*,jj]
+        dil_ph[*,jj] = dil_ph[*,jj] + beb_ph[*,jj]; + tgt_ph[*,jj]
         dil_ph[*,jj] = total(dil_ph[sind[*,jj],jj], /cumulative)
         beb_ph[*,jj] = total(beb_ph[sind[*,jj],jj], /cumulative)
       end      
@@ -395,7 +395,8 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, var, $
       eclipse[det].snr1 = eclipse[det].snreclp1 * sqrt(double(eclipse[det].neclip_obs1))
       eclipse[det].snr2 = eclipse[det].snreclp2 * sqrt(double(eclipse[det].neclip_obs2))
       eclipse[det].snr  = sqrt(eclipse[det].snr1^2. + eclipse[det].snr2^2.)
-     
+   
+ 
       ;eclipse[det].snrgress1 = eclipse[det].snreclp1 * $
       ;		sqrt(2. * eclipse[det].neclp_obs1 * $
  ;		     REARTH_IN_RSUN * eclipse[obs].r2 / $

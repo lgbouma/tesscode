@@ -5,7 +5,7 @@ pro calc_noise_cen, $
    ph_star, $                       ; ph/s/cm^2 from (npixels x nstars)
    ph_dil, $                        ; ph/s/cm^2 per pixel
    ph_beb, $                        ; ph/s/cm^2 per pixel from beb
-   ph_tgt, $                        ; ph/s/cm^2 from other target stars (subtracted)
+                           ; ph/s/cm^2 from other target stars (subtracted)
    bebind, $
    dur1, $                      ; BEB/HEB dur 
    dur2, $                      ; BEB/HEB dur
@@ -116,9 +116,9 @@ pro calc_noise_cen, $
     this_ebeb0 = ph_beb[*,ii]  * geom_area * cos(!DPI * field_angle[ii]/180.) * exptime
     this_ebeb1 = this_ebeb0*(1.0-dep1[ii])
     this_ebeb2 = this_ebeb0*(1.0-dep2[ii])
-    this_etgt  = ph_tgt[*,ii] * geom_area * cos(!DPI * field_angle[ii]/180.) * exptime
+    ;this_etgt  = ph_tgt[*,ii] * geom_area * cos(!DPI * field_angle[ii]/180.) * exptime
     this_sind = npix_sind[*,ii]                ; sorting indices
-    this_epix_all = this_estar0 + this_edil + this_ebeb0 + e_pix_zodi[ii] + ph_tgt  ; electrons per pixel, unsorted
+    this_epix_all = this_estar0 + this_edil + this_ebeb0 + e_pix_zodi[ii]  ; electrons per pixel, unsorted
     if total(ii eq bebind) then begin
       this_epix0 = this_estar0 + this_edil + this_ebeb0    ; electrons per pixel, unsorted
       this_epix1 = this_estar0 + this_edil + this_ebeb1    ; electrons per pixel, unsorted
@@ -139,29 +139,29 @@ pro calc_noise_cen, $
     this_estartot = total(this_estar0_sind)          ; total electrons
     this_etot1 = total(this_epix1_sind)          ; total electrons
     this_etot2 = total(this_epix2_sind)          ; total electrons
-    this_ntot = sqrt(this_etot_all + npix_aper*rn_pix^2. + cr_noise[ii]^2.)/this_estartot      ; total noise 
+    ;this_ntot = sqrt(this_etot_all + npix_aper*rn_pix^2. + cr_noise[ii]^2.)/this_estartot      ; total noise 
     ;this_ntot1 = sqrt(this_etot1 + npix_aper*rn_pix^2.)/this_etot1      ; total noise 
     ;this_ntot2 = sqrt(this_etot2 + npix_aper*rn_pix^2.)/this_etot2      ; total noise 
-    this_epix_noise = sqrt(this_epix_all_sind + rn_pix^2. + cr_noise[ii]^2.)/this_estartot ; noise per pixel
+    this_epix_noise = sqrt(this_epix_all_sind + rn_pix^2. + cr_noise[ii]^2.)/this_etot0 ; noise per pixel
 
     ; calculate centroid
-    xc0 = this_epix0_sind*xx[this_sind]
-    yc0 = this_epix0_sind*yy[this_sind]
-    xcen[ii] = total(xc0)/this_etot0
-    ycen[ii] = total(yc0)/this_etot0
-    xc1 = this_epix1_sind*xx[this_sind]
+    xc0 = this_epix0_sind*xx[this_sind] ; counts*x
+    yc0 = this_epix0_sind*yy[this_sind] ; counts*y
+    xcen[ii] = total(xc0)/this_etot0    ; x centroid out-of-eclipse
+    ycen[ii] = total(yc0)/this_etot0    ; y centroid out-of-eclipse
+    xc1 = this_epix1_sind*xx[this_sind] ; in eclipse 1
     yc1 = this_epix1_sind*yy[this_sind]
     xcenshift1[ii] = total(xc1)/this_etot1 - xcen[ii]
     ycenshift1[ii] = total(yc1)/this_etot1 - ycen[ii]
-    xc2 = this_epix2_sind*xx[this_sind]
+    xc2 = this_epix2_sind*xx[this_sind] ; in eclipse 2
     yc2 = this_epix2_sind*yy[this_sind]
     xcenshift2[ii] = total(xc2)/this_etot2 - xcen[ii]
     ycenshift2[ii] = total(yc2)/this_etot2 - ycen[ii]
     ; calculate centroid noise
-    xcn = this_epix_noise*xx[this_sind]
-    ycn = this_epix_noise*yy[this_sind]
-    xcennoise[ii] = sqrt(xcen[ii]^2.*this_ntot^2. + total(xcn^2.))
-    ycennoise[ii] = sqrt(ycen[ii]^2.*this_ntot^2. + total(ycn^2.))
+    xcn = this_epix_noise*(xx[this_sind] - xcen[ii])
+    ycn = this_epix_noise*(yy[this_sind] - ycen[ii])
+    xcennoise[ii] = sqrt(total(xcn^2.))
+    ycennoise[ii] = sqrt(total(ycn^2.))
    ; if (npix_aper gt 50) then stop
   end
   xcennoise1 = xcennoise*sqrt(exptime/exptime1)
