@@ -1,5 +1,5 @@
-PRO tile_wrapper, fpath, fnums, outname, ps_only=ps_only, detmag=detmag, 
-	eclip=eclip, n_trial=n_trial, eclass=eclass, prf_file
+PRO tile_wrapper, fpath, fnums, outname, ps_only=ps_only, detmag=detmag, $
+	eclip=eclip, n_trial=n_trial, eclass=eclass, prf_file=prf_file
   numfil = n_elements(fnums)
   ; Input files
   ph_file = 'ph_T_filt.fits' ; photon fluxes for T=10 vs Teff
@@ -22,7 +22,7 @@ PRO tile_wrapper, fpath, fnums, outname, ps_only=ps_only, detmag=detmag,
   ffi_len=30. ; in minutes
   ps_len=2. ; in minutes
   duty_cycle=100.+fltarr(numfil) ; Time blanked around apogee
-  min_depth=1D-8 ; minimum transit depth to retain from eclipses
+  min_depth=1D-6 ; minimum transit depth to retain from eclipses
   max_depth=1.0; maximum transit depth to retain from EBs
   if (keyword_set(n_trial)) then n_trial=n_trial else n_trial = 10 ; number of trials in this run
   if (keyword_set(prf_file)) then frac_file=prf_file else frac_file = 'psfs/dfrac_t75_f3p31.fits' ; prf file 
@@ -38,7 +38,8 @@ PRO tile_wrapper, fpath, fnums, outname, ps_only=ps_only, detmag=detmag,
   eclass = [	1, $ ; Planets
 	    	0, $ ; EBs
 		0, $ ; BEBs
-		0  ] ; HEBs
+		0, $ ; HEBs
+		0  ] ; BTPs
 
   ; Don't phuck with physics, though
   REARTH_IN_RSUN = 0.0091705248
@@ -102,7 +103,7 @@ PRO tile_wrapper, fpath, fnums, outname, ps_only=ps_only, detmag=detmag,
     end
     sing = where((targets.pri eq 0) and (targets.sec eq 0))
     selsing = ps_sel(targets[sing].mag.t, targets[sing].teff, targets[sing].m, targets[sing].r, ph_fits, $
-			geom_area=54.9, rn_pix=10., npnt=npnt_fits[ii])
+			rn_pix=15., npnt=npnt_fits[ii])
     if (selsing[0] ne -1) then begin 
       targets[sing[selsing]].ffi=0
       numps[ii] = numps[ii]+n_elements(selsing)

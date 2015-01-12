@@ -124,7 +124,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, var, $
 	dx=dx[obs], dy=dy[obs], fov_ind=eclipse[obs].coord.fov_ind, mask=mask1d, sind=sind
 
     ; BEBs and HEBs
-    bebdil = where(eclipse[obs].class eq 3 or eclipse[obs].class eq 4)
+    bebdil = where(eclipse[obs].class eq 3 or eclipse[obs].class eq 4 or eclipse[obs].class eq 5)
     beb_ph = dblarr(total(mask1d), nobs)
     if (bebdil[0] ne -1) then begin
       nbeb = n_elements(bebdil)
@@ -213,7 +213,7 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, var, $
       
 ;     print, "Diluting with binary companions"
       ; Binaries dilute planets, BEB targets. Not EBs or HEBs
-      bindil = where(eclipse[det].class eq 1 or eclipse[det].class eq 3)
+      bindil = where(eclipse[det].class eq 1 or eclipse[det].class eq 3 or eclipse[det].class eq 5)
       if (bindil[0] ne -1) then begin
         nbindil = n_elements(bindil)
 	dilute_binary, eclipse[det[bindil]], star, frac,  ph_p, $
@@ -221,27 +221,15 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, var, $
         for jj=0,nbindil-1 do dil_ph[*,bindil[jj]] = dil_ph[*,bindil[jj]] + dilvec[*,jj]
       end
   
-      ; All eclipses but BEBs
-      ;print, "Diluting with other target stars"
-      ;targdil = where(eclipse[det].class ne 3) ; BEBs are already diluted by brightest 
-      ;if (targdil[0] ne -1) then begin
-      ;  ntargdil = n_elements(targdil)
-      ;  dilute_eclipse_img, eclipse[det[targdil]], star, frac, ph_p, $
-      ;		dx[det[targdil]], dy[det[targdil]], dilvec, aspix=aspix, sq_deg=13.4, radmax=6.0
-      ;  for jj=0,ntargdil-1 do dil_ph[*,targdil[jj]] = dil_ph[*,targdil[jj]] + dilvec[*,jj]
-      ;end
-     
-      ;dilute_eclipse_img, eclipse[det], bk, frac, ph_p, $
-      ;		dx[det], dy[det], dilvec, aspix=aspix, sq_deg=0.134, radmax=4.0
-      ;for jj=0,ndet-1 do dil_ph[*,jj] = dil_ph[*,jj] + dilvec[*,jj]
       ; Everything is diluted by deep stars
       print, "Diluting with deep stars"
       dilute_eclipse_img, eclipse[det], deep, frac, ph_p, $
 		dx[det], dy[det], dilvec, aspix=aspix, sq_deg=0.0134, radmax=2.0
       for jj=0,ndet-1 do dil_ph[*,jj] = dil_ph[*,jj] + dilvec[*,jj]
       
+      ; BEB and BTP hosts will be diluted by the background star. Don't add others
       print, "Diluting with background stars"
-      bkdil = where(eclipse[det].class ne 3) ; BEB hosts are already diluted by the BEB
+      bkdil = where(eclipse[det].class ne 3 and eclipse[det].class ne 5) 
       if (bkdil[0] ne -1) then begin
         nbkdil = n_elements(bkdil)
         dilute_eclipse_img, eclipse[det[bkdil]], bk, frac, ph_p, $
@@ -249,8 +237,8 @@ pro eclip_observe, eclipse, star, bk, deep, frac, ph_p, cr, var, $
         for jj=0,nbkdil-1 do dil_ph[*,bkdil[jj]] = dil_ph[*,bkdil[jj]] + dilvec[*,jj]
       end
    
-      ; BEBs and HEBs
-      bebdil = where(eclipse[det].class eq 3 or eclipse[det].class eq 4)
+      ; BEBs, HEBs, and BTPs
+      bebdil = where(eclipse[det].class eq 3 or eclipse[det].class eq 4 or eclipse[det].class eq 5)
       if (bebdil[0] ne -1) then begin
         nbeb = n_elements(bebdil)
         ;beb_ph = dblarr(total(mask1d), nbeb)

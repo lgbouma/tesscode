@@ -1,5 +1,6 @@
-PRO starcat, fstub, fname, dmax=dmax, icmax=icmax, rmax=rmax, homies=homies
+PRO starcat, fstub, fname, dmax=dmax, icmax=icmax, kmax=kmax, rmax=rmax, homies=homies, ps=ps
   fnames = file_search(fstub)
+;  stop
 ;  restore, 'dartmouth_grid.sav'
 ;  tt = mrdfits('tic_teff.fits');
 ;  lfr = mrdfits('lfr.fits')
@@ -11,17 +12,30 @@ PRO starcat, fstub, fname, dmax=dmax, icmax=icmax, rmax=rmax, homies=homies
 ;  end
 ;  print, numfil, ' files contain ', total(numstar), ' stars within ', 10.^(dmax/5.+1.), ' pc.'
 ;  print, numfil, ' files contain ', total(numstar), ' stars brighter than Ic=', icmax
-;  nustar = replicate({starstruct}, 1E8)
+;  nustar = replicate({starstruct}, 1E8)i
+  ph_fits = mrdfits('ph_T_filt.fits') ; photon fluxes for T=10 vs Teff
+  npnt_fits = mrdfits('npnt.fits')
+
   idx0 = 0L
   nparam=21
-  nustar = fltarr(1e8, nparam)
+  nustar = fltarr(1e7, nparam)
   for ii=0, numfil-1 do begin
     ;if (numstar[ii] gt 0) then begin
       ;thisfn = repstr(fnames[ii], '.fits', '.sav')
       restore, fnames[ii]
-      if (keyword_set(rmax)) then gd = where(star.r le rmax and star.mag.ic le icmax)
-      if (keyword_set(dmax)) then gd = where(star.mag.dm le dmax)
-      if (keyword_set(homies)) then gd = where(star.spl)
+      gd = []
+      if (keyword_set(icmax)) then gd = where(star.mag.ic le icmax) $
+      else if (keyword_set(kmax)) then gd = where(star.mag.k le kmax) $
+      else if (keyword_set(rmax)) then gd = where(star.r le rmax and star.mag.ic le icmax) $
+      else if (keyword_set(dmax)) then gd = where(star.mag.dm le dmax) $
+      else if (keyword_set(homies)) then gd = where(star.spl) $
+      else if (keyword_set(ps)) then begin
+        pri = where(star.pri lt 2)
+	selpri = ps_sel(star[pri].mag.t, star[pri].teff, star[pri].m, star[pri].r, ph_fits, $
+                        rn_pix=15., npnt=npnt_fits[ii])
+        gd = pri[selpri]
+      endif
+      ;else gd = where(star.mag.ic gt 0.0)
       if (gd[0] ne -1) then begin
         m = star[gd].m
         rad = star[gd].r

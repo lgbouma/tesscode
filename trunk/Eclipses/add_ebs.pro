@@ -1,5 +1,5 @@
 function add_ebs, star, estruct, frac, ph_p, $
-  aspix=aspix, fov=fov, max_depth=max_depth
+  aspix=aspix, fov=fov, max_depth=max_depth, ps_only=ps_only
   
   neb = 0.
  
@@ -46,9 +46,12 @@ function add_ebs, star, estruct, frac, ph_p, $
  
   roche1 = (3.*m1/m2)^(1./3.)*r2
   roche2 = (3.*m2/m1)^(1./3.)*r1
+
+  if (keyword_set(ps_only)) then ps = (star.ffi ne ffi) else ps = intarr(npri)+1
+  
   ; Where are the (non-contact) eclipsing systems? 
   bin_ecl = where(((r1*abs(b1) lt (r1+r2)) or (r2*abs(b2) lt (r1+r2))) and $
-		  (ars gt (r1 > r2)) and (ars gt (roche1 > roche2)))
+		  (ars gt (r1 > r2)) and (ars gt (roche1 > roche2)) and ps)
     
   if (bin_ecl[0] ne -1) then begin
     neb = n_elements(bin_ecl)
