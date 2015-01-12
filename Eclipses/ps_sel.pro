@@ -1,7 +1,8 @@
 function ps_sel, tmag, teff, mass, rad, ph_p, $ 
   minrad=minrad, per=per, rn_pix=rn_pix, geom_area=geom_area, npnt=npnt
   nstars = n_elements(tmag)
-  if (keyword_set(minrad)) then minrad=minrad else minrad=2.5
+  ;print, "What am i doing in ps?"
+  if (keyword_set(minrad)) then minrad=minrad else minrad=2.3
   if (keyword_set(per)) then per=per else per=10.0
   if (keyword_set(npnt)) then npnt=npnt else npnt=1.0
   sz_ph_p = size(ph_p)
@@ -25,8 +26,8 @@ function ps_sel, tmag, teff, mass, rad, ph_p, $
   dep = (REARTH_IN_RSUN * float(minrad) / rad)^2.0
   sig = dep/7.3
   rn = rn_pix*sqrt(4.0*exptime/2.0)
-  minphot = 1.73*(1.+sqrt(1.+4.*sig^2.*rn^2.))/(2.*sig^2.)
-  sel = where(ph_star gt (minphot/(exptime*geom_area)))
+  minphot = 1.5*(1.+sqrt(1.+4.*sig^2.*rn^2.))/(2.*sig^2.)
+  sel = where(ph_star gt (minphot/(exptime*geom_area)) and teff gt 1500 and teff lt 15000)
  
 
   return, sel

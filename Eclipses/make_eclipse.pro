@@ -6,7 +6,7 @@ function make_eclipse, sstruct, bkstruct, estruct, frac, ph_p, dartstruct, tefft
   
   ; Add HEBs
   if (eclass[3]) then begin
-    gd = add_hebs(sstruct, heb_eclip, frac, ph_p, dartstruct, tefftic)
+    gd = add_hebs(sstruct, heb_eclip, frac, ph_p, dartstruct, tefftic, ps_only=ps_only)
     if (gd gt 0) then begin
       if (ecliplen gt 0) then estruct = struct_append(estruct, heb_eclip) $
       else estruct = heb_eclip   
@@ -16,7 +16,7 @@ function make_eclipse, sstruct, bkstruct, estruct, frac, ph_p, dartstruct, tefft
   
   ; Add Planets to all target stars
   if (eclass[0]) then begin
-    gd = add_planets(sstruct, p_eclip, frac, ph_p, tband, min_depth=min_depth, dressing=1)
+    gd = add_planets(sstruct, p_eclip, frac, ph_p, tband, min_depth=min_depth, dressing=1, ps_only=ps_only)
     if (gd gt 0) then begin
       if (ecliplen gt 0) then estruct = struct_append(estruct, p_eclip) $
       else estruct = p_eclip
@@ -36,10 +36,20 @@ function make_eclipse, sstruct, bkstruct, estruct, frac, ph_p, dartstruct, tefft
   
   ; Add BEBs (identify EBs among background stars, attach to target stars)
   if (eclass[2]) then begin
-    gd = add_bebs(sstruct, bkstruct, beb_eclip, frac, ph_p, 100)
+    gd = add_bebs(sstruct, bkstruct, beb_eclip, frac, ph_p, 100, ps_only=ps_only)
     if (gd gt 0) then begin
       if (ecliplen gt 0) then estruct = struct_append(estruct, beb_eclip) $
       else estruct = beb_eclip   
+    endif
+    ecliplen = ecliplen + gd
+  endif
+  
+  ; Add BTPs (identify EBs among background stars, attach to target stars)
+  if (eclass[4]) then begin
+    gd = add_btps(sstruct, bkstruct, btp_eclip, frac, ph_p, tband, 100, dressing=1, min_depth=min_depth, ps_only=ps_only)
+    if (gd gt 0) then begin
+      if (ecliplen gt 0) then estruct = struct_append(estruct, btp_eclip) $
+      else estruct = btp_eclip   
     endif
     ecliplen = ecliplen + gd
   endif

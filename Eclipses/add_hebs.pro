@@ -1,6 +1,6 @@
 function add_hebs, star, eclip, $
         frac, ph_p, dartstruct, tefftic, $ ;input
-  	aspix=aspix, radmax=radmax
+  	aspix=aspix, radmax=radmax, ps_only=ps_only
   
   neb = 0.
   nspl = 0.
@@ -32,7 +32,8 @@ function add_hebs, star, eclip, $
 
   nstars = n_elements(star)
 
-  spl = where(star.spl eq 1)
+  if keyword_set(ps_only) then spl = where(star.spl eq 1 and star.ffi ne 1) $
+  else spl = where(star.spl eq 1)
   if (spl[0] ne -1) then begin
     hostid = star[spl].companion.ind
     hostp = star[spl].companion.p

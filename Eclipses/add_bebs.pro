@@ -1,5 +1,5 @@
 function add_bebs, star, bkgnd, estruct, frac, ph_p, mult, $ ;input
-  	aspix=aspix, radmax=radmax
+  	aspix=aspix, radmax=radmax, ps_only=ps_only
 
   keep = 0
 
@@ -216,7 +216,8 @@ function add_bebs, star, bkgnd, estruct, frac, ph_p, mult, $ ;input
       ; draw star from random
       r = randomu(seed, nstars)
       ; How many of these are primaries and fall within radmax?
-      gd = where((r lt thresh) and (star.sec ne 1))
+      if (keyword_set(ps_only)) then gd = where((r lt thresh) and (star.sec ne 1) and (star.ffi ne 1)) $
+      else gd = where((r lt thresh) and (star.sec ne 1))
       ;print, 'found goods'
       if (gd[0] ne -1) then begin
         ; ID the brightest star
