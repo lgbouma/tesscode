@@ -1,5 +1,5 @@
 PRO main
-  fnums = mrdfits('../../trilegal/fnums.fits')	; File containing healpix numbers
+  fnums = mrdfits('fnums.fits')	; File containing healpix numbers
   eclass = [    1, $ ; Planets
                 1, $ ; EBs
                 1, $ ; BEBs
