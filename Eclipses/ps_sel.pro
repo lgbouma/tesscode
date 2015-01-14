@@ -29,6 +29,6 @@ function ps_sel, tmag, teff, mass, rad, ph_p, $
   minphot = 1.5*(1.+sqrt(1.+4.*sig^2.*rn^2.))/(2.*sig^2.)
   sel = where(ph_star gt (minphot/(exptime*geom_area)) and teff gt 1500 and teff lt 15000)
  
-  print, 'Selecting ', n_elements(sel) ' postage stamps out of ', nstars, ' stars.'
+  print, 'Selecting ', n_elements(sel),' postage stamps out of ', nstars, ' stars.'
   return, sel
 END
