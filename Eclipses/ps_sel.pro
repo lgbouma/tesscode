@@ -2,7 +2,7 @@ function ps_sel, tmag, teff, mass, rad, ph_p, $
   minrad=minrad, per=per, rn_pix=rn_pix, geom_area=geom_area, npnt=npnt
   nstars = n_elements(tmag)
   ;print, "What am i doing in ps?"
-  if (keyword_set(minrad)) then minrad=minrad else minrad=2.5
+  if (keyword_set(minrad)) then minrad=minrad else minrad=2.3
   if (keyword_set(per)) then per=per else per=20.0
   if (keyword_set(npnt)) then npnt=npnt else npnt=1.0
   sz_ph_p = size(ph_p)
