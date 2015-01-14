@@ -3,7 +3,7 @@ tot = trapz(trapz(dat));
 %dat = load(fname);
 npix=16;
 %pixsc=60; 
-pixsc=60;
+pixsc=54;
 %16 for 60, 
 %24 for 250, 
 %124 for 225, 
@@ -14,11 +14,11 @@ pixsc=60;
 % 212 for 225
 frac2d = zeros(npix, npix);
 %r2d = zeros(npix);
-%121 for Deb files, 122 for Kris files
+% 2 for new Deb files
  for ii=1:npix
      for jj=1:npix
-         thisx = (((ii-1)*pixsc):(ii*pixsc))+2+round(dx*pixsc/10);
-         thisy = (((jj-1)*pixsc):(jj*pixsc))+2+round(dy*pixsc/10);
+         thisx = (((ii-1)*pixsc):(ii*pixsc))+52+round(dx*pixsc/10);
+         thisy = (((jj-1)*pixsc):(jj*pixsc))+52+round(dy*pixsc/10);
          %[min(thisx) max(thisx) min(thisy) max(thisy)]
          frac2d(ii,jj) = trapz(trapz(dat(thisx,thisy)));
          %r2d(ii,jj) = sqrt((mean(thisx)-xcen)^2+(mean(thisy)-ycen)^2);
