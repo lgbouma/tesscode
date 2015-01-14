@@ -3,6 +3,8 @@ function make_eclipse, sstruct, bkstruct, estruct, frac, ph_p, dartstruct, tefft
   ecliplen = 0L
   if (keyword_set(min_depth)) then min_depth=min_depth else min_depth = 0.0
   if (keyword_set(max_depth)) then max_depth=max_depth else max_depth = 1.0
+
+  print, 'Adding eclipses to ', n_elements(sstruct), ' stars.'
   
   ; Add HEBs
   if (eclass[3]) then begin
