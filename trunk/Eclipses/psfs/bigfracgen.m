@@ -1,5 +1,5 @@
-dat = load('psf_TRACED_RAYS_T85_FOCUS_3P310S.TXT.mat');
-fout = 'dfrac_t85_f3p31.fits';
+dat = load('psf_TRACED_RAYS_T75_FOCUS_3P310S.TXT.mat');
+fout = 'dfrac_t75_f3p31.fits';
 dither = true;
 
 angs = [0 5 12.5 15.9];
@@ -53,7 +53,8 @@ for rr=1:nrot
         for jj=1:10
             frac = psfedoff(shiftdat, ii, jj);
             %bigrad(ii*rr,jj,mm,:,nn) = r1d;
-            bigfrac((ii+(rr-1)*10),jj,mm,:,nn) = frac;    
+            bigfrac((ii+(rr-1)*10),jj,mm,:,nn) = frac; 
+            
         end
       end
     end
