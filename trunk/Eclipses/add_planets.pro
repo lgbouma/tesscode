@@ -2,6 +2,7 @@ function add_planets, star, pstruct, frac, ph_p, tband, $
 	aspix=aspix, fov=fov, dressing=dressing, min_depth=min_depth, ps_only=ps_only
 
   ntra = 0
+  planet_multi=0
   sz_ph_p = size(ph_p)
   nfilt = sz_ph_p[1]
 
