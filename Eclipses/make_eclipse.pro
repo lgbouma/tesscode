@@ -56,12 +56,12 @@ function make_eclipse, sstruct, bkstruct, estruct, frac, ph_p, dartstruct, tefft
     ecliplen = ecliplen + gd
   endif
   
-  if (keyword_set(ps_only)) then begin
-    egd = where(sstruct[estruct.hostid].ffi lt 1)
-    if (egd[0] ne -1) then begin
-      estruct = estruct[egd]
-      ecliplen = n_elements(egd)
-    endif else ecliplen = 0  
-  endif
+;  if (keyword_set(ps_only)) then begin
+;    egd = where(sstruct[estruct.hostid].ffi lt 1)
+;    if (egd[0] ne -1) then begin
+;      estruct = estruct[egd]
+;      ecliplen = n_elements(egd)
+;    endif else ecliplen = 0  
+;  endif
   return, ecliplen
 END
