@@ -240,8 +240,8 @@ function add_planets, star, pstruct, frac, ph_p, tband, $
      pstruct=planet_eclip
    endif
   endif
-  print, 'Created ', ntra, ' transiting planets out of ', nplanets, ' total, ', $
-       'around ', nhotstars, ' hot stars and ', ncoolstars, ' cool stars, and ', nstars, ' total stars.'
+  print, 'Created ', ntra, ' transiting planets out of ', nplanets, ' around ', $
+        nstars, ' stars.'
 	;total(planet_multi gt 0), ' in multi systems'
   return, ntra
 end
