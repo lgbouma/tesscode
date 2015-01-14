@@ -26,7 +26,7 @@ function add_planets, star, pstruct, frac, ph_p, tband, $
     coolstars = where(star.teff lt 4000. and ps) 
     ncoolstars = total(star.teff lt 4000. and ps)
   endif else begin
-    hotstars = lindgen(total(ps))
+    hotstars = where(ps)
     nhotstars = total(ps)
     coolstars = -1
     ncoolstars = 0
@@ -236,10 +236,10 @@ function add_planets, star, pstruct, frac, ph_p, tband, $
 ;        sqrt(1.-(planet_eclip[tra].b)^2.) / $
 ;        (!PI*planet_eclip[tra].a*AU_IN_RSUN)
   
-     print, 'Created ', ntra, ' transiting planets out of ', nplanets, ' total, ', $
-       total(planet_multi gt 0), ' in multi systems'
      pstruct=planet_eclip
    endif
   endif
+  print, 'Created ', ntra, ' transiting planets out of ', nplanets, ' total, ', $
+       total(planet_multi gt 0), ' in multi systems'
   return, ntra
 end
