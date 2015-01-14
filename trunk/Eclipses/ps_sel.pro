@@ -2,8 +2,8 @@ function ps_sel, tmag, teff, mass, rad, ph_p, $
   minrad=minrad, per=per, rn_pix=rn_pix, geom_area=geom_area, npnt=npnt
   nstars = n_elements(tmag)
   ;print, "What am i doing in ps?"
-  if (keyword_set(minrad)) then minrad=minrad else minrad=2.3
-  if (keyword_set(per)) then per=per else per=10.0
+  if (keyword_set(minrad)) then minrad=minrad else minrad=2.5
+  if (keyword_set(per)) then per=per else per=20.0
   if (keyword_set(npnt)) then npnt=npnt else npnt=1.0
   sz_ph_p = size(ph_p)
   nfilt = sz_ph_p[1]
@@ -22,7 +22,7 @@ function ps_sel, tmag, teff, mass, rad, ph_p, $
   REARTH_IN_RSUN = 0.0091705248
   a = mass^(1./3.) * (float(per)/365.25)^(2./3.)   ; in AU
   dur = rad * float(per) / (!DPI*a*AU_IN_RSUN)
-  exptime = 2.*float(npnt)*float(floor(13./float(per)))*dur*24.*3600
+  exptime = 2.*float(npnt)*float(floor(27./float(per)))*dur*24.*3600
   dep = (REARTH_IN_RSUN * float(minrad) / rad)^2.0
   sig = dep/7.3
   rn = rn_pix*sqrt(4.0*exptime/2.0)
