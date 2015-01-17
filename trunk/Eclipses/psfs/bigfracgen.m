@@ -1,5 +1,5 @@
 dat = load('psf_TRACED_RAYS_T75_FOCUS_3P310S.TXT.mat');
-fout = 'dfrac_t75_f3p31.fits';
+fout = 'dfrac_t75_f3p31_3.fits';
 dither = true;
 
 angs = [0 5 12.5 15.9];
